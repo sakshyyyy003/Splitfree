@@ -58,3 +58,19 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row
   execute function public.handle_new_user();
+
+-- ----- RLS Policies -----
+
+-- Any authenticated user can read any profile (for displaying group members, etc.)
+create policy profiles_select_policy
+  on public.profiles
+  for select
+  to authenticated
+  using (true);
+
+-- Users can only update their own profile
+create policy profiles_update_policy
+  on public.profiles
+  for update
+  to authenticated
+  using (auth.uid() = id);
