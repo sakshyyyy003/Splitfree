@@ -58,3 +58,98 @@ create index idx_group_members_user_id on public.group_members (user_id);
 
 alter table public.groups enable row level security;
 alter table public.group_members enable row level security;
+
+-- =============================================================
+-- SECURITY DEFINER Helper Functions
+-- These bypass RLS to prevent infinite recursion when
+-- group_members policies reference the group_members table.
+-- =============================================================
+
+-- Check if the current user is a member of the given group.
+create or replace function public.is_group_member(_group_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.group_members
+    where group_id = _group_id
+    and user_id = (select auth.uid())
+  );
+$$;
+
+-- Check if the current user is an admin of the given group.
+create or replace function public.is_group_admin(_group_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.group_members
+    where group_id = _group_id
+    and user_id = (select auth.uid())
+    and role = 'admin'
+  );
+$$;
+
+-- =============================================================
+-- RLS Policies: groups
+-- =============================================================
+
+-- Members can view groups they belong to.
+create policy groups_select_policy
+  on public.groups
+  for select
+  to authenticated
+  using (public.is_group_member(id));
+
+-- Authenticated users can create groups (creator must be themselves).
+create policy groups_insert_policy
+  on public.groups
+  for insert
+  to authenticated
+  with check (created_by = (select auth.uid()));
+
+-- Only group admins can update a group.
+create policy groups_update_policy
+  on public.groups
+  for update
+  to authenticated
+  using (public.is_group_admin(id));
+
+-- Only group admins can delete a group.
+create policy groups_delete_policy
+  on public.groups
+  for delete
+  to authenticated
+  using (public.is_group_admin(id));
+
+-- =============================================================
+-- RLS Policies: group_members
+-- =============================================================
+
+-- Members can view all members in groups they belong to.
+create policy group_members_select_policy
+  on public.group_members
+  for select
+  to authenticated
+  using (public.is_group_member(group_id));
+
+-- Only group admins can add members.
+create policy group_members_insert_policy
+  on public.group_members
+  for insert
+  to authenticated
+  with check (public.is_group_admin(group_id));
+
+-- Admins can remove any member; members can remove themselves.
+create policy group_members_delete_policy
+  on public.group_members
+  for delete
+  to authenticated
+  using (
+    public.is_group_admin(group_id)
+    or user_id = (select auth.uid())
+  );
