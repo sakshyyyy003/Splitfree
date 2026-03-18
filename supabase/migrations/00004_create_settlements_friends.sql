@@ -1,7 +1,7 @@
 -- =============================================================
 -- Migration: 00004_create_settlements_friends.sql
 -- Description: Create the settlements and friends tables with
---              indexes.
+--              indexes and RLS policies.
 -- =============================================================
 
 -- ----- Table DDL: settlements -----
@@ -47,3 +47,62 @@ create index idx_friends_friend_id on public.friends (friend_id);
 
 alter table public.settlements enable row level security;
 alter table public.friends enable row level security;
+
+-- =============================================================
+-- RLS Policies: settlements
+-- No UPDATE/DELETE policies — settlements are write-once records.
+-- =============================================================
+
+-- Group members can view group settlements; for 1:1 settlements
+-- the payer or payee can view them.
+create policy settlements_select_policy
+  on public.settlements
+  for select
+  to authenticated
+  using (
+    (group_id is not null and public.is_group_member(group_id))
+    or paid_by = (select auth.uid())
+    or paid_to = (select auth.uid())
+  );
+
+-- The payer or payee can record a settlement.
+create policy settlements_insert_policy
+  on public.settlements
+  for insert
+  to authenticated
+  with check (
+    paid_by = (select auth.uid())
+    or paid_to = (select auth.uid())
+  );
+
+-- =============================================================
+-- RLS Policies: friends
+-- No UPDATE policy — friendships are not editable.
+-- =============================================================
+
+-- Users can view friendships they are part of.
+create policy friends_select_policy
+  on public.friends
+  for select
+  to authenticated
+  using (
+    user_id = (select auth.uid())
+    or friend_id = (select auth.uid())
+  );
+
+-- Users can add friends (they must be the initiator).
+create policy friends_insert_policy
+  on public.friends
+  for insert
+  to authenticated
+  with check (user_id = (select auth.uid()));
+
+-- Either party can remove the friendship.
+create policy friends_delete_policy
+  on public.friends
+  for delete
+  to authenticated
+  using (
+    user_id = (select auth.uid())
+    or friend_id = (select auth.uid())
+  );
