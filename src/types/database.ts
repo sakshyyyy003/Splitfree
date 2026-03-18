@@ -9,40 +9,174 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      profiles: {
+      expense_audit_log: {
         Row: {
           id: string;
-          email: string;
-          name: string;
-          avatar_url: string | null;
-          description: string | null;
+          expense_id: string;
+          changed_by: string;
+          action: string;
+          old_values: Json | null;
+          new_values: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          expense_id: string;
+          changed_by: string;
+          action: string;
+          old_values?: Json | null;
+          new_values?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          expense_id?: string;
+          changed_by?: string;
+          action?: string;
+          old_values?: Json | null;
+          new_values?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_audit_log_expense_id_fkey";
+            columns: ["expense_id"];
+            isOneToOne: false;
+            referencedRelation: "expenses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_audit_log_changed_by_fkey";
+            columns: ["changed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      expense_splits: {
+        Row: {
+          id: string;
+          expense_id: string;
+          user_id: string;
+          amount: number;
+          share_value: number | null;
+          is_settled: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          expense_id: string;
+          user_id: string;
+          amount: number;
+          share_value?: number | null;
+          is_settled?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          expense_id?: string;
+          user_id?: string;
+          amount?: number;
+          share_value?: number | null;
+          is_settled?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_splits_expense_id_fkey";
+            columns: ["expense_id"];
+            isOneToOne: false;
+            referencedRelation: "expenses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_splits_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      expenses: {
+        Row: {
+          id: string;
+          group_id: string | null;
+          paid_by: string;
+          created_by: string;
+          description: string;
+          amount: number;
+          currency: string;
+          split_type: string;
+          category: string;
+          date: string;
+          notes: string | null;
+          image_url: string | null;
+          is_recurring: boolean;
+          recurrence_rule: string | null;
+          is_deleted: boolean;
           created_at: string;
           updated_at: string;
         };
         Insert: {
-          id: string;
-          email: string;
-          name: string;
-          avatar_url?: string | null;
-          description?: string | null;
+          id?: string;
+          group_id?: string | null;
+          paid_by: string;
+          created_by: string;
+          description: string;
+          amount: number;
+          currency?: string;
+          split_type?: string;
+          category?: string;
+          date?: string;
+          notes?: string | null;
+          image_url?: string | null;
+          is_recurring?: boolean;
+          recurrence_rule?: string | null;
+          is_deleted?: boolean;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
-          email?: string;
-          name?: string;
-          avatar_url?: string | null;
-          description?: string | null;
+          group_id?: string | null;
+          paid_by?: string;
+          created_by?: string;
+          description?: string;
+          amount?: number;
+          currency?: string;
+          split_type?: string;
+          category?: string;
+          date?: string;
+          notes?: string | null;
+          image_url?: string | null;
+          is_recurring?: boolean;
+          recurrence_rule?: string | null;
+          is_deleted?: boolean;
           created_at?: string;
           updated_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "profiles_id_fkey";
-            columns: ["id"];
-            isOneToOne: true;
-            referencedRelation: "users";
+            foreignKeyName: "expenses_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "groups";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_paid_by_fkey";
+            columns: ["paid_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -132,6 +266,44 @@ export type Database = {
             columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      profiles: {
+        Row: {
+          id: string;
+          email: string;
+          name: string;
+          avatar_url: string | null;
+          description: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          name: string;
+          avatar_url?: string | null;
+          description?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          name?: string;
+          avatar_url?: string | null;
+          description?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey";
+            columns: ["id"];
+            isOneToOne: true;
+            referencedRelation: "users";
             referencedColumns: ["id"];
           },
         ];
