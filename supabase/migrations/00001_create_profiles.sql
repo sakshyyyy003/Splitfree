@@ -74,3 +74,12 @@ create policy profiles_update_policy
   for update
   to authenticated
   using (auth.uid() = id);
+
+-- ----- Trigger: updated_at auto-update -----
+-- Uses the moddatetime extension (enabled above) to set updated_at = now()
+-- on every row update.
+
+create trigger handle_updated_at
+  before update on public.profiles
+  for each row
+  execute procedure extensions.moddatetime(updated_at);
