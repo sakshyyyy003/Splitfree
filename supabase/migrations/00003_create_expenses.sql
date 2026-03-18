@@ -86,3 +86,127 @@ create index idx_expense_audit_log_expense_id on public.expense_audit_log (expen
 alter table public.expenses enable row level security;
 alter table public.expense_splits enable row level security;
 alter table public.expense_audit_log enable row level security;
+
+-- =============================================================
+-- RLS Policies: expenses
+-- =============================================================
+
+-- Members can view group expenses they belong to, or 1:1 expenses
+-- they paid for or are split with.
+create policy expenses_select_policy
+  on public.expenses
+  for select
+  to authenticated
+  using (
+    (group_id is not null and public.is_group_member(group_id))
+    or (
+      group_id is null
+      and (
+        paid_by = (select auth.uid())
+        or exists (
+          select 1 from public.expense_splits
+          where expense_splits.expense_id = expenses.id
+          and expense_splits.user_id = (select auth.uid())
+        )
+      )
+    )
+  );
+
+-- Group members can create group expenses; for 1:1 expenses the
+-- creator must also be the payer.
+create policy expenses_insert_policy
+  on public.expenses
+  for insert
+  to authenticated
+  with check (
+    (
+      group_id is not null
+      and public.is_group_member(group_id)
+      and created_by = (select auth.uid())
+    )
+    or (
+      group_id is null
+      and created_by = (select auth.uid())
+      and paid_by = (select auth.uid())
+    )
+  );
+
+-- Creators can update their own expenses; group admins can also
+-- update any expense in their group.
+create policy expenses_update_policy
+  on public.expenses
+  for update
+  to authenticated
+  using (
+    created_by = (select auth.uid())
+    or (group_id is not null and public.is_group_admin(group_id))
+  );
+
+-- Creators can delete their own expenses; group admins can also
+-- delete any expense in their group.
+create policy expenses_delete_policy
+  on public.expenses
+  for delete
+  to authenticated
+  using (
+    created_by = (select auth.uid())
+    or (group_id is not null and public.is_group_admin(group_id))
+  );
+
+-- =============================================================
+-- RLS Policies: expense_splits
+-- =============================================================
+
+-- Users can view splits for expenses they have access to.
+-- No INSERT/UPDATE/DELETE policies — managed by service role/triggers.
+create policy expense_splits_select_policy
+  on public.expense_splits
+  for select
+  to authenticated
+  using (
+    exists (
+      select 1 from public.expenses
+      where expenses.id = expense_splits.expense_id
+      and (
+        (expenses.group_id is not null and public.is_group_member(expenses.group_id))
+        or (
+          expenses.group_id is null
+          and (
+            expenses.paid_by = (select auth.uid())
+            or expense_splits.user_id = (select auth.uid())
+          )
+        )
+      )
+    )
+  );
+
+-- =============================================================
+-- RLS Policies: expense_audit_log
+-- =============================================================
+
+-- Users can view audit logs for expenses they have access to.
+-- No INSERT/UPDATE/DELETE policies — managed by SECURITY DEFINER trigger.
+create policy expense_audit_log_select_policy
+  on public.expense_audit_log
+  for select
+  to authenticated
+  using (
+    exists (
+      select 1 from public.expenses
+      where expenses.id = expense_audit_log.expense_id
+      and (
+        (expenses.group_id is not null and public.is_group_member(expenses.group_id))
+        or (
+          expenses.group_id is null
+          and (
+            expenses.paid_by = (select auth.uid())
+            or exists (
+              select 1 from public.expense_splits
+              where expense_splits.expense_id = expenses.id
+              and expense_splits.user_id = (select auth.uid())
+            )
+          )
+        )
+      )
+    )
+  );
