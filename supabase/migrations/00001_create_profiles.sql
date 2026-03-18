@@ -25,3 +25,36 @@ create index idx_profiles_email on public.profiles (email);
 -- ----- Row Level Security -----
 
 alter table public.profiles enable row level security;
+
+-- ----- Trigger Function: handle_new_user -----
+-- Automatically creates a profile row when a new user signs up.
+-- Extracts name and avatar_url from the OAuth/signup metadata.
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.profiles (id, email, name, avatar_url)
+  values (
+    new.id,
+    new.email,
+    coalesce(
+      new.raw_user_meta_data ->> 'name',
+      new.raw_user_meta_data ->> 'full_name',
+      split_part(new.email, '@', 1)
+    ),
+    new.raw_user_meta_data ->> 'avatar_url'
+  );
+  return new;
+end;
+$$;
+
+-- ----- Trigger: on_auth_user_created -----
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row
+  execute function public.handle_new_user();
