@@ -210,3 +210,72 @@ create policy expense_audit_log_select_policy
       )
     )
   );
+
+-- =============================================================
+-- Trigger: updated_at auto-update for expenses
+-- Uses the moddatetime extension (enabled in 00001_create_profiles.sql)
+-- to set updated_at = now() on every row update.
+-- =============================================================
+
+create trigger handle_expenses_updated_at
+  before update on public.expenses
+  for each row
+  execute procedure extensions.moddatetime(updated_at);
+
+-- =============================================================
+-- Trigger Function: handle_expense_audit_log
+-- Records every INSERT, UPDATE, and DELETE on the expenses table
+-- into expense_audit_log.  Runs as SECURITY DEFINER so the
+-- insert into the audit table succeeds even though regular users
+-- have no direct write access to expense_audit_log.
+-- =============================================================
+
+create or replace function public.handle_expense_audit_log()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  _action     varchar(20);
+  _old_values jsonb;
+  _new_values jsonb;
+begin
+  case tg_op
+    when 'INSERT' then
+      _action     := 'created';
+      _old_values := null;
+      _new_values := to_jsonb(new);
+    when 'UPDATE' then
+      _action     := 'updated';
+      _old_values := to_jsonb(old);
+      _new_values := to_jsonb(new);
+    when 'DELETE' then
+      _action     := 'deleted';
+      _old_values := to_jsonb(old);
+      _new_values := null;
+  end case;
+
+  insert into public.expense_audit_log (expense_id, changed_by, action, old_values, new_values)
+  values (
+    coalesce(new.id, old.id),
+    (select auth.uid()),
+    _action,
+    _old_values,
+    _new_values
+  );
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+
+  return new;
+end;
+$$;
+
+-- ----- Trigger: on_expense_change -----
+
+create trigger on_expense_change
+  after insert or update or delete on public.expenses
+  for each row
+  execute function public.handle_expense_audit_log();
