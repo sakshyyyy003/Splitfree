@@ -153,3 +153,14 @@ create policy group_members_delete_policy
     public.is_group_admin(group_id)
     or user_id = (select auth.uid())
   );
+
+-- =============================================================
+-- Trigger: updated_at auto-update for groups
+-- Uses the moddatetime extension (enabled in 00001_create_profiles.sql)
+-- to set updated_at = now() on every row update.
+-- =============================================================
+
+create trigger handle_groups_updated_at
+  before update on public.groups
+  for each row
+  execute procedure extensions.moddatetime(updated_at);
