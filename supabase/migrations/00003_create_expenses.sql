@@ -1,0 +1,88 @@
+-- =============================================================
+-- Migration: 00003_create_expenses.sql
+-- Description: Create the expenses, expense_splits, and
+--              expense_audit_log tables with indexes.
+-- =============================================================
+
+-- ----- Table DDL: expenses -----
+
+create table public.expenses (
+  id                uuid            primary key default gen_random_uuid(),
+  group_id          uuid            references public.groups (id) on delete cascade,
+  description       varchar(255)    not null,
+  amount            numeric(12, 2)  not null check (amount > 0),
+  currency          varchar(3)      not null default 'INR',
+  date              date            not null default current_date,
+  paid_by           uuid            not null references public.profiles (id),
+  created_by        uuid            not null references public.profiles (id),
+  split_type        varchar(20)     not null default 'equal'
+                      check (split_type in ('equal', 'exact', 'percentage', 'shares')),
+  category          varchar(30)     not null default 'other'
+                      check (category in (
+                        'food', 'transport', 'accommodation',
+                        'entertainment', 'utilities', 'shopping', 'other'
+                      )),
+  image_url         varchar(500),
+  notes             text,
+  is_recurring      boolean         not null default false,
+  recurrence_rule   varchar(50),
+  is_deleted        boolean         not null default false,
+  created_at        timestamptz     not null default now(),
+  updated_at        timestamptz     not null default now()
+);
+
+-- Partial index on group_id for active (non-deleted) expenses
+create index idx_expenses_group_id
+  on public.expenses (group_id)
+  where is_deleted = false;
+
+-- Index on paid_by for lookups by payer
+create index idx_expenses_paid_by on public.expenses (paid_by);
+
+-- Index on date for chronological queries
+create index idx_expenses_date on public.expenses (date);
+
+-- Index on category for category-based filtering
+create index idx_expenses_category on public.expenses (category);
+
+-- ----- Table DDL: expense_splits -----
+
+create table public.expense_splits (
+  id              uuid            primary key default gen_random_uuid(),
+  expense_id      uuid            not null references public.expenses (id) on delete cascade,
+  user_id         uuid            not null references public.profiles (id),
+  amount          numeric(12, 2)  not null check (amount >= 0),
+  share_value     numeric(10, 4),
+  is_settled      boolean         not null default false,
+  created_at      timestamptz     not null default now(),
+
+  unique (expense_id, user_id)
+);
+
+-- Index on expense_id for listing splits of an expense
+create index idx_expense_splits_expense_id on public.expense_splits (expense_id);
+
+-- Index on user_id for listing splits involving a user
+create index idx_expense_splits_user_id on public.expense_splits (user_id);
+
+-- ----- Table DDL: expense_audit_log -----
+
+create table public.expense_audit_log (
+  id              uuid            primary key default gen_random_uuid(),
+  expense_id      uuid            not null references public.expenses (id) on delete cascade,
+  changed_by      uuid            not null references public.profiles (id),
+  action          varchar(20)     not null
+                    check (action in ('created', 'updated', 'deleted')),
+  old_values      jsonb,
+  new_values      jsonb,
+  created_at      timestamptz     not null default now()
+);
+
+-- Index on expense_id for listing audit entries of an expense
+create index idx_expense_audit_log_expense_id on public.expense_audit_log (expense_id);
+
+-- ----- Row Level Security -----
+
+alter table public.expenses enable row level security;
+alter table public.expense_splits enable row level security;
+alter table public.expense_audit_log enable row level security;
