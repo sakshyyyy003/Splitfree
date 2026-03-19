@@ -6,7 +6,7 @@
  */
 
 /** Routes accessible by anyone, regardless of auth status. */
-export const PUBLIC_ROUTES = ["/", "/auth/callback"] as const;
+export const PUBLIC_ROUTES = ["/", "/auth/callback", "/join"] as const;
 
 /** Routes only for unauthenticated users (login/signup flow). */
 export const AUTH_ROUTES = ["/login", "/signup"] as const;

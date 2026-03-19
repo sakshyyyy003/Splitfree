@@ -40,7 +40,9 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
-  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname === route)
+  const isPublicRoute = PUBLIC_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  )
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname === route)
 
   // Public routes are accessible by anyone — no redirect needed.
