@@ -1,22 +1,14 @@
-import { redirect } from "next/navigation";
-
-import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/queries/profile";
-import { UNAUTHENTICATED_REDIRECT } from "@/constants/routes";
+import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { ProfileForm } from "@/components/profile/profile-form";
 
 export default async function ProfilePage() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const user = await requireAuthenticatedUser();
 
-  if (error || !data.user) {
-    redirect(UNAUTHENTICATED_REDIRECT);
-  }
-
-  const profile = await getProfile(data.user.id);
+  const profile = await getProfile(user.id);
 
   return (
-    <div className="mx-auto w-full max-w-lg px-4 py-8">
+    <div className="mx-auto w-full max-w-lg">
       <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Manage your personal information.
