@@ -56,14 +56,10 @@ These rules apply to ALL skills this agent executes. Read and internalize before
 8. **Self-documenting flow** — Reading through the code should be enough to understand it; no mental gymnastics required
 9. **Test, don't validate** — Avoid aggressive inline validations; handle edge cases through thoughtful and thorough testing instead
 
-## Critical: No Shortcuts Policy
-
-**NEVER use shortcuts to get things done.** Quality is more important than speed at any cost.
 
 When encountering test failures, build errors, or review comments:
 
-| Situation      | Wrong Approach ❌                  | Right Approach ✅                    |
-| -------------- | ---------------------------------- | ------------------------------------ |
+
 | Test failing   | Add `skip` or mock to make it pass | Fix the underlying issue or ask user |
 | Type error     | Add `as any` or `@ts-ignore`       | Fix the type properly or ask user    |
 | Build error    | Comment out code or add workaround | Understand root cause or ask user    |
