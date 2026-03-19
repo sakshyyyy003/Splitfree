@@ -1,21 +1,23 @@
-import { getProfile } from "@/lib/queries/profile";
+import dashboardUser from "../../../mockdata/dashboard-user.json";
+
 import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { ProtectedShell } from "@/components/app/protected-shell";
+import type { DashboardUser } from "@/types/dashboard";
 
 export default async function ProtectedLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await requireAuthenticatedUser();
-  const profile = await getProfile(user.id);
+  await requireAuthenticatedUser();
+  const user = dashboardUser as DashboardUser;
 
   return (
     <ProtectedShell
       user={{
-        email: user.email ?? null,
-        name: profile.name,
-        avatarUrl: profile.avatar_url,
+        email: user.email,
+        name: user.name,
+        avatarUrl: user.avatarUrl,
       }}
     >
       {children}
