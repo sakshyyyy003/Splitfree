@@ -211,6 +211,161 @@
       }
     ]
   },
+  "exp-goa-breakfast": {
+    "id": "exp-goa-breakfast",
+    "groupId": "goa-getaway",
+    "title": "Cafe breakfast run",
+    "amount": 1310,
+    "currency": "INR",
+    "category": "food",
+    "paidByUserId": "u-neha",
+    "paidByName": "Neha Kapoor",
+    "splitSummary": "Equal split across everyone at the table",
+    "incurredOn": "2026-03-14",
+    "createdAt": "2026-03-14T09:10:00.000Z",
+    "notes": "Coffee, eggs, and pastries before checkout.",
+    "splitType": "equal",
+    "participants": [
+      {
+        "userId": "u-sakshi",
+        "name": "Sakshi Gupta",
+        "email": "sakshi@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 262
+      },
+      {
+        "userId": "u-rahul",
+        "name": "Rahul Mehta",
+        "email": "rahul@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 262
+      },
+      {
+        "userId": "u-aditi",
+        "name": "Aditi Rao",
+        "email": "aditi@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 262
+      },
+      {
+        "userId": "u-neha",
+        "name": "Neha Kapoor",
+        "email": "neha@example.com",
+        "avatarUrl": null,
+        "paidAmount": 1310,
+        "owedAmount": 262
+      },
+      {
+        "userId": "u-karan",
+        "name": "Karan Sethi",
+        "email": "karan@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 262
+      }
+    ]
+  },
+  "exp-goa-snorkeling": {
+    "id": "exp-goa-snorkeling",
+    "groupId": "goa-getaway",
+    "title": "Snorkeling tickets",
+    "amount": 5240,
+    "currency": "INR",
+    "category": "entertainment",
+    "paidByUserId": "u-sakshi",
+    "paidByName": "Sakshi Gupta",
+    "splitSummary": "Only the four people who joined the activity were included",
+    "incurredOn": "2026-03-15",
+    "createdAt": "2026-03-15T13:35:00.000Z",
+    "notes": "Includes gear rental and boat transfer.",
+    "splitType": "exact",
+    "participants": [
+      {
+        "userId": "u-sakshi",
+        "name": "Sakshi Gupta",
+        "email": "sakshi@example.com",
+        "avatarUrl": null,
+        "paidAmount": 5240,
+        "owedAmount": 1310
+      },
+      {
+        "userId": "u-rahul",
+        "name": "Rahul Mehta",
+        "email": "rahul@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 1310
+      },
+      {
+        "userId": "u-aditi",
+        "name": "Aditi Rao",
+        "email": "aditi@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 1310
+      },
+      {
+        "userId": "u-neha",
+        "name": "Neha Kapoor",
+        "email": "neha@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 1310
+      }
+    ]
+  },
+  "exp-goa-cab": {
+    "id": "exp-goa-cab",
+    "groupId": "goa-getaway",
+    "title": "Late-night cab back to villa",
+    "amount": 2940,
+    "currency": "INR",
+    "category": "transport",
+    "paidByUserId": "u-karan",
+    "paidByName": "Karan Sethi",
+    "splitSummary": "Split equally across the four people in the cab",
+    "incurredOn": "2026-03-17",
+    "createdAt": "2026-03-17T23:40:00.000Z",
+    "notes": "Post-dinner return trip with surge pricing.",
+    "splitType": "equal",
+    "participants": [
+      {
+        "userId": "u-sakshi",
+        "name": "Sakshi Gupta",
+        "email": "sakshi@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 735
+      },
+      {
+        "userId": "u-aditi",
+        "name": "Aditi Rao",
+        "email": "aditi@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 735
+      },
+      {
+        "userId": "u-neha",
+        "name": "Neha Kapoor",
+        "email": "neha@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 735
+      },
+      {
+        "userId": "u-karan",
+        "name": "Karan Sethi",
+        "email": "karan@example.com",
+        "avatarUrl": null,
+        "paidAmount": 2940,
+        "owedAmount": 735
+      }
+    ]
+  },
   "exp-flat-rent": {
     "id": "exp-flat-rent",
     "groupId": "flat-2026",
@@ -334,6 +489,88 @@
       }
     ]
   },
+  "exp-flat-electricity": {
+    "id": "exp-flat-electricity",
+    "groupId": "flat-2026",
+    "title": "Electricity bill",
+    "amount": 2389,
+    "currency": "INR",
+    "category": "utilities",
+    "paidByUserId": "u-ria",
+    "paidByName": "Ria Sen",
+    "splitSummary": "Equal split across 3 flatmates",
+    "incurredOn": "2026-03-10",
+    "createdAt": "2026-03-10T08:15:00.000Z",
+    "notes": "Higher usage due to AC running most nights.",
+    "splitType": "equal",
+    "participants": [
+      {
+        "userId": "u-ria",
+        "name": "Ria Sen",
+        "email": "ria@example.com",
+        "avatarUrl": null,
+        "paidAmount": 2389,
+        "owedAmount": 796.33
+      },
+      {
+        "userId": "u-sakshi",
+        "name": "Sakshi Gupta",
+        "email": "sakshi@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 796.33
+      },
+      {
+        "userId": "u-mohit",
+        "name": "Mohit Arora",
+        "email": "mohit@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 796.34
+      }
+    ]
+  },
+  "exp-flat-water": {
+    "id": "exp-flat-water",
+    "groupId": "flat-2026",
+    "title": "Water tanker refill",
+    "amount": 1250,
+    "currency": "INR",
+    "category": "utilities",
+    "paidByUserId": "u-mohit",
+    "paidByName": "Mohit Arora",
+    "splitSummary": "Equal split across 3 flatmates",
+    "incurredOn": "2026-03-08",
+    "createdAt": "2026-03-08T14:05:00.000Z",
+    "notes": null,
+    "splitType": "equal",
+    "participants": [
+      {
+        "userId": "u-ria",
+        "name": "Ria Sen",
+        "email": "ria@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 416.67
+      },
+      {
+        "userId": "u-sakshi",
+        "name": "Sakshi Gupta",
+        "email": "sakshi@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 416.67
+      },
+      {
+        "userId": "u-mohit",
+        "name": "Mohit Arora",
+        "email": "mohit@example.com",
+        "avatarUrl": null,
+        "paidAmount": 1250,
+        "owedAmount": 416.66
+      }
+    ]
+  },
   "exp-date-concert": {
     "id": "exp-date-concert",
     "groupId": "date-nights",
@@ -430,6 +667,39 @@
         "avatarUrl": null,
         "paidAmount": 740,
         "owedAmount": 370
+      }
+    ]
+  },
+  "exp-date-movie": {
+    "id": "exp-date-movie",
+    "groupId": "date-nights",
+    "title": "Movie night",
+    "amount": 1700,
+    "currency": "INR",
+    "category": "entertainment",
+    "paidByUserId": "u-sakshi",
+    "paidByName": "Sakshi Gupta",
+    "splitSummary": "Equal split for two tickets and snacks",
+    "incurredOn": "2026-03-09",
+    "createdAt": "2026-03-09T21:15:00.000Z",
+    "notes": "Included caramel popcorn and cold coffee.",
+    "splitType": "equal",
+    "participants": [
+      {
+        "userId": "u-sakshi",
+        "name": "Sakshi Gupta",
+        "email": "sakshi@example.com",
+        "avatarUrl": null,
+        "paidAmount": 1700,
+        "owedAmount": 850
+      },
+      {
+        "userId": "u-arjun",
+        "name": "Arjun Malhotra",
+        "email": "arjun@example.com",
+        "avatarUrl": null,
+        "paidAmount": 0,
+        "owedAmount": 850
       }
     ]
   }
