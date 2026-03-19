@@ -401,6 +401,13 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_expense_with_splits: {
+        Args: {
+          _expense_data: Json;
+          _splits_data: Json;
+        };
+        Returns: Json;
+      };
       is_group_admin: {
         Args: {
           _group_id: string;
