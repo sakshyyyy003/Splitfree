@@ -1,0 +1,138 @@
+{
+  "goa-getaway": [
+    {
+      "id": "exp-goa-villa",
+      "title": "Villa booking",
+      "amount": 18500,
+      "currency": "INR",
+      "category": "accommodation",
+      "paidByUserId": "u-sakshi",
+      "paidByName": "Sakshi Gupta",
+      "splitSummary": "Split equally across 5 people",
+      "incurredOn": "2026-03-14",
+      "createdAt": "2026-03-14T11:45:00.000Z",
+      "notes": "Advance paid for the entire stay."
+    },
+    {
+      "id": "exp-goa-scooters",
+      "title": "Scooter rentals",
+      "amount": 4200,
+      "currency": "INR",
+      "category": "transport",
+      "paidByUserId": "u-rahul",
+      "paidByName": "Rahul Mehta",
+      "splitSummary": "Exact split based on who used each scooter",
+      "incurredOn": "2026-03-15",
+      "createdAt": "2026-03-15T08:20:00.000Z",
+      "notes": "Two-day rental for three scooters."
+    },
+    {
+      "id": "exp-goa-dinner",
+      "title": "Dinner at Pousada",
+      "amount": 6780,
+      "currency": "INR",
+      "category": "food",
+      "paidByUserId": "u-aditi",
+      "paidByName": "Aditi Rao",
+      "splitSummary": "Shared equally including starters and dessert",
+      "incurredOn": "2026-03-16",
+      "createdAt": "2026-03-16T20:10:00.000Z",
+      "notes": "Included seafood platter and mocktails."
+    },
+    {
+      "id": "exp-goa-ferry",
+      "title": "Island ferry tickets",
+      "amount": 2150,
+      "currency": "INR",
+      "category": "transport",
+      "paidByUserId": "u-neha",
+      "paidByName": "Neha Kapoor",
+      "splitSummary": "Equal split across everyone on the ferry",
+      "incurredOn": "2026-03-17",
+      "createdAt": "2026-03-17T09:05:00.000Z",
+      "notes": null
+    }
+  ],
+  "flat-2026": [
+    {
+      "id": "exp-flat-rent",
+      "title": "March rent",
+      "amount": 36000,
+      "currency": "INR",
+      "category": "utilities",
+      "paidByUserId": "u-ria",
+      "paidByName": "Ria Sen",
+      "splitSummary": "Equal split across 3 flatmates",
+      "incurredOn": "2026-03-01",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "notes": "Transferred to landlord."
+    },
+    {
+      "id": "exp-flat-wifi",
+      "title": "Wi-Fi bill",
+      "amount": 1499,
+      "currency": "INR",
+      "category": "utilities",
+      "paidByUserId": "u-sakshi",
+      "paidByName": "Sakshi Gupta",
+      "splitSummary": "Equal split across 3 flatmates",
+      "incurredOn": "2026-03-04",
+      "createdAt": "2026-03-04T19:10:00.000Z",
+      "notes": null
+    },
+    {
+      "id": "exp-flat-groceries",
+      "title": "Weekly groceries",
+      "amount": 3825,
+      "currency": "INR",
+      "category": "shopping",
+      "paidByUserId": "u-sakshi",
+      "paidByName": "Sakshi Gupta",
+      "splitSummary": "Equal split across 3 flatmates",
+      "incurredOn": "2026-03-12",
+      "createdAt": "2026-03-12T21:30:00.000Z",
+      "notes": "Includes cleaning supplies."
+    }
+  ],
+  "date-nights": [
+    {
+      "id": "exp-date-concert",
+      "title": "Indie concert tickets",
+      "amount": 5400,
+      "currency": "INR",
+      "category": "entertainment",
+      "paidByUserId": "u-sakshi",
+      "paidByName": "Sakshi Gupta",
+      "splitSummary": "Equal split for two tickets",
+      "incurredOn": "2026-03-05",
+      "createdAt": "2026-03-05T18:40:00.000Z",
+      "notes": null
+    },
+    {
+      "id": "exp-date-dinner",
+      "title": "Friday dinner",
+      "amount": 2650,
+      "currency": "INR",
+      "category": "food",
+      "paidByUserId": "u-arjun",
+      "paidByName": "Arjun Malhotra",
+      "splitSummary": "Equal split after applying restaurant discount",
+      "incurredOn": "2026-03-14",
+      "createdAt": "2026-03-14T22:05:00.000Z",
+      "notes": "Dinner and dessert."
+    },
+    {
+      "id": "exp-date-cab",
+      "title": "Cab ride home",
+      "amount": 740,
+      "currency": "INR",
+      "category": "transport",
+      "paidByUserId": "u-arjun",
+      "paidByName": "Arjun Malhotra",
+      "splitSummary": "Equal split",
+      "incurredOn": "2026-03-14",
+      "createdAt": "2026-03-14T23:18:00.000Z",
+      "notes": null
+    }
+  ]
+}

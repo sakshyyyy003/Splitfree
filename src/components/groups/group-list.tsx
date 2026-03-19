@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Coins, Pin, UsersRound } from "lucide-react";
 
 import type { DashboardGroup } from "@/types/dashboard";
@@ -62,49 +63,48 @@ export function GroupList({ groups }: GroupListProps) {
               : "text-muted-foreground";
 
         return (
-          <Card
-            key={group.id}
-            className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/35"
-          >
-            <CardHeader className="gap-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">
-                      {categoryLabels[group.category] ?? group.category}
-                    </Badge>
-                    {group.isPinned ? (
-                      <Badge variant="outline" className="gap-1.5">
-                        <Pin className="size-3" />
-                        Pinned
+          <Link key={group.id} href={`/groups/${group.id}`} className="block">
+            <Card className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/35 transition-transform duration-150 hover:-translate-y-0.5">
+              <CardHeader className="gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary">
+                        {categoryLabels[group.category] ?? group.category}
                       </Badge>
-                    ) : null}
+                      {group.isPinned ? (
+                        <Badge variant="outline" className="gap-1.5">
+                          <Pin className="size-3" />
+                          Pinned
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <CardTitle>{group.name}</CardTitle>
                   </div>
-                  <CardTitle>{group.name}</CardTitle>
                 </div>
-              </div>
-              <CardDescription className="min-h-10 text-sm leading-6">
-                {group.description?.trim() ||
-                  "Shared expenses, balances, and settlements in one place."}
-              </CardDescription>
-            </CardHeader>
+                <CardDescription className="min-h-10 text-sm leading-6">
+                  {group.description?.trim() ||
+                    "Shared expenses, balances, and settlements in one place."}
+                </CardDescription>
+              </CardHeader>
 
-            <CardContent className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <MetricPill
-                  icon={UsersRound}
-                  label="Members"
-                  value={formatMemberCount(group.memberCount)}
-                />
-                <MetricPill
-                  icon={Coins}
-                  label="Net balance"
-                  value={getNetBalanceCopy(group.netBalance, group.currency)}
-                  valueClassName={balanceTone}
-                />
-              </div>
-            </CardContent>
-          </Card>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <MetricPill
+                    icon={UsersRound}
+                    label="Members"
+                    value={formatMemberCount(group.memberCount)}
+                  />
+                  <MetricPill
+                    icon={Coins}
+                    label="Net balance"
+                    value={getNetBalanceCopy(group.netBalance, group.currency)}
+                    valueClassName={balanceTone}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         );
       })}
     </div>

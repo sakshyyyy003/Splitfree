@@ -1,0 +1,40 @@
+import type { DashboardGroup } from "@/types/dashboard";
+
+export type GroupDetail = DashboardGroup & {
+  expenseCount: number;
+  totalSpent: number;
+  settledAmount: number;
+  coverImageUrl: string | null;
+};
+
+export type GroupExpense = {
+  id: string;
+  title: string;
+  amount: number;
+  currency: string;
+  category: string;
+  paidByUserId: string;
+  paidByName: string;
+  splitSummary: string;
+  incurredOn: string;
+  createdAt: string;
+  notes: string | null;
+};
+
+export type GroupBalance = {
+  userId: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  role: "admin" | "member";
+  netBalance: number;
+};
+
+export type GroupMember = {
+  userId: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  role: "admin" | "member";
+  joinedAt: string;
+};
