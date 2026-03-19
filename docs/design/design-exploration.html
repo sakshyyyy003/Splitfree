@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Splitfree Design Exploration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Manrope", "ui-sans-serif", "system-ui", "sans-serif"],
+              display: ["Space Grotesk", "ui-sans-serif", "system-ui", "sans-serif"],
+            },
+            colors: {
+              ink: "#112018",
+              moss: "#1c5c43",
+              mint: "#c8f2d3",
+              foam: "#f3fbf5",
+              peach: "#ffd6b5",
+              sand: "#f7efde",
+              line: "#d6e3d8",
+              danger: "#b8402a",
+            },
+            boxShadow: {
+              soft: "0 22px 50px rgba(17, 32, 24, 0.10)",
+              panel: "0 10px 30px rgba(28, 92, 67, 0.10)",
+            },
+            borderRadius: {
+              "4xl": "2rem",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background:
+          radial-gradient(circle at top left, rgba(200, 242, 211, 0.9), transparent 30%),
+          radial-gradient(circle at top right, rgba(255, 214, 181, 0.5), transparent 24%),
+          linear-gradient(180deg, #f7efde 0%, #f3fbf5 22%, #f8fbf8 100%);
+      }
+
+      .grid-overlay {
+        background-image:
+          linear-gradient(rgba(17, 32, 24, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(17, 32, 24, 0.03) 1px, transparent 1px);
+        background-size: 22px 22px;
+      }
+
+      .chart-bar span {
+        display: block;
+        border-radius: 999px 999px 0 0;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen text-ink antialiased">
+    <header class="sticky top-0 z-50 border-b border-ink/10 bg-foam/90 backdrop-blur-xl">
+      <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <a href="#landing" class="flex items-center gap-3">
+          <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-moss text-lg font-extrabold text-white shadow-panel">S</div>
+          <div>
+            <p class="font-display text-lg font-bold">Splitfree</p>
+            <p class="text-xs uppercase tracking-[0.28em] text-ink/55">Design Exploration</p>
+          </div>
+        </a>
+        <nav class="hidden items-center gap-2 rounded-full border border-ink/10 bg-white/70 p-1.5 text-sm font-semibold lg:flex">
+          <a class="rounded-full px-4 py-2 text-ink/70 hover:bg-mint" href="#landing">Landing</a>
+          <a class="rounded-full px-4 py-2 text-ink/70 hover:bg-mint" href="#shell">App Shell</a>
+          <a class="rounded-full px-4 py-2 text-ink/70 hover:bg-mint" href="#dashboard">Dashboard</a>
+          <a class="rounded-full px-4 py-2 text-ink/70 hover:bg-mint" href="#group-flow">Create Group</a>
+          <a class="rounded-full px-4 py-2 text-ink/70 hover:bg-mint" href="#group-detail">Group</a>
+          <a class="rounded-full px-4 py-2 text-ink/70 hover:bg-mint" href="#expense-flow">Add Expense</a>
+          <a class="rounded-full px-4 py-2 text-ink/70 hover:bg-mint" href="#settle-flow">Settle</a>
+          <a class="rounded-full px-4 py-2 text-ink/70 hover:bg-mint" href="#analytics">Analytics</a>
+          <a class="rounded-full px-4 py-2 text-ink/70 hover:bg-mint" href="#profile">Profile</a>
+        </nav>
+        <div class="flex items-center gap-2">
+          <a href="#shell" class="hidden rounded-full border border-ink/10 px-4 py-2 text-sm font-semibold text-ink/75 sm:inline-flex">Preview App</a>
+          <a href="#landing" class="rounded-full bg-moss px-4 py-2 text-sm font-semibold text-white shadow-panel">Use This Direction</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+      <section id="landing" class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <div class="overflow-hidden rounded-4xl border border-ink/10 bg-white/75 shadow-soft">
+          <div class="grid-overlay p-6 sm:p-8 lg:p-10">
+            <div class="mb-8 flex flex-wrap items-center gap-3">
+              <span class="rounded-full border border-moss/15 bg-mint px-4 py-1.5 text-xs font-bold uppercase tracking-[0.24em] text-moss">Shared finance, stripped down</span>
+              <span class="rounded-full border border-ink/10 bg-white/80 px-4 py-1.5 text-xs font-semibold text-ink/65">INR only</span>
+            </div>
+            <div class="max-w-3xl">
+              <h1 class="font-display text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
+                Stop chasing screenshots.
+                <span class="text-moss">Splitfree keeps every shared rupee obvious.</span>
+              </h1>
+              <p class="mt-5 max-w-2xl text-base leading-7 text-ink/72 sm:text-lg">
+                Built for trips, flats, couples, and team spends. Add expenses in seconds, see exactly who owes whom, and settle with fewer transactions.
+              </p>
+            </div>
+            <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+              <a href="#dashboard" class="inline-flex items-center justify-center rounded-full bg-moss px-6 py-3.5 text-sm font-bold text-white shadow-panel">Start Tracking</a>
+              <a href="#expense-flow" class="inline-flex items-center justify-center rounded-full border border-ink/12 bg-white/80 px-6 py-3.5 text-sm font-bold text-ink">See Add Expense Flow</a>
+            </div>
+            <div class="mt-8 grid gap-4 sm:grid-cols-3">
+              <div class="rounded-3xl border border-ink/10 bg-white/85 p-4">
+                <p class="text-xs font-bold uppercase tracking-[0.24em] text-ink/45">Fast entry</p>
+                <p class="mt-2 text-sm leading-6 text-ink/75">Equal, exact, percentage, or shares without opening dense calculators.</p>
+              </div>
+              <div class="rounded-3xl border border-ink/10 bg-white/85 p-4">
+                <p class="text-xs font-bold uppercase tracking-[0.24em] text-ink/45">Debt simplification</p>
+                <p class="mt-2 text-sm leading-6 text-ink/75">Surface only the payments that matter, like Aditi owes Rahul ₹640.</p>
+              </div>
+              <div class="rounded-3xl border border-ink/10 bg-white/85 p-4">
+                <p class="text-xs font-bold uppercase tracking-[0.24em] text-ink/45">Calm trust</p>
+                <p class="mt-2 text-sm leading-6 text-ink/75">Warm neutrals and strong contrast make the product feel reliable, not playful.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="flex flex-col gap-6">
+          <div class="rounded-4xl border border-ink/10 bg-ink p-6 text-white shadow-soft">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs uppercase tracking-[0.24em] text-white/55">Hero Snapshot</p>
+                <h2 class="mt-2 font-display text-2xl font-bold">Goa Trip</h2>
+              </div>
+              <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">Pinned</span>
+            </div>
+            <div class="mt-6 rounded-3xl bg-white/8 p-5">
+              <p class="text-sm text-white/60">Overall balance</p>
+              <p class="mt-2 text-4xl font-extrabold">+₹2,480</p>
+              <p class="mt-2 text-sm text-mint">You are owed across 3 groups</p>
+              <div class="mt-5 space-y-3 text-sm">
+                <div class="flex items-center justify-between rounded-2xl bg-white/8 px-4 py-3">
+                  <span>Aditi owes Rahul</span>
+                  <span class="font-bold text-peach">₹640</span>
+                </div>
+                <div class="flex items-center justify-between rounded-2xl bg-white/8 px-4 py-3">
+                  <span>Flat 4B utilities</span>
+                  <span class="font-bold text-mint">Updated 2h ago</span>
+                </div>
+              </div>
+            </div>
+            <div class="mt-5 grid grid-cols-2 gap-3">
+              <button class="rounded-2xl bg-mint px-4 py-3 text-sm font-bold text-moss">Log in</button>
+              <button class="rounded-2xl border border-white/15 px-4 py-3 text-sm font-bold">Sign up</button>
+            </div>
+          </div>
+
+          <div class="rounded-4xl border border-ink/10 bg-white/80 p-6 shadow-soft">
+            <p class="text-xs font-bold uppercase tracking-[0.24em] text-ink/45">Pricing</p>
+            <div class="mt-4 flex items-end justify-between gap-4">
+              <div>
+                <h3 class="font-display text-3xl font-bold">Free</h3>
+                <p class="mt-1 text-sm text-ink/65">Core expense sharing for trips, homes, couples, and one-off splits.</p>
+              </div>
+              <span class="rounded-full bg-sand px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-moss">v1</span>
+            </div>
+            <ul class="mt-5 space-y-3 text-sm text-ink/72">
+              <li class="rounded-2xl bg-foam px-4 py-3">Unlimited groups and expenses</li>
+              <li class="rounded-2xl bg-foam px-4 py-3">Google or email authentication</li>
+              <li class="rounded-2xl bg-foam px-4 py-3">Category analytics and settle-up history</li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+
+      <section id="shell" class="rounded-4xl border border-ink/10 bg-white/75 p-5 shadow-soft sm:p-7">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.26em] text-ink/45">App Shell</p>
+            <h2 class="mt-2 font-display text-3xl font-bold">One layout system for mobile, tablet, and desktop</h2>
+          </div>
+          <p class="max-w-xl text-sm leading-6 text-ink/65">Desktop uses a left rail and roomy content panel. Mobile collapses to a header plus bottom nav, with the primary add action always reachable.</p>
+        </div>
+
+        <div class="mt-8 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+          <div class="rounded-[2.25rem] border border-ink/10 bg-ink p-4 text-white shadow-panel">
+            <div class="mx-auto max-w-sm rounded-[2rem] border border-white/10 bg-[#09120d] p-3">
+              <div class="overflow-hidden rounded-[1.6rem] bg-foam text-ink">
+                <div class="border-b border-ink/8 bg-white/80 px-4 py-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-xs font-bold uppercase tracking-[0.22em] text-ink/45">Mobile App</p>
+                      <h3 class="mt-1 font-display text-xl font-bold">Dashboard</h3>
+                    </div>
+                    <div class="flex gap-2">
+                      <div class="h-10 w-10 rounded-2xl border border-ink/10 bg-mint"></div>
+                      <div class="h-10 w-10 rounded-2xl border border-ink/10 bg-white"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="space-y-4 p-4">
+                  <div class="rounded-3xl bg-moss p-4 text-white">
+                    <p class="text-sm text-white/70">You are owed</p>
+                    <p class="mt-2 text-3xl font-extrabold">₹2,480</p>
+                    <p class="mt-3 text-sm text-mint">Across Goa Trip, Flat 4B, Team Lunch</p>
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <button class="rounded-2xl bg-ink px-4 py-3 text-sm font-bold text-white">New Group</button>
+                    <button class="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-ink shadow-sm">Add Expense</button>
+                  </div>
+                  <div class="rounded-3xl border border-ink/10 bg-white p-4">
+                    <div class="flex items-center justify-between">
+                      <h4 class="font-bold">Pinned groups</h4>
+                      <span class="text-xs font-semibold text-ink/45">2 active</span>
+                    </div>
+                    <div class="mt-3 space-y-3">
+                      <div class="rounded-2xl bg-foam px-4 py-3">
+                        <div class="flex items-center justify-between">
+                          <p class="font-semibold">Goa Trip</p>
+                          <span class="text-sm font-bold text-moss">+₹1,240</span>
+                        </div>
+                        <p class="mt-1 text-xs text-ink/55">4 people • Accommodation and food</p>
+                      </div>
+                      <div class="rounded-2xl bg-foam px-4 py-3">
+                        <div class="flex items-center justify-between">
+                          <p class="font-semibold">Flat 4B</p>
+                          <span class="text-sm font-bold text-danger">-₹520</span>
+                        </div>
+                        <p class="mt-1 text-xs text-ink/55">Utilities cycle closes in 3 days</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-5 border-t border-ink/8 bg-white/90 px-2 py-2 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-ink/45">
+                  <span class="rounded-2xl bg-mint px-2 py-3 text-moss">Home</span>
+                  <span class="px-2 py-3">Groups</span>
+                  <span class="px-2 py-3">Add</span>
+                  <span class="px-2 py-3">Stats</span>
+                  <span class="px-2 py-3">Me</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-[2.25rem] border border-ink/10 bg-[#fbfdf9] p-4 shadow-panel">
+            <div class="grid min-h-[42rem] gap-4 lg:grid-cols-[16rem_1fr]">
+              <aside class="rounded-[1.75rem] bg-ink p-5 text-white">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-mint font-display text-xl font-bold text-moss">S</div>
+                  <div>
+                    <p class="font-display text-lg font-bold">Splitfree</p>
+                    <p class="text-xs uppercase tracking-[0.22em] text-white/45">Desktop Nav</p>
+                  </div>
+                </div>
+                <nav class="mt-8 space-y-2 text-sm font-semibold">
+                  <a href="#dashboard" class="block rounded-2xl bg-white/10 px-4 py-3 text-mint">Dashboard</a>
+                  <a href="#group-detail" class="block rounded-2xl px-4 py-3 text-white/70">Groups</a>
+                  <a href="#expense-flow" class="block rounded-2xl px-4 py-3 text-white/70">Expenses</a>
+                  <a href="#analytics" class="block rounded-2xl px-4 py-3 text-white/70">Analytics</a>
+                  <a href="#profile" class="block rounded-2xl px-4 py-3 text-white/70">Profile</a>
+                </nav>
+                <div class="mt-8 rounded-3xl bg-white/8 p-4">
+                  <p class="text-xs uppercase tracking-[0.22em] text-white/45">Quick actions</p>
+                  <div class="mt-4 space-y-3">
+                    <button class="w-full rounded-2xl bg-mint px-4 py-3 text-sm font-bold text-moss">+ New Group</button>
+                    <button class="w-full rounded-2xl border border-white/12 px-4 py-3 text-sm font-bold">+ Add Expense</button>
+                  </div>
+                </div>
+              </aside>
+              <div class="rounded-[1.75rem] border border-ink/10 bg-white p-5">
+                <div class="flex flex-col gap-3 border-b border-ink/8 pb-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p class="text-xs uppercase tracking-[0.22em] text-ink/45">Authenticated area</p>
+                    <h3 class="mt-1 font-display text-2xl font-bold">Header with search, status, and account</h3>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <div class="rounded-2xl border border-ink/10 bg-foam px-4 py-3 text-sm text-ink/60">Search groups or people</div>
+                    <div class="h-12 w-12 rounded-2xl bg-moss"></div>
+                  </div>
+                </div>
+                <div class="mt-6 grid gap-4 lg:grid-cols-2">
+                  <div class="rounded-3xl bg-sand p-5">
+                    <p class="text-xs uppercase tracking-[0.2em] text-ink/45">Layout rules</p>
+                    <ul class="mt-4 space-y-3 text-sm leading-6 text-ink/70">
+                      <li>12-column desktop feel, but cards stay rounded and tactile.</li>
+                      <li>Primary CTA is solid moss, secondary action is outlined on white.</li>
+                      <li>Top summaries use filled surfaces; detailed modules use white cards.</li>
+                    </ul>
+                  </div>
+                  <div class="rounded-3xl border border-ink/10 bg-foam p-5">
+                    <p class="text-xs uppercase tracking-[0.2em] text-ink/45">Responsive intent</p>
+                    <ul class="mt-4 space-y-3 text-sm leading-6 text-ink/70">
+                      <li>Mobile cards stack with strong top-level numbers first.</li>
+                      <li>Tablet keeps bottom nav until the sidebar has enough space.</li>
+                      <li>Forms stay single-column until there is room to compare related inputs.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="dashboard" class="rounded-4xl border border-ink/10 bg-white/75 p-5 shadow-soft sm:p-7">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.26em] text-ink/45">Dashboard</p>
+            <h2 class="mt-2 font-display text-3xl font-bold">Balance-first overview with quick entry points</h2>
+          </div>
+          <div class="flex gap-3">
+            <button class="rounded-full border border-ink/10 bg-white px-5 py-3 text-sm font-bold">New Group</button>
+            <button class="rounded-full bg-moss px-5 py-3 text-sm font-bold text-white">Add Expense</button>
+          </div>
+        </div>
+        <div class="mt-8 grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+          <div class="space-y-5">
+            <div class="grid gap-4 md:grid-cols-3">
+              <div class="rounded-3xl bg-ink p-5 text-white">
+                <p class="text-sm text-white/60">Net balance</p>
+                <p class="mt-2 text-4xl font-extrabold">+₹2,480</p>
+                <p class="mt-2 text-sm text-mint">You are owed more than you owe</p>
+              </div>
+              <div class="rounded-3xl border border-ink/10 bg-foam p-5">
+                <p class="text-sm text-ink/55">Groups</p>
+                <p class="mt-2 text-4xl font-extrabold">6</p>
+                <p class="mt-2 text-sm text-ink/65">2 pinned, 1 settling soon</p>
+              </div>
+              <div class="rounded-3xl border border-ink/10 bg-white p-5">
+                <p class="text-sm text-ink/55">This month</p>
+                <p class="mt-2 text-4xl font-extrabold">₹18,920</p>
+                <p class="mt-2 text-sm text-ink/65">Food and transport lead</p>
+              </div>
+            </div>
+            <div class="rounded-3xl border border-ink/10 bg-white p-5">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-lg font-bold">Pinned groups</h3>
+                  <p class="text-sm text-ink/55">Your fastest jump-back list</p>
+                </div>
+                <span class="rounded-full bg-sand px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-moss">Priority</span>
+              </div>
+              <div class="mt-5 grid gap-4 md:grid-cols-2">
+                <article class="rounded-3xl bg-foam p-5">
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <p class="font-bold">Goa Trip</p>
+                      <p class="mt-1 text-sm text-ink/55">4 members • Trip</p>
+                    </div>
+                    <span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-moss">Pinned</span>
+                  </div>
+                  <p class="mt-5 text-3xl font-extrabold text-moss">+₹1,240</p>
+                  <p class="mt-2 text-sm text-ink/65">Aditi owes Rahul ₹640</p>
+                </article>
+                <article class="rounded-3xl border border-ink/10 bg-white p-5">
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <p class="font-bold">Flat 4B</p>
+                      <p class="mt-1 text-sm text-ink/55">3 members • Home</p>
+                    </div>
+                    <span class="rounded-full bg-sand px-3 py-1 text-xs font-bold text-ink/65">Utilities</span>
+                  </div>
+                  <p class="mt-5 text-3xl font-extrabold text-danger">-₹520</p>
+                  <p class="mt-2 text-sm text-ink/65">You owe Neeraj for electricity and Wi-Fi</p>
+                </article>
+              </div>
+            </div>
+            <div class="rounded-3xl border border-dashed border-ink/18 bg-white/70 p-5">
+              <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 class="text-lg font-bold">First-time empty state</h3>
+                  <p class="mt-1 max-w-xl text-sm text-ink/60">Show this when the user has no groups yet. Keep it instructional, not decorative.</p>
+                </div>
+                <button class="rounded-full bg-ink px-5 py-3 text-sm font-bold text-white">Create your first group</button>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-5">
+            <div class="rounded-3xl border border-ink/10 bg-white p-5">
+              <h3 class="text-lg font-bold">Recent activity</h3>
+              <div class="mt-4 space-y-3">
+                <div class="rounded-2xl bg-foam px-4 py-3">
+                  <div class="flex items-center justify-between gap-4">
+                    <p class="font-semibold">Dinner at Thalassa</p>
+                    <span class="font-bold">₹3,200</span>
+                  </div>
+                  <p class="mt-1 text-sm text-ink/55">Rahul paid • Split equally among 4 • Goa Trip</p>
+                </div>
+                <div class="rounded-2xl bg-foam px-4 py-3">
+                  <div class="flex items-center justify-between gap-4">
+                    <p class="font-semibold">Electricity bill</p>
+                    <span class="font-bold">₹2,460</span>
+                  </div>
+                  <p class="mt-1 text-sm text-ink/55">Neeraj paid • Exact split • Flat 4B</p>
+                </div>
+                <div class="rounded-2xl bg-foam px-4 py-3">
+                  <div class="flex items-center justify-between gap-4">
+                    <p class="font-semibold">Manual settlement</p>
+                    <span class="font-bold text-moss">₹640 settled</span>
+                  </div>
+                  <p class="mt-1 text-sm text-ink/55">Aditi paid Rahul • Goa Trip</p>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-3xl border border-ink/10 bg-sand p-5">
+              <h3 class="text-lg font-bold">Quick actions module</h3>
+              <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                <button class="rounded-2xl bg-white px-4 py-4 text-left shadow-sm">
+                  <p class="text-sm font-bold">New Group</p>
+                  <p class="mt-1 text-sm text-ink/55">Start a trip, home, couple, or other shared space</p>
+                </button>
+                <button class="rounded-2xl bg-moss px-4 py-4 text-left text-white shadow-panel">
+                  <p class="text-sm font-bold">Add Expense</p>
+                  <p class="mt-1 text-sm text-white/70">Jump straight into the last used group</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="group-flow" class="rounded-4xl border border-ink/10 bg-white/75 p-5 shadow-soft sm:p-7">
+        <div class="max-w-3xl">
+          <p class="text-xs font-bold uppercase tracking-[0.26em] text-ink/45">Create Group Flow</p>
+          <h2 class="mt-2 font-display text-3xl font-bold">Simple onboarding with one decisive form</h2>
+          <p class="mt-3 text-sm leading-6 text-ink/65">Currency is fixed to INR, so the form does not waste space on currency controls. Invites are stacked in the order users are most likely to use them: link first, then username, then phone.</p>
+        </div>
+        <div class="mt-8 grid gap-5 xl:grid-cols-[1fr_0.82fr]">
+          <form class="rounded-3xl border border-ink/10 bg-white p-5">
+            <div class="grid gap-5 md:grid-cols-2">
+              <label class="block md:col-span-2">
+                <span class="text-sm font-bold">Group name</span>
+                <input class="mt-2 w-full rounded-2xl border border-ink/12 bg-foam px-4 py-3.5 outline-none" value="Goa Trip" />
+              </label>
+              <div class="md:col-span-2">
+                <span class="text-sm font-bold">Category</span>
+                <div class="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <button type="button" class="rounded-2xl bg-moss px-4 py-3 text-sm font-bold text-white">Trip</button>
+                  <button type="button" class="rounded-2xl border border-ink/10 px-4 py-3 text-sm font-bold">Home</button>
+                  <button type="button" class="rounded-2xl border border-ink/10 px-4 py-3 text-sm font-bold">Couple</button>
+                  <button type="button" class="rounded-2xl border border-ink/10 px-4 py-3 text-sm font-bold">Other</button>
+                </div>
+              </div>
+              <div class="md:col-span-2">
+                <span class="text-sm font-bold">Cover image</span>
+                <div class="mt-2 flex min-h-44 items-center justify-center rounded-3xl border border-dashed border-ink/18 bg-sand text-center">
+                  <div>
+                    <p class="font-semibold">Upload cover image</p>
+                    <p class="mt-1 text-sm text-ink/55">Beach photo, apartment exterior, or simple color cover</p>
+                  </div>
+                </div>
+              </div>
+              <label class="block">
+                <span class="text-sm font-bold">Invite by link</span>
+                <div class="mt-2 flex rounded-2xl border border-ink/12 bg-foam p-1.5">
+                  <input class="w-full bg-transparent px-3 py-2 text-sm outline-none" value="splitfree.app/join/GOA42" />
+                  <button type="button" class="rounded-xl bg-white px-4 text-sm font-bold shadow-sm">Copy</button>
+                </div>
+              </label>
+              <label class="block">
+                <span class="text-sm font-bold">Invite by username</span>
+                <input class="mt-2 w-full rounded-2xl border border-ink/12 bg-foam px-4 py-3.5 outline-none" value="@aditi.mehta, @kabir.s" />
+              </label>
+              <label class="block md:col-span-2">
+                <span class="text-sm font-bold">Invite by phone</span>
+                <input class="mt-2 w-full rounded-2xl border border-ink/12 bg-foam px-4 py-3.5 outline-none" value="+91 98765 43210, +91 99888 77665" />
+              </label>
+            </div>
+            <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button type="button" class="rounded-full border border-ink/10 px-5 py-3 text-sm font-bold">Save draft</button>
+              <button type="button" class="rounded-full bg-moss px-5 py-3 text-sm font-bold text-white">Create Group</button>
+            </div>
+          </form>
+          <div class="space-y-5">
+            <div class="rounded-3xl bg-ink p-5 text-white">
+              <p class="text-xs uppercase tracking-[0.22em] text-white/45">Flow note</p>
+              <h3 class="mt-2 text-xl font-bold">Invite options should feel optional, not mandatory</h3>
+              <p class="mt-3 text-sm leading-6 text-white/68">Users can create the group first and add people later. The UI should never make invite completion feel like a blocker.</p>
+            </div>
+            <div class="rounded-3xl border border-ink/10 bg-foam p-5">
+              <p class="text-xs uppercase tracking-[0.22em] text-ink/45">Field treatment</p>
+              <ul class="mt-4 space-y-3 text-sm leading-6 text-ink/70">
+                <li>Large labels with soft filled inputs for speed on mobile.</li>
+                <li>Rounded 2xl and 3xl surfaces keep the product warm without looking toy-like.</li>
+                <li>Preview cards should mirror the visual hierarchy from the dashboard.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="group-detail" class="rounded-4xl border border-ink/10 bg-white/75 p-5 shadow-soft sm:p-7">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.26em] text-ink/45">Group Detail</p>
+            <h2 class="mt-2 font-display text-3xl font-bold">Summary, balances, members, and expense feed in one scan</h2>
+          </div>
+          <div class="flex gap-3">
+            <button class="rounded-full border border-ink/10 bg-white px-5 py-3 text-sm font-bold">Settle Up</button>
+            <button class="rounded-full bg-moss px-5 py-3 text-sm font-bold text-white">Add Expense</button>
+          </div>
+        </div>
+        <div class="mt-8 grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+          <div class="space-y-5">
+            <div class="rounded-3xl bg-ink p-6 text-white">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="text-xs uppercase tracking-[0.22em] text-white/45">Trip group</p>
+                  <h3 class="mt-2 font-display text-3xl font-bold">Goa Trip</h3>
+                  <p class="mt-2 text-sm text-white/68">4 members • 16 expenses • Updated 2 hours ago</p>
+                </div>
+                <span class="rounded-full bg-mint px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-moss">Pinned</span>
+              </div>
+              <div class="mt-6 grid gap-4 sm:grid-cols-2">
+                <div class="rounded-3xl bg-white/10 p-4">
+                  <p class="text-sm text-white/60">Total spent</p>
+                  <p class="mt-2 text-3xl font-extrabold">₹24,860</p>
+                </div>
+                <div class="rounded-3xl bg-white/10 p-4">
+                  <p class="text-sm text-white/60">Your position</p>
+                  <p class="mt-2 text-3xl font-extrabold text-mint">+₹1,240</p>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-3xl border border-ink/10 bg-white p-5">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold">Running balances</h3>
+                <span class="text-xs font-semibold uppercase tracking-[0.18em] text-ink/45">Simplified</span>
+              </div>
+              <div class="mt-4 space-y-3">
+                <div class="rounded-2xl bg-foam px-4 py-3">
+                  <div class="flex items-center justify-between gap-4">
+                    <p class="font-semibold">Aditi owes Rahul</p>
+                    <span class="font-bold text-moss">₹640</span>
+                  </div>
+                </div>
+                <div class="rounded-2xl bg-foam px-4 py-3">
+                  <div class="flex items-center justify-between gap-4">
+                    <p class="font-semibold">Kabir owes Rahul</p>
+                    <span class="font-bold text-moss">₹400</span>
+                  </div>
+                </div>
+                <div class="rounded-2xl bg-foam px-4 py-3">
+                  <div class="flex items-center justify-between gap-4">
+                    <p class="font-semibold">Maya owes Aditi</p>
+                    <span class="font-bold text-moss">₹220</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-3xl border border-ink/10 bg-sand p-5">
+              <h3 class="text-lg font-bold">Members</h3>
+              <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                <div class="rounded-2xl bg-white px-4 py-3">Rahul • Admin</div>
+                <div class="rounded-2xl bg-white px-4 py-3">Aditi • Member</div>
+                <div class="rounded-2xl bg-white px-4 py-3">Kabir • Member</div>
+                <div class="rounded-2xl bg-white px-4 py-3">Maya • Member</div>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-3xl border border-ink/10 bg-white p-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-lg font-bold">Expense feed</h3>
+                <p class="text-sm text-ink/55">Latest entries, notes, categories, and receipt states</p>
+              </div>
+              <span class="rounded-full bg-foam px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-ink/55">March</span>
+            </div>
+            <div class="mt-5 space-y-4">
+              <article class="rounded-3xl bg-foam p-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p class="font-bold">Scooter rental</p>
+                    <p class="mt-1 text-sm text-ink/55">Transport • Paid by Rahul • Shares split</p>
+                    <p class="mt-2 text-sm text-ink/68">2 scooters for the day, shares 2:1:1:0</p>
+                  </div>
+                  <div class="text-left sm:text-right">
+                    <p class="text-lg font-extrabold">₹1,800</p>
+                    <p class="text-sm text-ink/55">19 Mar</p>
+                  </div>
+                </div>
+              </article>
+              <article class="rounded-3xl bg-foam p-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p class="font-bold">Dinner at Thalassa</p>
+                    <p class="mt-1 text-sm text-ink/55">Food • Paid by Aditi • Equal split</p>
+                    <p class="mt-2 text-sm text-ink/68">Receipt attached • Sunset dinner on the final night</p>
+                  </div>
+                  <div class="text-left sm:text-right">
+                    <p class="text-lg font-extrabold">₹3,200</p>
+                    <p class="text-sm text-ink/55">18 Mar</p>
+                  </div>
+                </div>
+              </article>
+              <article class="rounded-3xl border border-dashed border-ink/15 bg-white p-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p class="font-bold">No expenses yet state</p>
+                    <p class="mt-1 text-sm text-ink/55">Use this only for newly created groups</p>
+                  </div>
+                  <button class="rounded-full bg-ink px-4 py-2 text-sm font-bold text-white">Add first expense</button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="expense-flow" class="rounded-4xl border border-ink/10 bg-white/75 p-5 shadow-soft sm:p-7">
+        <div class="max-w-3xl">
+          <p class="text-xs font-bold uppercase tracking-[0.26em] text-ink/45">Add Expense Flow</p>
+          <h2 class="mt-2 font-display text-3xl font-bold">Dense where calculation matters, spacious where trust matters</h2>
+          <p class="mt-3 text-sm leading-6 text-ink/65">The amount and split logic are the focus. Category, note, and receipt are secondary but visible. Split method cards make the four core calculation paths easy to compare.</p>
+        </div>
+        <div class="mt-8 grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+          <form class="rounded-3xl border border-ink/10 bg-white p-5">
+            <div class="grid gap-5 md:grid-cols-2">
+              <label class="block md:col-span-2">
+                <span class="text-sm font-bold">Description</span>
+                <input class="mt-2 w-full rounded-2xl border border-ink/12 bg-foam px-4 py-3.5 outline-none" value="Dinner at Thalassa" />
+              </label>
+              <label class="block">
+                <span class="text-sm font-bold">Amount (INR)</span>
+                <input class="mt-2 w-full rounded-2xl border border-ink/12 bg-foam px-4 py-3.5 text-2xl font-extrabold outline-none" value="3200" />
+              </label>
+              <label class="block">
+                <span class="text-sm font-bold">Date</span>
+                <input class="mt-2 w-full rounded-2xl border border-ink/12 bg-foam px-4 py-3.5 outline-none" value="2026-03-18" />
+              </label>
+              <label class="block">
+                <span class="text-sm font-bold">Payer</span>
+                <div class="mt-2 rounded-2xl border border-ink/12 bg-foam px-4 py-3.5">Aditi</div>
+              </label>
+              <label class="block">
+                <span class="text-sm font-bold">Participants</span>
+                <div class="mt-2 rounded-2xl border border-ink/12 bg-foam px-4 py-3.5">Rahul, Aditi, Kabir, Maya</div>
+              </label>
+              <div class="md:col-span-2">
+                <span class="text-sm font-bold">Split type</span>
+                <div class="mt-2 grid gap-3 sm:grid-cols-2">
+                  <button type="button" class="rounded-2xl bg-moss px-4 py-4 text-left text-white">
+                    <p class="font-bold">Equal</p>
+                    <p class="mt-1 text-sm text-white/70">Everyone pays the same amount</p>
+                  </button>
+                  <button type="button" class="rounded-2xl border border-ink/10 px-4 py-4 text-left">
+                    <p class="font-bold">Exact</p>
+                    <p class="mt-1 text-sm text-ink/55">Enter exact rupee amounts</p>
+                  </button>
+                  <button type="button" class="rounded-2xl border border-ink/10 px-4 py-4 text-left">
+                    <p class="font-bold">Percentage</p>
+                    <p class="mt-1 text-sm text-ink/55">Useful when shares are weighted by usage</p>
+                  </button>
+                  <button type="button" class="rounded-2xl border border-ink/10 px-4 py-4 text-left">
+                    <p class="font-bold">Shares</p>
+                    <p class="mt-1 text-sm text-ink/55">Split using ratios like 2:1:1</p>
+                  </button>
+                </div>
+              </div>
+              <label class="block">
+                <span class="text-sm font-bold">Category</span>
+                <div class="mt-2 rounded-2xl border border-ink/12 bg-foam px-4 py-3.5">Food</div>
+              </label>
+              <label class="block">
+                <span class="text-sm font-bold">Note</span>
+                <input class="mt-2 w-full rounded-2xl border border-ink/12 bg-foam px-4 py-3.5 outline-none" value="Sunset dinner with shared starters" />
+              </label>
+              <div class="md:col-span-2">
+                <span class="text-sm font-bold">Receipt image</span>
+                <div class="mt-2 flex min-h-32 items-center justify-center rounded-3xl border border-dashed border-ink/18 bg-sand text-center">
+                  <div>
+                    <p class="font-semibold">Drop receipt or upload image</p>
+                    <p class="mt-1 text-sm text-ink/55">Optional for v1, but visible enough to invite use</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button type="button" class="rounded-full border border-ink/10 px-5 py-3 text-sm font-bold">Cancel</button>
+              <button type="button" class="rounded-full bg-moss px-5 py-3 text-sm font-bold text-white">Save Expense</button>
+            </div>
+          </form>
+
+          <div class="space-y-5">
+            <div class="rounded-3xl border border-ink/10 bg-foam p-5">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold">Equal split preview</h3>
+                <span class="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-moss">Live calc</span>
+              </div>
+              <div class="mt-4 space-y-3">
+                <div class="flex items-center justify-between rounded-2xl bg-white px-4 py-3"><span>Rahul</span><span class="font-bold">₹800</span></div>
+                <div class="flex items-center justify-between rounded-2xl bg-white px-4 py-3"><span>Aditi</span><span class="font-bold">₹800</span></div>
+                <div class="flex items-center justify-between rounded-2xl bg-white px-4 py-3"><span>Kabir</span><span class="font-bold">₹800</span></div>
+                <div class="flex items-center justify-between rounded-2xl bg-white px-4 py-3"><span>Maya</span><span class="font-bold">₹800</span></div>
+              </div>
+            </div>
+            <div class="rounded-3xl bg-ink p-5 text-white">
+              <p class="text-xs uppercase tracking-[0.22em] text-white/45">Interaction rule</p>
+              <p class="mt-3 text-sm leading-6 text-white/68">When users switch split methods, keep participants visible and only swap the input treatment below. Do not move the save button or hide the summary.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="settle-flow" class="rounded-4xl border border-ink/10 bg-white/75 p-5 shadow-soft sm:p-7">
+        <div class="max-w-3xl">
+          <p class="text-xs font-bold uppercase tracking-[0.26em] text-ink/45">Settle Up Flow</p>
+          <h2 class="mt-2 font-display text-3xl font-bold">Reduce decisions: show suggested settlements first</h2>
+          <p class="mt-3 text-sm leading-6 text-ink/65">This surface is about clarity, not bookkeeping. Suggested debt simplification should be the hero, while manual settlement stays present as a secondary path.</p>
+        </div>
+        <div class="mt-8 grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+          <div class="space-y-5">
+            <div class="rounded-3xl bg-moss p-5 text-white">
+              <p class="text-xs uppercase tracking-[0.22em] text-white/55">Suggested settlements</p>
+              <div class="mt-4 space-y-3">
+                <div class="rounded-2xl bg-white/12 px-4 py-3">
+                  <div class="flex items-center justify-between">
+                    <span>Aditi pays Rahul</span>
+                    <span class="font-bold">₹640</span>
+                  </div>
+                </div>
+                <div class="rounded-2xl bg-white/12 px-4 py-3">
+                  <div class="flex items-center justify-between">
+                    <span>Kabir pays Rahul</span>
+                    <span class="font-bold">₹400</span>
+                  </div>
+                </div>
+                <div class="rounded-2xl bg-white/12 px-4 py-3">
+                  <div class="flex items-center justify-between">
+                    <span>Maya pays Aditi</span>
+                    <span class="font-bold">₹220</span>
+                  </div>
+                </div>
+              </div>
+              <button class="mt-5 w-full rounded-2xl bg-white px-4 py-3 text-sm font-bold text-moss">Settle All</button>
+            </div>
+            <div class="rounded-3xl border border-ink/10 bg-white p-5">
+              <h3 class="text-lg font-bold">Settle-all complete state</h3>
+              <div class="mt-4 rounded-3xl bg-foam p-5 text-center">
+                <p class="text-sm text-ink/55">All balances cleared</p>
+                <p class="mt-2 font-display text-3xl font-bold text-moss">Nothing pending</p>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-3xl border border-ink/10 bg-white p-5">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-bold">Record manual settlement</h3>
+              <span class="text-xs font-semibold uppercase tracking-[0.18em] text-ink/45">Fallback path</span>
+            </div>
+            <div class="mt-5 grid gap-5 md:grid-cols-2">
+              <label class="block">
+                <span class="text-sm font-bold">Paid by</span>
+                <div class="mt-2 rounded-2xl border border-ink/12 bg-foam px-4 py-3.5">Aditi</div>
+              </label>
+              <label class="block">
+                <span class="text-sm font-bold">Paid to</span>
+                <div class="mt-2 rounded-2xl border border-ink/12 bg-foam px-4 py-3.5">Rahul</div>
+              </label>
+              <label class="block">
+                <span class="text-sm font-bold">Amount (INR)</span>
+                <input class="mt-2 w-full rounded-2xl border border-ink/12 bg-foam px-4 py-3.5 outline-none" value="640" />
+              </label>
+              <label class="block">
+                <span class="text-sm font-bold">Date</span>
+                <input class="mt-2 w-full rounded-2xl border border-ink/12 bg-foam px-4 py-3.5 outline-none" value="2026-03-19" />
+              </label>
+              <label class="block md:col-span-2">
+                <span class="text-sm font-bold">Note</span>
+                <input class="mt-2 w-full rounded-2xl border border-ink/12 bg-foam px-4 py-3.5 outline-none" value="UPI transfer after lunch" />
+              </label>
+            </div>
+            <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button class="rounded-full border border-ink/10 px-5 py-3 text-sm font-bold">Cancel</button>
+              <button class="rounded-full bg-ink px-5 py-3 text-sm font-bold text-white">Record Settlement</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="analytics" class="rounded-4xl border border-ink/10 bg-white/75 p-5 shadow-soft sm:p-7">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.26em] text-ink/45">Analytics / Reports</p>
+            <h2 class="mt-2 font-display text-3xl font-bold">Soft charts, strong summaries</h2>
+          </div>
+          <p class="max-w-xl text-sm leading-6 text-ink/65">Charts should be supportive, not the entire page. The spend totals, trend cues, and top categories carry most of the value.</p>
+        </div>
+        <div class="mt-8 grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+          <div class="rounded-3xl border border-ink/10 bg-white p-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-lg font-bold">Monthly category breakdown</h3>
+                <p class="text-sm text-ink/55">March 2026</p>
+              </div>
+              <span class="rounded-full bg-foam px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-moss">INR</span>
+            </div>
+            <div class="mt-6 grid min-h-[20rem] grid-cols-5 items-end gap-4">
+              <div class="chart-bar flex flex-col items-center gap-3"><span class="h-32 w-full bg-moss"></span><p class="text-xs font-bold uppercase tracking-[0.15em] text-ink/55">Food</p></div>
+              <div class="chart-bar flex flex-col items-center gap-3"><span class="h-24 w-full bg-[#6ba889]"></span><p class="text-xs font-bold uppercase tracking-[0.15em] text-ink/55">Transport</p></div>
+              <div class="chart-bar flex flex-col items-center gap-3"><span class="h-40 w-full bg-peach"></span><p class="text-xs font-bold uppercase tracking-[0.15em] text-ink/55">Stay</p></div>
+              <div class="chart-bar flex flex-col items-center gap-3"><span class="h-16 w-full bg-[#f0b76a]"></span><p class="text-xs font-bold uppercase tracking-[0.15em] text-ink/55">Shopping</p></div>
+              <div class="chart-bar flex flex-col items-center gap-3"><span class="h-20 w-full bg-[#90d5a9]"></span><p class="text-xs font-bold uppercase tracking-[0.15em] text-ink/55">Other</p></div>
+            </div>
+          </div>
+          <div class="space-y-5">
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div class="rounded-3xl bg-ink p-5 text-white">
+                <p class="text-sm text-white/55">Month total</p>
+                <p class="mt-2 text-4xl font-extrabold">₹18,920</p>
+                <p class="mt-2 text-sm text-mint">+12% vs February</p>
+              </div>
+              <div class="rounded-3xl border border-ink/10 bg-foam p-5">
+                <p class="text-sm text-ink/55">Top group</p>
+                <p class="mt-2 text-3xl font-extrabold">Goa Trip</p>
+                <p class="mt-2 text-sm text-ink/65">₹9,860 spent</p>
+              </div>
+            </div>
+            <div class="rounded-3xl border border-ink/10 bg-white p-5">
+              <h3 class="text-lg font-bold">Group spending summary</h3>
+              <div class="mt-4 space-y-3">
+                <div class="flex items-center justify-between rounded-2xl bg-foam px-4 py-3"><span>Goa Trip</span><span class="font-bold">₹9,860</span></div>
+                <div class="flex items-center justify-between rounded-2xl bg-foam px-4 py-3"><span>Flat 4B</span><span class="font-bold">₹5,420</span></div>
+                <div class="flex items-center justify-between rounded-2xl bg-foam px-4 py-3"><span>Team Lunch</span><span class="font-bold">₹2,680</span></div>
+                <div class="flex items-center justify-between rounded-2xl bg-foam px-4 py-3"><span>Weekend Drive</span><span class="font-bold">₹960</span></div>
+              </div>
+            </div>
+            <div class="rounded-3xl border border-ink/10 bg-sand p-5">
+              <h3 class="text-lg font-bold">Insight cards</h3>
+              <p class="mt-2 text-sm text-ink/65">Examples: “Food drove 34% of your spend” or “Utilities stayed flat for 3 months”.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="profile" class="rounded-4xl border border-ink/10 bg-white/75 p-5 shadow-soft sm:p-7">
+        <div class="max-w-3xl">
+          <p class="text-xs font-bold uppercase tracking-[0.26em] text-ink/45">Profile / Account</p>
+          <h2 class="mt-2 font-display text-3xl font-bold">Human, compact, and clearly account-oriented</h2>
+          <p class="mt-3 text-sm leading-6 text-ink/65">This page should feel more like settings than social media. Profile identity sits at the top, but auth and preferences remain easy to audit.</p>
+        </div>
+        <div class="mt-8 grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+          <div class="rounded-3xl bg-ink p-6 text-white">
+            <div class="flex items-center gap-4">
+              <div class="flex h-20 w-20 items-center justify-center rounded-3xl bg-mint font-display text-3xl font-bold text-moss">R</div>
+              <div>
+                <h3 class="font-display text-3xl font-bold">Rahul Verma</h3>
+                <p class="mt-1 text-sm text-white/68">Trips, shared homes, and lunch tabs without chaos.</p>
+              </div>
+            </div>
+            <div class="mt-6 space-y-3 text-sm">
+              <div class="rounded-2xl bg-white/10 px-4 py-3">Email: rahul@example.com</div>
+              <div class="rounded-2xl bg-white/10 px-4 py-3">Primary auth: Google</div>
+              <div class="rounded-2xl bg-white/10 px-4 py-3">Default locale: India</div>
+            </div>
+          </div>
+          <div class="space-y-5">
+            <div class="rounded-3xl border border-ink/10 bg-white p-5">
+              <h3 class="text-lg font-bold">Profile details</h3>
+              <div class="mt-5 grid gap-5 md:grid-cols-2">
+                <label class="block">
+                  <span class="text-sm font-bold">Name</span>
+                  <input class="mt-2 w-full rounded-2xl border border-ink/12 bg-foam px-4 py-3.5 outline-none" value="Rahul Verma" />
+                </label>
+                <label class="block">
+                  <span class="text-sm font-bold">Avatar</span>
+                  <div class="mt-2 rounded-2xl border border-dashed border-ink/18 bg-sand px-4 py-3.5 text-sm text-ink/55">Upload image</div>
+                </label>
+                <label class="block md:col-span-2">
+                  <span class="text-sm font-bold">Description</span>
+                  <textarea class="mt-2 min-h-28 w-full rounded-2xl border border-ink/12 bg-foam px-4 py-3.5 outline-none">Trips, shared homes, and lunch tabs without chaos.</textarea>
+                </label>
+              </div>
+            </div>
+            <div class="rounded-3xl border border-ink/10 bg-foam p-5">
+              <h3 class="text-lg font-bold">Account settings</h3>
+              <div class="mt-4 grid gap-3">
+                <div class="rounded-2xl bg-white px-4 py-3">Change password</div>
+                <div class="rounded-2xl bg-white px-4 py-3">Manage connected Google account</div>
+                <div class="rounded-2xl bg-white px-4 py-3">Notification preferences</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
