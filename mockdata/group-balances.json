@@ -1,88 +1,141 @@
 {
-  "goa-getaway": [
-    {
-      "userId": "u-sakshi",
-      "name": "Sakshi Gupta",
-      "email": "sakshi@example.com",
-      "avatarUrl": null,
-      "role": "admin",
-      "netBalance": 2840.5
-    },
-    {
-      "userId": "u-rahul",
-      "name": "Rahul Mehta",
-      "email": "rahul@example.com",
-      "avatarUrl": null,
-      "role": "member",
-      "netBalance": -1420.25
-    },
-    {
-      "userId": "u-aditi",
-      "name": "Aditi Rao",
-      "email": "aditi@example.com",
-      "avatarUrl": null,
-      "role": "member",
-      "netBalance": -665.25
-    },
-    {
-      "userId": "u-neha",
-      "name": "Neha Kapoor",
-      "email": "neha@example.com",
-      "avatarUrl": null,
-      "role": "member",
-      "netBalance": -455
-    },
-    {
-      "userId": "u-karan",
-      "name": "Karan Sethi",
-      "email": "karan@example.com",
-      "avatarUrl": null,
-      "role": "member",
-      "netBalance": -300
-    }
-  ],
-  "flat-2026": [
-    {
-      "userId": "u-sakshi",
-      "name": "Sakshi Gupta",
-      "email": "sakshi@example.com",
-      "avatarUrl": null,
-      "role": "member",
-      "netBalance": -1265
-    },
-    {
-      "userId": "u-ria",
-      "name": "Ria Sen",
-      "email": "ria@example.com",
-      "avatarUrl": null,
-      "role": "admin",
-      "netBalance": 890
-    },
-    {
-      "userId": "u-mohit",
-      "name": "Mohit Arora",
-      "email": "mohit@example.com",
-      "avatarUrl": null,
-      "role": "member",
-      "netBalance": 375
-    }
-  ],
-  "date-nights": [
-    {
-      "userId": "u-sakshi",
-      "name": "Sakshi Gupta",
-      "email": "sakshi@example.com",
-      "avatarUrl": null,
-      "role": "member",
-      "netBalance": 0
-    },
-    {
-      "userId": "u-arjun",
-      "name": "Arjun Malhotra",
-      "email": "arjun@example.com",
-      "avatarUrl": null,
-      "role": "member",
-      "netBalance": 0
-    }
-  ]
+  "goa-getaway": {
+    "balances": [
+      {
+        "userId": "u-sakshi",
+        "name": "Sakshi Gupta",
+        "email": "sakshi@example.com",
+        "avatarUrl": null,
+        "role": "admin",
+        "netBalance": 2840.5
+      },
+      {
+        "userId": "u-rahul",
+        "name": "Rahul Mehta",
+        "email": "rahul@example.com",
+        "avatarUrl": null,
+        "role": "member",
+        "netBalance": -1420.25
+      },
+      {
+        "userId": "u-aditi",
+        "name": "Aditi Rao",
+        "email": "aditi@example.com",
+        "avatarUrl": null,
+        "role": "member",
+        "netBalance": -665.25
+      },
+      {
+        "userId": "u-neha",
+        "name": "Neha Kapoor",
+        "email": "neha@example.com",
+        "avatarUrl": null,
+        "role": "member",
+        "netBalance": -455
+      },
+      {
+        "userId": "u-karan",
+        "name": "Karan Sethi",
+        "email": "karan@example.com",
+        "avatarUrl": null,
+        "role": "member",
+        "netBalance": -300
+      }
+    ],
+    "simplifiedDebts": [
+      {
+        "fromUserId": "u-rahul",
+        "fromName": "Rahul Mehta",
+        "toUserId": "u-sakshi",
+        "toName": "Sakshi Gupta",
+        "amount": 1420.25
+      },
+      {
+        "fromUserId": "u-aditi",
+        "fromName": "Aditi Rao",
+        "toUserId": "u-sakshi",
+        "toName": "Sakshi Gupta",
+        "amount": 665.25
+      },
+      {
+        "fromUserId": "u-neha",
+        "fromName": "Neha Kapoor",
+        "toUserId": "u-sakshi",
+        "toName": "Sakshi Gupta",
+        "amount": 455
+      },
+      {
+        "fromUserId": "u-karan",
+        "fromName": "Karan Sethi",
+        "toUserId": "u-sakshi",
+        "toName": "Sakshi Gupta",
+        "amount": 300
+      }
+    ]
+  },
+  "flat-2026": {
+    "balances": [
+      {
+        "userId": "u-sakshi",
+        "name": "Sakshi Gupta",
+        "email": "sakshi@example.com",
+        "avatarUrl": null,
+        "role": "member",
+        "netBalance": -1265
+      },
+      {
+        "userId": "u-ria",
+        "name": "Ria Sen",
+        "email": "ria@example.com",
+        "avatarUrl": null,
+        "role": "admin",
+        "netBalance": 890
+      },
+      {
+        "userId": "u-mohit",
+        "name": "Mohit Arora",
+        "email": "mohit@example.com",
+        "avatarUrl": null,
+        "role": "member",
+        "netBalance": 375
+      }
+    ],
+    "simplifiedDebts": [
+      {
+        "fromUserId": "u-sakshi",
+        "fromName": "Sakshi Gupta",
+        "toUserId": "u-ria",
+        "toName": "Ria Sen",
+        "amount": 890
+      },
+      {
+        "fromUserId": "u-sakshi",
+        "fromName": "Sakshi Gupta",
+        "toUserId": "u-mohit",
+        "toName": "Mohit Arora",
+        "amount": 375
+      }
+    ]
+  },
+  "date-nights": {
+    "balances": [
+      {
+        "userId": "u-sakshi",
+        "name": "Sakshi Gupta",
+        "email": "sakshi@example.com",
+        "avatarUrl": null,
+        "role": "member",
+        "netBalance": 0
+      },
+      {
+        "userId": "u-arjun",
+        "name": "Arjun Malhotra",
+        "email": "arjun@example.com",
+        "avatarUrl": null,
+        "role": "member",
+        "netBalance": 0
+      }
+    ],
+    "simplifiedDebts": []
+  }
 }
