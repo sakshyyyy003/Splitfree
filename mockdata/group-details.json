@@ -11,8 +11,8 @@
     "isArchived": false,
     "createdAt": "2026-03-01T10:00:00.000Z",
     "updatedAt": "2026-03-18T08:30:00.000Z",
-    "expenseCount": 16,
-    "totalSpent": 48760,
+    "expenseCount": 7,
+    "totalSpent": 41120,
     "settledAmount": 12240,
     "coverImageUrl": null
   },
@@ -28,8 +28,8 @@
     "isArchived": false,
     "createdAt": "2026-01-05T12:00:00.000Z",
     "updatedAt": "2026-03-17T18:15:00.000Z",
-    "expenseCount": 11,
-    "totalSpent": 68940,
+    "expenseCount": 5,
+    "totalSpent": 44963,
     "settledAmount": 20400,
     "coverImageUrl": null
   },
@@ -45,8 +45,8 @@
     "isArchived": false,
     "createdAt": "2026-02-10T09:45:00.000Z",
     "updatedAt": "2026-03-16T20:05:00.000Z",
-    "expenseCount": 8,
-    "totalSpent": 17850,
+    "expenseCount": 4,
+    "totalSpent": 10490,
     "settledAmount": 6240,
     "coverImageUrl": null
   }

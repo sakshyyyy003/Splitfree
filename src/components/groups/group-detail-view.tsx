@@ -22,6 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { GroupExpenseList } from "@/components/groups/group-expense-list";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type GroupDetailViewProps = {
@@ -152,55 +153,11 @@ export function GroupDetailView({
             <CardHeader>
               <CardTitle>Expense feed</CardTitle>
               <CardDescription>
-                Recent group spends, who paid, and how each bill was split.
+                Recent group spends with category icons and mock pagination.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {expenses.map((expense) => (
-                <div
-                  key={expense.id}
-                  className="rounded-[1.5rem] border border-border/70 bg-background/85 p-4"
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-base font-semibold">{expense.title}</p>
-                        <Badge variant="outline">
-                          {categoryLabels[expense.category] ?? expense.category}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Paid by {expense.paidByName} on{" "}
-                        {dateFormatter.format(new Date(expense.incurredOn))}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {expense.splitSummary}
-                      </p>
-                      {expense.notes ? (
-                        <p className="text-sm leading-6 text-foreground/80">
-                          {expense.notes}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <div className="shrink-0 rounded-2xl bg-secondary px-4 py-3 text-right">
-                      <p className="text-lg font-bold">
-                        {formatCurrency(expense.amount, expense.currency)}
-                      </p>
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                        Added {dateTimeFormatter.format(new Date(expense.createdAt))}
-                      </p>
-                      <Link
-                        href={`/groups/${group.id}/expenses/${expense.id}`}
-                        className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
-                      >
-                        View details
-                        <ArrowUpRight className="size-3.5" />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <CardContent>
+              <GroupExpenseList groupId={group.id} expenses={expenses} />
             </CardContent>
           </Card>
         </TabsContent>

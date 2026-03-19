@@ -51,6 +51,45 @@
       "incurredOn": "2026-03-17",
       "createdAt": "2026-03-17T09:05:00.000Z",
       "notes": null
+    },
+    {
+      "id": "exp-goa-breakfast",
+      "title": "Cafe breakfast run",
+      "amount": 1310,
+      "currency": "INR",
+      "category": "food",
+      "paidByUserId": "u-neha",
+      "paidByName": "Neha Kapoor",
+      "splitSummary": "Equal split across everyone at the table",
+      "incurredOn": "2026-03-14",
+      "createdAt": "2026-03-14T09:10:00.000Z",
+      "notes": "Coffee, eggs, and pastries before checkout."
+    },
+    {
+      "id": "exp-goa-snorkeling",
+      "title": "Snorkeling tickets",
+      "amount": 5240,
+      "currency": "INR",
+      "category": "entertainment",
+      "paidByUserId": "u-sakshi",
+      "paidByName": "Sakshi Gupta",
+      "splitSummary": "Only the four people who joined the activity were included",
+      "incurredOn": "2026-03-15",
+      "createdAt": "2026-03-15T13:35:00.000Z",
+      "notes": "Includes gear rental and boat transfer."
+    },
+    {
+      "id": "exp-goa-cab",
+      "title": "Late-night cab back to villa",
+      "amount": 2940,
+      "currency": "INR",
+      "category": "transport",
+      "paidByUserId": "u-karan",
+      "paidByName": "Karan Sethi",
+      "splitSummary": "Split equally across the four people in the cab",
+      "incurredOn": "2026-03-17",
+      "createdAt": "2026-03-17T23:40:00.000Z",
+      "notes": "Post-dinner return trip with surge pricing."
     }
   ],
   "flat-2026": [
@@ -92,6 +131,32 @@
       "incurredOn": "2026-03-12",
       "createdAt": "2026-03-12T21:30:00.000Z",
       "notes": "Includes cleaning supplies."
+    },
+    {
+      "id": "exp-flat-electricity",
+      "title": "Electricity bill",
+      "amount": 2389,
+      "currency": "INR",
+      "category": "utilities",
+      "paidByUserId": "u-ria",
+      "paidByName": "Ria Sen",
+      "splitSummary": "Equal split across 3 flatmates",
+      "incurredOn": "2026-03-10",
+      "createdAt": "2026-03-10T08:15:00.000Z",
+      "notes": "Higher usage due to AC running most nights."
+    },
+    {
+      "id": "exp-flat-water",
+      "title": "Water tanker refill",
+      "amount": 1250,
+      "currency": "INR",
+      "category": "utilities",
+      "paidByUserId": "u-mohit",
+      "paidByName": "Mohit Arora",
+      "splitSummary": "Equal split across 3 flatmates",
+      "incurredOn": "2026-03-08",
+      "createdAt": "2026-03-08T14:05:00.000Z",
+      "notes": null
     }
   ],
   "date-nights": [
@@ -133,6 +198,19 @@
       "incurredOn": "2026-03-14",
       "createdAt": "2026-03-14T23:18:00.000Z",
       "notes": null
+    },
+    {
+      "id": "exp-date-movie",
+      "title": "Movie night",
+      "amount": 1700,
+      "currency": "INR",
+      "category": "entertainment",
+      "paidByUserId": "u-sakshi",
+      "paidByName": "Sakshi Gupta",
+      "splitSummary": "Equal split for two tickets and snacks",
+      "incurredOn": "2026-03-09",
+      "createdAt": "2026-03-09T21:15:00.000Z",
+      "notes": "Included caramel popcorn and cold coffee."
     }
   ]
 }
