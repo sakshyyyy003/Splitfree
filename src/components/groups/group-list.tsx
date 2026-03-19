@@ -1,6 +1,6 @@
 import { Coins, Pin, UsersRound } from "lucide-react";
 
-import type { UserGroupSummary } from "@/lib/queries/groups";
+import type { DashboardGroup } from "@/types/dashboard";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 
 type GroupListProps = {
-  groups: UserGroupSummary[];
+  groups: DashboardGroup[];
 };
 
 const balanceFormatter = new Intl.NumberFormat("en-IN", {

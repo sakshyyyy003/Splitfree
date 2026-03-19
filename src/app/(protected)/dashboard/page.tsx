@@ -1,12 +1,12 @@
-import { requireAuthenticatedUser } from "@/lib/auth/user";
-import { getUserGroups } from "@/lib/queries/groups";
+import dashboardGroups from "../../../../mockdata/dashboard-groups.json";
+import dashboardUser from "../../../../mockdata/dashboard-user.json";
+
 import { GroupList } from "@/components/groups/group-list";
+import type { DashboardGroup } from "@/types/dashboard";
 
 export default async function DashboardPage() {
-  const user = await requireAuthenticatedUser();
-  const groups = await getUserGroups(user.id);
-
-  const displayName = user.user_metadata?.name ?? user.email ?? "there";
+  const groups = dashboardGroups as DashboardGroup[];
+  const displayName = dashboardUser.name ?? dashboardUser.email ?? "there";
 
   return (
     <div className="space-y-8">

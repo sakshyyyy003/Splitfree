@@ -1,0 +1,41 @@
+[
+  {
+    "id": "goa-getaway",
+    "name": "Goa Getaway",
+    "description": "Flights, beach shacks, and villa costs for the long weekend.",
+    "category": "trip",
+    "currency": "INR",
+    "memberCount": 5,
+    "netBalance": 2840.5,
+    "isPinned": true,
+    "isArchived": false,
+    "createdAt": "2026-03-01T10:00:00.000Z",
+    "updatedAt": "2026-03-18T08:30:00.000Z"
+  },
+  {
+    "id": "flat-2026",
+    "name": "Flat 2026",
+    "description": "Rent, wifi, groceries, and utility splits for the apartment.",
+    "category": "home",
+    "currency": "INR",
+    "memberCount": 3,
+    "netBalance": -1265,
+    "isPinned": false,
+    "isArchived": false,
+    "createdAt": "2026-01-05T12:00:00.000Z",
+    "updatedAt": "2026-03-17T18:15:00.000Z"
+  },
+  {
+    "id": "date-nights",
+    "name": "Date Nights",
+    "description": "Dinner, movie, and concert spends tracked together.",
+    "category": "couple",
+    "currency": "INR",
+    "memberCount": 2,
+    "netBalance": 0,
+    "isPinned": false,
+    "isArchived": false,
+    "createdAt": "2026-02-10T09:45:00.000Z",
+    "updatedAt": "2026-03-16T20:05:00.000Z"
+  }
+]
