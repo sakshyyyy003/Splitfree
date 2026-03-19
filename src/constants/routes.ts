@@ -16,3 +16,6 @@ export const AUTHENTICATED_REDIRECT = "/dashboard";
 
 /** Where to send unauthenticated users who visit a protected route. */
 export const UNAUTHENTICATED_REDIRECT = "/login";
+
+/** Protected route: user profile page. */
+export const PROFILE_ROUTE = "/profile";
