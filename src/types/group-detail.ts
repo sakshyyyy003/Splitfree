@@ -21,6 +21,21 @@ export type GroupExpense = {
   notes: string | null;
 };
 
+export type ExpenseSplitParticipant = {
+  userId: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  paidAmount: number;
+  owedAmount: number;
+};
+
+export type GroupExpenseDetail = GroupExpense & {
+  groupId: string;
+  splitType: "equal" | "exact" | "percentage" | "shares";
+  participants: ExpenseSplitParticipant[];
+};
+
 export type GroupBalance = {
   userId: string;
   name: string;
