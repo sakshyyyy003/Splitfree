@@ -1,10 +1,12 @@
 import { z } from "zod/v4";
 
-// -------------------------------------------------------
-// Constants — aligned with DB column constraints
-// -------------------------------------------------------
+import { SPLIT_TYPES } from "@/lib/algorithms/splits";
+export type { SplitType } from "@/lib/algorithms/splits";
+export { SPLIT_TYPES } from "@/lib/algorithms/splits";
 
-const SPLIT_TYPES = ["equal", "exact", "percentage", "shares"] as const;
+// -------------------------------------------------------
+// Constants
+// -------------------------------------------------------
 
 const CATEGORIES = [
   "food",
