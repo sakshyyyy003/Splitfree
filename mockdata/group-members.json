@@ -1,0 +1,88 @@
+{
+  "goa-getaway": [
+    {
+      "userId": "u-sakshi",
+      "name": "Sakshi Gupta",
+      "email": "sakshi@example.com",
+      "avatarUrl": null,
+      "role": "admin",
+      "joinedAt": "2026-03-01T10:00:00.000Z"
+    },
+    {
+      "userId": "u-rahul",
+      "name": "Rahul Mehta",
+      "email": "rahul@example.com",
+      "avatarUrl": null,
+      "role": "member",
+      "joinedAt": "2026-03-01T10:15:00.000Z"
+    },
+    {
+      "userId": "u-aditi",
+      "name": "Aditi Rao",
+      "email": "aditi@example.com",
+      "avatarUrl": null,
+      "role": "member",
+      "joinedAt": "2026-03-01T10:25:00.000Z"
+    },
+    {
+      "userId": "u-neha",
+      "name": "Neha Kapoor",
+      "email": "neha@example.com",
+      "avatarUrl": null,
+      "role": "member",
+      "joinedAt": "2026-03-02T08:40:00.000Z"
+    },
+    {
+      "userId": "u-karan",
+      "name": "Karan Sethi",
+      "email": "karan@example.com",
+      "avatarUrl": null,
+      "role": "member",
+      "joinedAt": "2026-03-02T09:10:00.000Z"
+    }
+  ],
+  "flat-2026": [
+    {
+      "userId": "u-ria",
+      "name": "Ria Sen",
+      "email": "ria@example.com",
+      "avatarUrl": null,
+      "role": "admin",
+      "joinedAt": "2026-01-05T12:00:00.000Z"
+    },
+    {
+      "userId": "u-sakshi",
+      "name": "Sakshi Gupta",
+      "email": "sakshi@example.com",
+      "avatarUrl": null,
+      "role": "member",
+      "joinedAt": "2026-01-07T17:20:00.000Z"
+    },
+    {
+      "userId": "u-mohit",
+      "name": "Mohit Arora",
+      "email": "mohit@example.com",
+      "avatarUrl": null,
+      "role": "member",
+      "joinedAt": "2026-01-09T11:35:00.000Z"
+    }
+  ],
+  "date-nights": [
+    {
+      "userId": "u-sakshi",
+      "name": "Sakshi Gupta",
+      "email": "sakshi@example.com",
+      "avatarUrl": null,
+      "role": "member",
+      "joinedAt": "2026-02-10T09:45:00.000Z"
+    },
+    {
+      "userId": "u-arjun",
+      "name": "Arjun Malhotra",
+      "email": "arjun@example.com",
+      "avatarUrl": null,
+      "role": "member",
+      "joinedAt": "2026-02-10T09:55:00.000Z"
+    }
+  ]
+}
