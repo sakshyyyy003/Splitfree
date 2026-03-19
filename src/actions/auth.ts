@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
@@ -84,6 +85,31 @@ export async function signUp(
 
   revalidatePath("/", "layout");
   redirect(AUTHENTICATED_REDIRECT);
+}
+
+export async function signInWithGoogle(): Promise<ActionResult<null>> {
+  const supabase = await createClient();
+  const requestHeaders = await headers();
+  const origin = requestHeaders.get("origin");
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${origin}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    return {
+      data: null,
+      error: {
+        code: error.code ?? "unknown_error",
+        message: error.message,
+      },
+    };
+  }
+
+  redirect(data.url);
 }
 
 export async function signOut(): Promise<void> {

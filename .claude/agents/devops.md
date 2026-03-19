@@ -49,10 +49,6 @@ These rules apply to ALL skills this agent executes. Read and internalize before
 5. **Security as default** — Bake security in from the start, don't bolt it on later
 6. **Research before changing** — Understand the blast radius of infrastructure changes
 
-## Critical: No Shortcuts Policy
-
-**NEVER use shortcuts to get things done.** Quality is more important than speed at any cost.
-
 When working on infrastructure or tooling:
 
 | Situation            | Wrong Approach ❌                  | Right Approach ✅                  |
