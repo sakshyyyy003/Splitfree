@@ -190,6 +190,13 @@ export function GroupDetailView({
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                         Added {dateTimeFormatter.format(new Date(expense.createdAt))}
                       </p>
+                      <Link
+                        href={`/groups/${group.id}/expenses/${expense.id}`}
+                        className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+                      >
+                        View details
+                        <ArrowUpRight className="size-3.5" />
+                      </Link>
                     </div>
                   </div>
                 </div>
