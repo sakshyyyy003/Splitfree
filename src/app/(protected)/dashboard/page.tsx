@@ -1,11 +1,17 @@
-import dashboardGroups from "../../../../mockdata/dashboard-groups.json";
-import dashboardUser from "../../../../mockdata/dashboard-user.json";
-
+import { OverallBalanceView } from "@/components/dashboard/overall-balance-view";
 import { GroupList } from "@/components/groups/group-list";
-import type { DashboardGroup } from "@/types/dashboard";
+import {
+  getMockDashboardGroups,
+  getMockDashboardOverallBalances,
+  getMockDashboardUser,
+} from "@/lib/mock/dashboard";
 
 export default async function DashboardPage() {
-  const groups = dashboardGroups as DashboardGroup[];
+  const [groups, overallBalances, dashboardUser] = await Promise.all([
+    getMockDashboardGroups(),
+    getMockDashboardOverallBalances(),
+    getMockDashboardUser(),
+  ]);
   const displayName = dashboardUser.name ?? dashboardUser.email ?? "there";
 
   return (
@@ -24,6 +30,8 @@ export default async function DashboardPage() {
           </p>
         </div>
       </section>
+
+      <OverallBalanceView balances={overallBalances} />
 
       <section className="space-y-4">
         <div className="space-y-1">
