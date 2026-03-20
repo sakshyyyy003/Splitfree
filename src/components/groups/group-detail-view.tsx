@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ArrowUpRight,
   Coins,
+  Handshake,
   Plus,
   ReceiptText,
   UsersRound,
@@ -209,6 +210,15 @@ export function GroupDetailView({
                 Positive balances mean money owed back. Negative balances mean
                 money still due.
               </CardDescription>
+              <CardAction>
+                <Link
+                  href={`/groups/${group.id}/settle`}
+                  className={buttonVariants({ size: "sm" })}
+                >
+                  <Handshake className="size-4" />
+                  Settle Up
+                </Link>
+              </CardAction>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid gap-3 md:grid-cols-3">
@@ -337,7 +347,16 @@ export function GroupDetailView({
                           {debt.fromName} owes {debt.toName}{" "}
                           {formatCurrency(debt.amount, group.currency)}
                         </p>
-                        <Badge variant="secondary">Suggested transfer</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">Suggested transfer</Badge>
+                          <Link
+                            href={`/groups/${group.id}/settle?from=${debt.fromUserId}&to=${debt.toUserId}`}
+                            className={buttonVariants({ size: "sm", variant: "outline" })}
+                          >
+                            <Handshake className="size-4" />
+                            Settle
+                          </Link>
+                        </div>
                       </div>
                     ))}
                   </div>
