@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { getGroupBalances } from "@/lib/queries/balances";
 import { getGroupMembers } from "@/lib/queries/group-members";
@@ -34,12 +36,14 @@ export default async function SettleUpPage({ params }: SettleUpPageProps) {
         </p>
       </section>
 
-      <SettleUpForm
-        groupId={groupId}
-        simplifiedDebts={simplifiedDebts}
-        members={members}
-        currentUserId={user.id}
-      />
+      <Suspense>
+        <SettleUpForm
+          groupId={groupId}
+          simplifiedDebts={simplifiedDebts}
+          members={members}
+          currentUserId={user.id}
+        />
+      </Suspense>
     </div>
   );
 }
