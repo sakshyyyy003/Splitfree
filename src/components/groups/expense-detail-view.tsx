@@ -12,6 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeleteExpenseButton } from "@/components/groups/delete-expense-button";
 import type { GroupDetail, GroupExpenseDetail } from "@/types/group-detail";
 
 type ExpenseDetailViewProps = {
@@ -111,6 +112,10 @@ export function ExpenseDetailView({
                 <PencilLine className="size-4" />
                 Edit expense
               </Link>
+              <DeleteExpenseButton
+                expenseId={expense.id}
+                groupId={group.id}
+              />
             </div>
           </div>
 
