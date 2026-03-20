@@ -127,6 +127,33 @@ export const updateExpenseWithSplitsSchema = z
   );
 
 // -------------------------------------------------------
+// Direct expense schema — 1:1 (non-group) expense
+// -------------------------------------------------------
+
+const directExpenseSchema = expenseSchema.omit({ group_id: true });
+
+export const createDirectExpenseSchema = z
+  .object({
+    friend_id: z.uuid({ error: "Invalid friend ID" }),
+    expense: directExpenseSchema,
+    splits: z
+      .array(splitSchema)
+      .length(2, { error: "Direct expenses require exactly 2 splits" }),
+  })
+  .refine(
+    (data) => {
+      const splitsSum = data.splits.reduce((sum, split) => sum + split.amount, 0);
+      const roundedSplitsSum = Math.round(splitsSum * 100) / 100;
+      const roundedExpenseAmount = Math.round(data.expense.amount * 100) / 100;
+      return roundedSplitsSum === roundedExpenseAmount;
+    },
+    {
+      error: "Split amounts must sum to the expense amount",
+      path: ["splits"],
+    },
+  );
+
+// -------------------------------------------------------
 // Delete expense schema
 // -------------------------------------------------------
 
@@ -146,5 +173,8 @@ export type CreateExpenseWithSplitsInput = z.infer<
 >;
 export type UpdateExpenseWithSplitsInput = z.infer<
   typeof updateExpenseWithSplitsSchema
+>;
+export type CreateDirectExpenseInput = z.infer<
+  typeof createDirectExpenseSchema
 >;
 export type DeleteExpenseInput = z.infer<typeof deleteExpenseSchema>;
