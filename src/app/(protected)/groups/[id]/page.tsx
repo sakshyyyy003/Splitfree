@@ -6,6 +6,7 @@ import {
   getMockGroupExpenses,
   getMockGroupMembers,
 } from "@/lib/mock/group-detail";
+import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { GroupDetailView } from "@/components/groups/group-detail-view";
 
 type GroupDetailPageProps = {
@@ -17,7 +18,10 @@ type GroupDetailPageProps = {
 export default async function GroupDetailPage({
   params,
 }: GroupDetailPageProps) {
-  const { id } = await params;
+  const [{ id }, user] = await Promise.all([
+    params,
+    requireAuthenticatedUser(),
+  ]);
 
   const [group, expenses, balanceSummary, members] = await Promise.all([
     getMockGroupDetail(id),
@@ -37,6 +41,7 @@ export default async function GroupDetailPage({
       balances={balanceSummary.balances}
       simplifiedDebts={balanceSummary.simplifiedDebts}
       members={members}
+      currentUserId={user.id}
     />
   );
 }

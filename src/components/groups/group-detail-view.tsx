@@ -1,15 +1,18 @@
  "use client";
 
+import { useTransition } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   ArrowUpRight,
   Coins,
   Handshake,
+  Loader2,
   Plus,
   ReceiptText,
   UsersRound,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import type {
   GroupBalance,
@@ -18,6 +21,8 @@ import type {
   GroupMember,
   GroupSimplifiedDebt,
 } from "@/types/group-detail";
+import { addMemberToGroup } from "@/actions/group";
+import type { ProfileResult } from "@/actions/search";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -30,6 +35,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { GroupExpenseList } from "@/components/groups/group-expense-list";
+import { UserSearch } from "@/components/ui/user-search";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type GroupDetailViewProps = {
@@ -38,6 +44,7 @@ type GroupDetailViewProps = {
   balances: GroupBalance[];
   simplifiedDebts: GroupSimplifiedDebt[];
   members: GroupMember[];
+  currentUserId: string;
 };
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
@@ -78,7 +85,29 @@ export function GroupDetailView({
   balances,
   simplifiedDebts,
   members,
+  currentUserId,
 }: GroupDetailViewProps) {
+  const currentMember = members.find((member) => member.userId === currentUserId);
+  const isAdmin = currentMember?.role === "admin";
+  const memberUserIds = members.map((member) => member.userId);
+  const [isAddingMember, startAddMemberTransition] = useTransition();
+
+  function handleAddMember(profile: ProfileResult) {
+    startAddMemberTransition(async () => {
+      const result = await addMemberToGroup({
+        groupId: group.id,
+        userId: profile.id,
+      });
+
+      if (result.error) {
+        toast.error(result.error.message);
+        return;
+      }
+
+      toast.success(`${profile.name ?? profile.email} has been added to the group`);
+    });
+  }
+
   const sortedBalances = [...balances].sort((left, right) => {
     const magnitudeDifference =
       Math.abs(right.netBalance) - Math.abs(left.netBalance);
@@ -378,34 +407,54 @@ export function GroupDetailView({
                 Everyone currently in the group and when they joined.
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2">
-              {members.map((member) => (
-                <div
-                  key={member.userId}
-                  className="flex items-center gap-3 rounded-[1.5rem] border border-border/70 bg-background/85 p-4"
-                >
-                  <Avatar>
-                    {member.avatarUrl ? (
-                      <AvatarImage src={member.avatarUrl} alt={member.name} />
-                    ) : null}
-                    <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate font-semibold">{member.name}</p>
-                      <Badge variant={member.role === "admin" ? "default" : "outline"}>
-                        {member.role === "admin" ? "Admin" : "Member"}
-                      </Badge>
-                    </div>
-                    <p className="truncate text-sm text-muted-foreground">
-                      {member.email}
+            <CardContent className="space-y-4">
+              {isAdmin && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-muted-foreground">
+                      Add a member
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      Joined {dateFormatter.format(new Date(member.joinedAt))}
-                    </p>
+                    {isAddingMember && (
+                      <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+                    )}
                   </div>
+                  <UserSearch
+                    onSelect={handleAddMember}
+                    excludeUserIds={memberUserIds}
+                    placeholder="Search by name or email to add..."
+                  />
                 </div>
-              ))}
+              )}
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {members.map((member) => (
+                  <div
+                    key={member.userId}
+                    className="flex items-center gap-3 rounded-[1.5rem] border border-border/70 bg-background/85 p-4"
+                  >
+                    <Avatar>
+                      {member.avatarUrl ? (
+                        <AvatarImage src={member.avatarUrl} alt={member.name} />
+                      ) : null}
+                      <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate font-semibold">{member.name}</p>
+                        <Badge variant={member.role === "admin" ? "default" : "outline"}>
+                          {member.role === "admin" ? "Admin" : "Member"}
+                        </Badge>
+                      </div>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {member.email}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Joined {dateFormatter.format(new Date(member.joinedAt))}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
