@@ -53,3 +53,14 @@ export type GroupMember = {
   role: "admin" | "member";
   joinedAt: string;
 };
+
+export type SimplifiedDebt = {
+  from: string;
+  to: string;
+  amount: number;
+};
+
+export type GroupBalancesResult = {
+  balances: GroupBalance[];
+  simplifiedDebts: SimplifiedDebt[];
+};
