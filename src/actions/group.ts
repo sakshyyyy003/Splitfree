@@ -8,6 +8,10 @@ import {
   coverImageSchema,
   type CreateGroupInput,
 } from "@/lib/validators/group";
+import {
+  addMemberSchema,
+  type AddMemberInput,
+} from "@/lib/validators/group-member";
 import type { ActionResult } from "@/actions/auth";
 
 const COVERS_BUCKET = "group-covers";
@@ -270,4 +274,86 @@ export async function joinGroup(
   revalidatePath(`/groups/${group.id}`);
 
   return { data: { groupId: group.id }, error: null };
+}
+
+export async function addMemberToGroup(
+  input: AddMemberInput,
+): Promise<ActionResult<null>> {
+  const parsed = addMemberSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      data: null,
+      error: {
+        code: "validation_error",
+        message: parsed.error.issues[0]?.message ?? "Invalid input",
+      },
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      data: null,
+      error: { code: "unauthorized", message: "You must be signed in" },
+    };
+  }
+
+  // Check the caller is an admin of this group
+  const { data: membership } = await supabase
+    .from("group_members")
+    .select("role")
+    .eq("group_id", parsed.data.groupId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!membership || membership.role !== "admin") {
+    return {
+      data: null,
+      error: {
+        code: "forbidden",
+        message: "Only group admins can add members",
+      },
+    };
+  }
+
+  // Idempotency: if the user is already a member, return success
+  const { data: existing } = await supabase
+    .from("group_members")
+    .select("id")
+    .eq("group_id", parsed.data.groupId)
+    .eq("user_id", parsed.data.userId)
+    .single();
+
+  if (existing) {
+    return { data: null, error: null };
+  }
+
+  // Add as member
+  const { error: insertError } = await supabase
+    .from("group_members")
+    .insert({
+      group_id: parsed.data.groupId,
+      user_id: parsed.data.userId,
+      role: "member",
+    });
+
+  if (insertError) {
+    return {
+      data: null,
+      error: {
+        code: "insert_failed",
+        message: "Failed to add member. Please try again.",
+      },
+    };
+  }
+
+  revalidatePath(`/groups/${parsed.data.groupId}`);
+
+  return { data: null, error: null };
 }

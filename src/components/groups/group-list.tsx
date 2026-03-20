@@ -44,9 +44,15 @@ export function GroupList({ groups }: GroupListProps) {
         </CardHeader>
         <CardContent>
           <div className="rounded-[1.75rem] border border-border/70 bg-background/80 p-5 text-sm text-muted-foreground">
-            Group creation is the next milestone. This dashboard is ready to list
-            balances as soon as your first group lands.
+            Create your first group to start tracking shared expenses and
+            balances in one place.
           </div>
+          <Link
+            href="/groups/new"
+            className="mt-4 inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full border border-primary bg-primary px-5 text-sm font-bold whitespace-nowrap text-primary-foreground shadow-panel transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px sm:w-auto"
+          >
+            Create your first group
+          </Link>
         </CardContent>
       </Card>
     );

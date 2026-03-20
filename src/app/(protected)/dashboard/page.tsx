@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { OverallBalanceView } from "@/components/dashboard/overall-balance-view";
 import { GroupList } from "@/components/groups/group-list";
 import {
@@ -34,11 +36,20 @@ export default async function DashboardPage() {
       <OverallBalanceView balances={overallBalances} />
 
       <section className="space-y-4">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold tracking-tight">Your groups</h2>
-          <p className="text-sm text-muted-foreground">
-            A quick read on where you stand across every shared circle.
-          </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-bold tracking-tight">Your groups</h2>
+            <p className="text-sm text-muted-foreground">
+              A quick read on where you stand across every shared circle.
+            </p>
+          </div>
+
+          <Link
+            href="/groups/new"
+            className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-primary bg-primary px-4 text-sm font-bold whitespace-nowrap text-primary-foreground shadow-panel transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
+          >
+            New Group
+          </Link>
         </div>
 
         <GroupList groups={groups} />
