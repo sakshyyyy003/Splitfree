@@ -8,7 +8,7 @@ import {
 import type { ActionResult } from "@/actions/auth";
 import type { Tables } from "@/types/database";
 
-type ProfileResult = Pick<Tables<"profiles">, "id" | "name" | "email" | "avatar_url">;
+export type ProfileResult = Pick<Tables<"profiles">, "id" | "name" | "email" | "avatar_url">;
 
 const MAX_RESULTS = 10;
 
