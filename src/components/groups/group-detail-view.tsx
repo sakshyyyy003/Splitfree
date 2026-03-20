@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   ArrowUpRight,
   Coins,
+  Plus,
   ReceiptText,
   UsersRound,
 } from "lucide-react";
@@ -16,8 +17,10 @@ import type {
 } from "@/types/group-detail";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -180,6 +183,15 @@ export function GroupDetailView({
               <CardDescription>
                 Recent group spends with category icons and mock pagination.
               </CardDescription>
+              <CardAction>
+                <Link
+                  href={`/groups/${group.id}/expenses/new`}
+                  className={buttonVariants({ size: "sm" })}
+                >
+                  <Plus className="size-4" />
+                  Add Expense
+                </Link>
+              </CardAction>
             </CardHeader>
             <CardContent>
               <GroupExpenseList groupId={group.id} expenses={expenses} />
