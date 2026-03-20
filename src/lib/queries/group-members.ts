@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { getMockGroupMembers } from "@/lib/mock/group-detail";
 import type { GroupMember } from "@/types/group-detail";
 
 /**
@@ -21,6 +22,13 @@ export async function getGroupMembers(
     .order("joined_at", { ascending: true });
 
   if (error) {
+    if (
+      error.message.includes("Could not find the table") &&
+      error.message.includes("schema cache")
+    ) {
+      return getMockGroupMembers(groupId);
+    }
+
     throw new Error(`Failed to fetch group members: ${error.message}`);
   }
 
