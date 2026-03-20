@@ -401,6 +401,12 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      calculate_group_balances: {
+        Args: {
+          p_group_id: string;
+        };
+        Returns: Json;
+      };
       create_expense_with_splits: {
         Args: {
           _expense_data: Json;
