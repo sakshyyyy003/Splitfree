@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 
 import { ExpenseDetailView } from "@/components/groups/expense-detail-view";
+import { requireAuthenticatedUser } from "@/lib/auth/user";
 import {
   getMockExpenseDetail,
   getMockGroupDetail,
 } from "@/lib/mock/group-detail";
+import { getGroupMembers } from "@/lib/queries/group-members";
 
 type ExpenseDetailPageProps = {
   params: Promise<{
@@ -18,7 +20,8 @@ export default async function ExpenseDetailPage({
 }: ExpenseDetailPageProps) {
   const { id, expenseId } = await params;
 
-  const [group, expense] = await Promise.all([
+  const [user, group, expense] = await Promise.all([
+    requireAuthenticatedUser(),
     getMockGroupDetail(id),
     getMockExpenseDetail(id, expenseId),
   ]);
@@ -27,5 +30,14 @@ export default async function ExpenseDetailPage({
     notFound();
   }
 
-  return <ExpenseDetailView group={group} expense={expense} />;
+  const members = await getGroupMembers(id);
+
+  const isExpenseCreator = expense.createdByUserId === user.id;
+  const isGroupAdmin =
+    members.find((member) => member.userId === user.id)?.role === "admin";
+  const canDelete = isExpenseCreator || isGroupAdmin;
+
+  return (
+    <ExpenseDetailView group={group} expense={expense} canDelete={canDelete} />
+  );
 }

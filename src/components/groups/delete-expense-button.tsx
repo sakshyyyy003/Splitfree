@@ -21,15 +21,21 @@ import {
 type DeleteExpenseButtonProps = {
   expenseId: string;
   groupId: string;
+  canDelete: boolean;
 };
 
 export function DeleteExpenseButton({
   expenseId,
   groupId,
+  canDelete,
 }: DeleteExpenseButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  if (!canDelete) {
+    return null;
+  }
 
   function handleDelete() {
     startTransition(async () => {
