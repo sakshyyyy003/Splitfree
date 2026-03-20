@@ -98,6 +98,35 @@ export const createExpenseWithSplitsSchema = z
   );
 
 // -------------------------------------------------------
+// Update schema — expense + splits with optimistic lock
+// -------------------------------------------------------
+
+export const updateExpenseWithSplitsSchema = z
+  .object({
+    expense_id: z.uuid({ error: "Invalid expense ID" }),
+    expected_updated_at: z
+      .string()
+      .min(1, { error: "Expected updated_at timestamp is required" }),
+    expense: expenseSchema,
+    splits: z
+      .array(splitSchema)
+      .min(1, { error: "At least one split is required" }),
+  })
+  .refine(
+    (data) => {
+      const splitsSum = data.splits.reduce((sum, split) => sum + split.amount, 0);
+      // Round to 2 decimal places to avoid floating-point drift
+      const roundedSplitsSum = Math.round(splitsSum * 100) / 100;
+      const roundedExpenseAmount = Math.round(data.expense.amount * 100) / 100;
+      return roundedSplitsSum === roundedExpenseAmount;
+    },
+    {
+      error: "Split amounts must sum to the expense amount",
+      path: ["splits"],
+    },
+  );
+
+// -------------------------------------------------------
 // Delete expense schema
 // -------------------------------------------------------
 
@@ -114,5 +143,8 @@ export type ExpenseInput = z.infer<typeof expenseSchema>;
 export type SplitInput = z.infer<typeof splitSchema>;
 export type CreateExpenseWithSplitsInput = z.infer<
   typeof createExpenseWithSplitsSchema
+>;
+export type UpdateExpenseWithSplitsInput = z.infer<
+  typeof updateExpenseWithSplitsSchema
 >;
 export type DeleteExpenseInput = z.infer<typeof deleteExpenseSchema>;
