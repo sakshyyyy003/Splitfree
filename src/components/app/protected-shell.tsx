@@ -1,12 +1,15 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
+  Clock,
   LayoutDashboard,
   LogOut,
   Plus,
   UserRound,
+  Users,
 } from "lucide-react";
 
 import { signOut } from "@/actions/auth";
@@ -39,6 +42,112 @@ const navigationItems = [
       pathname === PROFILE_ROUTE || pathname.startsWith(`${PROFILE_ROUTE}/`),
   },
 ] as const;
+
+type MobileNavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  match: (pathname: string, searchParams: URLSearchParams) => boolean;
+};
+
+const mobileNavLeft: MobileNavItem[] = [
+  {
+    href: "/dashboard?tab=groups",
+    label: "Groups",
+    icon: Users,
+    match: (p, sp) => p === "/dashboard" && (sp.get("tab") ?? "groups") === "groups",
+  },
+  {
+    href: "/dashboard?tab=people",
+    label: "People",
+    icon: UserRound,
+    match: (p, sp) => p === "/dashboard" && sp.get("tab") === "people",
+  },
+];
+
+const mobileNavRight: MobileNavItem[] = [
+  {
+    href: "/dashboard?tab=activity",
+    label: "Activity",
+    icon: Clock,
+    match: (p, sp) => p === "/dashboard" && sp.get("tab") === "activity",
+  },
+  {
+    href: PROFILE_ROUTE,
+    label: "Profile",
+    icon: UserRound,
+    match: (p) => p === PROFILE_ROUTE || p.startsWith(`${PROFILE_ROUTE}/`),
+  },
+];
+
+function MobileBottomNav({ pathname }: { pathname: string }) {
+  const searchParams = useSearchParams();
+
+  function renderTab(item: MobileNavItem) {
+    const isActive = item.match(pathname, searchParams);
+    const Icon = item.icon;
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={cn(
+          "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] font-bold uppercase tracking-wide-custom transition-colors",
+          isActive
+            ? "text-hotgreen"
+            : "text-white/50 hover:text-white",
+        )}
+      >
+        <div
+          className={cn(
+            "flex size-6 items-center justify-center",
+            isActive && "bg-hotgreen text-black rounded-sm",
+          )}
+        >
+          <Icon className="size-4" />
+        </div>
+        <span>{item.label}</span>
+      </Link>
+    );
+  }
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-30 bg-black border-t-2 border-hotgreen px-2 pb-3 pt-2 lg:hidden">
+      <div className="mx-auto flex max-w-md items-center">
+        {/* Left tabs */}
+        {mobileNavLeft.map(renderTab)}
+
+        {/* Center CTA */}
+        <div className="flex flex-col items-center justify-center px-3 -mt-5">
+          <Link
+            href="/expenses/direct/new"
+            aria-label="Add new"
+            className="flex size-12 items-center justify-center rounded-full bg-hotgreen text-black shadow-[0_0_12px_rgba(0,255,100,0.4)]"
+          >
+            <Plus className="size-6" strokeWidth={3} />
+          </Link>
+        </div>
+
+        {/* Right tabs */}
+        {mobileNavRight.map(renderTab)}
+      </div>
+    </nav>
+  );
+}
+
+function getInitials(value: string) {
+  const parts = value
+    .split(" ")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+
+  if (parts.length === 0) {
+    return "SF";
+  }
+
+  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("");
+}
 
 export function ProtectedShell({ children, user }: ProtectedShellProps) {
   const pathname = usePathname();
@@ -135,75 +244,11 @@ export function ProtectedShell({ children, user }: ProtectedShellProps) {
           </main>
 
           {/* Mobile Bottom Nav */}
-          <nav className="fixed inset-x-0 bottom-0 z-30 bg-black border-t-2 border-hotgreen px-3 pb-3 pt-2 lg:hidden">
-            <div className="mx-auto flex max-w-md items-center gap-2">
-              {navigationItems.map((item) => {
-                const isActive = item.match(pathname);
-                const Icon = item.icon;
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide-custom transition-colors",
-                      isActive
-                        ? "text-hotgreen"
-                        : "text-white/50 hover:text-white",
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "flex size-6 items-center justify-center",
-                        isActive && "bg-hotgreen text-black rounded-sm",
-                      )}
-                    >
-                      <Icon className="size-4" />
-                    </div>
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-
-              <Link
-                href="/dashboard"
-                className="flex flex-col items-center justify-center px-3 py-1"
-                aria-label="Add new"
-              >
-                <div className="flex size-10 items-center justify-center rounded-full bg-hotgreen text-black">
-                  <Plus className="size-5" strokeWidth={3} />
-                </div>
-              </Link>
-
-              <form action={signOut} className="flex min-w-0 flex-1 justify-center">
-                <button
-                  type="submit"
-                  className="flex flex-col items-center justify-center gap-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide-custom text-white/50 hover:text-white transition-colors"
-                >
-                  <div className="flex size-6 items-center justify-center">
-                    <LogOut className="size-4" />
-                  </div>
-                  <span>Sign out</span>
-                </button>
-              </form>
-            </div>
-          </nav>
+          <Suspense>
+            <MobileBottomNav pathname={pathname} />
+          </Suspense>
         </div>
       </div>
     </div>
   );
-}
-
-function getInitials(value: string) {
-  const parts = value
-    .split(" ")
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .slice(0, 2);
-
-  if (parts.length === 0) {
-    return "SF";
-  }
-
-  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("");
 }

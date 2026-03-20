@@ -4,6 +4,9 @@
 --              indexes and an invite code generation function.
 -- =============================================================
 
+-- Enable pgcrypto for gen_random_bytes
+create extension if not exists pgcrypto schema extensions;
+
 -- ----- Function: generate_invite_code -----
 -- Produces a 12-character hex string from 6 random bytes.
 -- Used as the default value for groups.invite_code.
@@ -12,7 +15,7 @@ create or replace function public.generate_invite_code()
 returns varchar(20)
 language sql
 as $$
-  select encode(gen_random_bytes(6), 'hex');
+  select encode(extensions.gen_random_bytes(6), 'hex');
 $$;
 
 -- ----- Table DDL: groups -----

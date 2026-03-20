@@ -88,10 +88,6 @@ export function GroupList({ groups }: GroupListProps) {
                     <CardTitle>{group.name}</CardTitle>
                   </div>
                 </div>
-                <CardDescription className="min-h-10 text-sm leading-6">
-                  {group.description?.trim() ||
-                    "Shared expenses, balances, and settlements in one place."}
-                </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-4">
