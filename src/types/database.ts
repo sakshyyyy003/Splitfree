@@ -407,6 +407,10 @@ export type Database = {
         };
         Returns: Json;
       };
+      calculate_overall_balances: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
       create_expense_with_splits: {
         Args: {
           _expense_data: Json;

@@ -4,14 +4,14 @@ import { OverallBalanceView } from "@/components/dashboard/overall-balance-view"
 import { GroupList } from "@/components/groups/group-list";
 import {
   getMockDashboardGroups,
-  getMockDashboardOverallBalances,
   getMockDashboardUser,
 } from "@/lib/mock/dashboard";
+import { getOverallBalances } from "@/lib/queries/balances";
 
 export default async function DashboardPage() {
   const [groups, overallBalances, dashboardUser] = await Promise.all([
     getMockDashboardGroups(),
-    getMockDashboardOverallBalances(),
+    getOverallBalances(),
     getMockDashboardUser(),
   ]);
   const displayName = dashboardUser.name ?? dashboardUser.email ?? "there";

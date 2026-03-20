@@ -3,6 +3,10 @@ import "server-only";
 import { simplifyDebts } from "@/lib/algorithms/debt";
 import { createClient } from "@/lib/supabase/server";
 import type {
+  DashboardCounterpartyBalance,
+  DashboardOverallBalances,
+} from "@/types/dashboard";
+import type {
   GroupBalance,
   GroupBalanceSummary,
   GroupSimplifiedDebt,
@@ -271,4 +275,190 @@ export async function getGroupBalances(
   );
 
   return { balances, simplifiedDebts };
+}
+
+// ---------------------------------------------------------------------------
+// Overall Balances (across all groups)
+// ---------------------------------------------------------------------------
+
+/**
+ * Raw shape returned by the `calculate_overall_balances` Postgres function.
+ * The function returns jsonb with counterparties and summary.
+ */
+type RawOverallCounterparty = {
+  user_id: string;
+  net_balance: number;
+  group_ids: string[];
+};
+
+type RawOverallSummary = {
+  total_owed: number;
+  total_you_owe: number;
+  net_balance: number;
+};
+
+type RawOverallBalancesResponse = {
+  counterparties: RawOverallCounterparty[];
+  summary: RawOverallSummary;
+};
+
+type ProfileEntry = {
+  id: string;
+  name: string;
+  email: string;
+  avatar_url: string | null;
+};
+
+type GroupEntry = {
+  id: string;
+  name: string;
+};
+
+function isMissingOverallBalancesFunction(message: string): boolean {
+  return (
+    message.includes("calculate_overall_balances") &&
+    message.includes("schema cache")
+  );
+}
+
+function buildEmptyOverallBalances(): DashboardOverallBalances {
+  return {
+    summary: {
+      currency: "USD",
+      totalOwed: 0,
+      totalYouOwe: 0,
+      netBalance: 0,
+      updatedAt: new Date().toISOString(),
+    },
+    counterparties: [],
+  };
+}
+
+function buildGroupLabel(groupNames: string[]): string {
+  if (groupNames.length === 0) return "No groups";
+  if (groupNames.length === 1) return groupNames[0];
+  return `${groupNames.length} groups`;
+}
+
+async function fetchProfilesByIds(
+  userIds: string[],
+): Promise<Map<string, ProfileEntry>> {
+  if (userIds.length === 0) return new Map();
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, name, email, avatar_url")
+    .in("id", userIds);
+
+  if (error) {
+    if (isMissingTableInSchemaCache(error.message)) {
+      return new Map();
+    }
+    throw new Error(`Failed to fetch profiles: ${error.message}`);
+  }
+
+  const lookup = new Map<string, ProfileEntry>();
+  for (const profile of data ?? []) {
+    lookup.set(profile.id, profile);
+  }
+  return lookup;
+}
+
+async function fetchGroupsByIds(
+  groupIds: string[],
+): Promise<Map<string, GroupEntry>> {
+  if (groupIds.length === 0) return new Map();
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("groups")
+    .select("id, name")
+    .in("id", groupIds);
+
+  if (error) {
+    if (isMissingTableInSchemaCache(error.message)) {
+      return new Map();
+    }
+    throw new Error(`Failed to fetch groups: ${error.message}`);
+  }
+
+  const lookup = new Map<string, GroupEntry>();
+  for (const group of data ?? []) {
+    lookup.set(group.id, group);
+  }
+  return lookup;
+}
+
+export async function getOverallBalances(): Promise<DashboardOverallBalances> {
+  const supabase = await createClient();
+
+  const { data: rpcData, error: rpcError } = await supabase.rpc(
+    "calculate_overall_balances",
+  );
+
+  if (rpcError) {
+    if (isMissingOverallBalancesFunction(rpcError.message)) {
+      return buildEmptyOverallBalances();
+    }
+    throw new Error(
+      `Failed to calculate overall balances: ${rpcError.message}`,
+    );
+  }
+
+  const raw = rpcData as unknown as RawOverallBalancesResponse;
+
+  if (!raw?.counterparties?.length) {
+    return buildEmptyOverallBalances();
+  }
+
+  // Collect all user IDs and group IDs for batch fetching
+  const allUserIds = raw.counterparties.map((c) => c.user_id);
+  const allGroupIds = [
+    ...new Set(raw.counterparties.flatMap((c) => c.group_ids)),
+  ];
+
+  // Fetch profiles and groups in parallel
+  const [profileLookup, groupLookup] = await Promise.all([
+    fetchProfilesByIds(allUserIds),
+    fetchGroupsByIds(allGroupIds),
+  ]);
+
+  // Build counterparty entries
+  const counterparties: DashboardCounterpartyBalance[] = raw.counterparties.map(
+    (entry) => {
+      const profile = profileLookup.get(entry.user_id);
+      const groupNames = entry.group_ids
+        .map((gid) => groupLookup.get(gid)?.name)
+        .filter((name): name is string => name != null);
+
+      // Use the first group as the settle group
+      const settleGroupId = entry.group_ids[0] ?? "";
+      const settleGroupName = groupLookup.get(settleGroupId)?.name ?? "";
+
+      return {
+        userId: entry.user_id,
+        name: profile?.name ?? "Unknown",
+        email: profile?.email ?? "",
+        avatarUrl: profile?.avatar_url ?? null,
+        netBalance: entry.net_balance,
+        groupCount: entry.group_ids.length,
+        groupLabel: buildGroupLabel(groupNames),
+        lastActivityAt: new Date().toISOString(),
+        settleGroupId,
+        settleGroupName,
+      };
+    },
+  );
+
+  return {
+    summary: {
+      currency: "USD",
+      totalOwed: raw.summary.total_owed,
+      totalYouOwe: raw.summary.total_you_owe,
+      netBalance: raw.summary.net_balance,
+      updatedAt: new Date().toISOString(),
+    },
+    counterparties,
+  };
 }
