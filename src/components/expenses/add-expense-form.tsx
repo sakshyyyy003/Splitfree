@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,7 +13,7 @@ import {
   SPLIT_TYPES,
   type SplitType,
 } from "@/lib/validators/expense";
-import { calculateSplit } from "@/lib/algorithms/splits";
+import { calculateSplit, type SplitResult } from "@/lib/algorithms/splits";
 import { createExpense } from "@/actions/expenses";
 import type { GroupMember } from "@/types/group-detail";
 
@@ -74,6 +74,26 @@ const splitTypeLabels: Record<SplitType, string> = {
   shares: "Shares",
 };
 
+const splitTypeInputLabels: Record<SplitType, string> = {
+  equal: "",
+  exact: "Amount (INR)",
+  percentage: "Percentage (%)",
+  shares: "Shares",
+};
+
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 2,
+});
+
+function formatINR(amount: number): string {
+  return currencyFormatter.format(amount);
+}
+
+/** Per-participant custom values for non-equal split types */
+type CustomSplitValues = Record<string, number>;
+
 // -------------------------------------------------------
 // Form-level schema (UI fields only, not the full payload)
 // -------------------------------------------------------
@@ -120,6 +140,9 @@ export function AddExpenseForm({
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
     () => members.map((m) => m.userId),
   );
+  const [customSplitValues, setCustomSplitValues] = useState<CustomSplitValues>(
+    {},
+  );
 
   const {
     register,
@@ -139,10 +162,139 @@ export function AddExpenseForm({
     },
   });
 
+  const watchedAmount = watch("amount");
   const watchedDate = watch("date");
   const watchedPaidBy = watch("paid_by");
   const watchedSplitType = watch("split_type");
   const watchedCategory = watch("category");
+
+  // -----------------------------------------------------------
+  // Live split preview — recomputes when inputs change
+  // -----------------------------------------------------------
+
+  const splitPreview = useMemo<{
+    results: SplitResult[];
+    error: string | null;
+  }>(() => {
+    const amount = Number(watchedAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return { results: [], error: null };
+    }
+
+    if (selectedParticipants.length === 0) {
+      return { results: [], error: "No participants selected" };
+    }
+
+    try {
+      if (watchedSplitType === "equal") {
+        return {
+          results: calculateSplit({
+            splitType: "equal",
+            totalAmount: amount,
+            participants: selectedParticipants,
+          }),
+          error: null,
+        };
+      }
+
+      if (watchedSplitType === "exact") {
+        const assignments = selectedParticipants.map((userId) => ({
+          userId,
+          amount: customSplitValues[userId] ?? 0,
+        }));
+        return {
+          results: calculateSplit({
+            splitType: "exact",
+            totalAmount: amount,
+            participants: assignments,
+          }),
+          error: null,
+        };
+      }
+
+      if (watchedSplitType === "percentage") {
+        const assignments = selectedParticipants.map((userId) => ({
+          userId,
+          percent: customSplitValues[userId] ?? 0,
+        }));
+        return {
+          results: calculateSplit({
+            splitType: "percentage",
+            totalAmount: amount,
+            participants: assignments,
+          }),
+          error: null,
+        };
+      }
+
+      // shares
+      const assignments = selectedParticipants.map((userId) => ({
+        userId,
+        shares: customSplitValues[userId] ?? 0,
+      }));
+      return {
+        results: calculateSplit({
+          splitType: "shares",
+          totalAmount: amount,
+          participants: assignments,
+        }),
+        error: null,
+      };
+    } catch (err) {
+      return {
+        results: [],
+        error: err instanceof Error ? err.message : "Invalid split values",
+      };
+    }
+  }, [
+    watchedAmount,
+    watchedSplitType,
+    selectedParticipants,
+    customSplitValues,
+  ]);
+
+  // Validation feedback for non-equal split types
+  const splitValidation = useMemo<{
+    total: number;
+    expected: number;
+    remaining: number;
+    unit: string;
+  } | null>(() => {
+    if (watchedSplitType === "equal") return null;
+
+    const total = selectedParticipants.reduce(
+      (sum, id) => sum + (customSplitValues[id] ?? 0),
+      0,
+    );
+
+    if (watchedSplitType === "exact") {
+      const amount = Number(watchedAmount);
+      const expected = Number.isFinite(amount) && amount > 0 ? amount : 0;
+      return {
+        total: Math.round(total * 100) / 100,
+        expected: Math.round(expected * 100) / 100,
+        remaining: Math.round((expected - total) * 100) / 100,
+        unit: "INR",
+      };
+    }
+
+    if (watchedSplitType === "percentage") {
+      return {
+        total: Math.round(total * 100) / 100,
+        expected: 100,
+        remaining: Math.round((100 - total) * 100) / 100,
+        unit: "%",
+      };
+    }
+
+    // shares — no fixed target, just show total
+    return {
+      total,
+      expected: 0,
+      remaining: 0,
+      unit: "shares",
+    };
+  }, [watchedSplitType, watchedAmount, selectedParticipants, customSplitValues]);
 
   function handleParticipantToggle(userId: string, checked: boolean) {
     setSelectedParticipants((prev) => {
@@ -151,6 +303,28 @@ export function AddExpenseForm({
       }
       return prev.filter((id) => id !== userId);
     });
+    // Remove custom value when participant is unchecked
+    if (!checked) {
+      setCustomSplitValues((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+    }
+  }
+
+  function handleCustomValueChange(userId: string, raw: string) {
+    const parsed = parseFloat(raw);
+    setCustomSplitValues((prev) => ({
+      ...prev,
+      [userId]: Number.isFinite(parsed) && parsed >= 0 ? parsed : 0,
+    }));
+  }
+
+  function handleSplitTypeChange(newType: SplitType) {
+    setValue("split_type", newType, { shouldValidate: true });
+    // Reset custom values when switching split types to avoid stale data
+    setCustomSplitValues({});
   }
 
   function handleDateSelect(date: Date | undefined) {
@@ -164,20 +338,51 @@ export function AddExpenseForm({
       throw new Error("At least one participant is required");
     }
 
-    // Currently only "equal" split is fully supported from the form.
-    // Other split types (exact, percentage, shares) require per-participant
-    // value inputs that will be added in the live split preview task.
-    if (formValues.split_type !== "equal") {
-      throw new Error(
-        `Split type "${formValues.split_type}" is not yet supported. Please use "equal" for now.`,
-      );
-    }
+    let splitResults: SplitResult[];
 
-    const splitResults = calculateSplit({
-      splitType: "equal",
-      totalAmount: formValues.amount,
-      participants: selectedParticipants,
-    });
+    switch (formValues.split_type) {
+      case "equal": {
+        splitResults = calculateSplit({
+          splitType: "equal",
+          totalAmount: formValues.amount,
+          participants: selectedParticipants,
+        });
+        break;
+      }
+      case "exact": {
+        splitResults = calculateSplit({
+          splitType: "exact",
+          totalAmount: formValues.amount,
+          participants: selectedParticipants.map((userId) => ({
+            userId,
+            amount: customSplitValues[userId] ?? 0,
+          })),
+        });
+        break;
+      }
+      case "percentage": {
+        splitResults = calculateSplit({
+          splitType: "percentage",
+          totalAmount: formValues.amount,
+          participants: selectedParticipants.map((userId) => ({
+            userId,
+            percent: customSplitValues[userId] ?? 0,
+          })),
+        });
+        break;
+      }
+      case "shares": {
+        splitResults = calculateSplit({
+          splitType: "shares",
+          totalAmount: formValues.amount,
+          participants: selectedParticipants.map((userId) => ({
+            userId,
+            shares: customSplitValues[userId] ?? 0,
+          })),
+        });
+        break;
+      }
+    }
 
     return splitResults.map((result) => ({
       user_id: result.userId,
@@ -362,9 +567,7 @@ export function AddExpenseForm({
             <RadioGroup
               value={watchedSplitType}
               onValueChange={(val) =>
-                setValue("split_type", val as SplitType, {
-                  shouldValidate: true,
-                })
+                handleSplitTypeChange(val as SplitType)
               }
               className="flex flex-wrap gap-3"
             >
@@ -388,21 +591,40 @@ export function AddExpenseForm({
               {members.map((member) => {
                 const isChecked = selectedParticipants.includes(member.userId);
                 return (
-                  <label
-                    key={member.userId}
-                    className="flex cursor-pointer items-center gap-2"
-                  >
-                    <Checkbox
-                      checked={isChecked}
-                      onCheckedChange={(checked) =>
-                        handleParticipantToggle(member.userId, checked)
-                      }
-                    />
-                    <span className="text-sm">
-                      {member.name}
-                      {member.userId === currentUserId ? " (you)" : ""}
-                    </span>
-                  </label>
+                  <div key={member.userId} className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <label className="flex cursor-pointer items-center gap-2 flex-1 min-w-0">
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={(checked) =>
+                            handleParticipantToggle(member.userId, checked)
+                          }
+                        />
+                        <span className="text-sm truncate">
+                          {member.name}
+                          {member.userId === currentUserId ? " (you)" : ""}
+                        </span>
+                      </label>
+                      {watchedSplitType !== "equal" && isChecked && (
+                        <Input
+                          type="number"
+                          inputMode="decimal"
+                          step={watchedSplitType === "shares" ? "1" : "0.01"}
+                          min="0"
+                          placeholder="0"
+                          className="w-28 text-right"
+                          value={customSplitValues[member.userId] ?? ""}
+                          onChange={(e) =>
+                            handleCustomValueChange(
+                              member.userId,
+                              e.target.value,
+                            )
+                          }
+                          aria-label={`${splitTypeInputLabels[watchedSplitType]} for ${member.name}`}
+                        />
+                      )}
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -411,7 +633,61 @@ export function AddExpenseForm({
                 At least one participant is required
               </p>
             )}
+            {/* Validation feedback for custom split values */}
+            {splitValidation && watchedSplitType !== "shares" && (
+              <p
+                className={cn(
+                  "text-sm",
+                  splitValidation.remaining === 0
+                    ? "text-muted-foreground"
+                    : "text-destructive",
+                )}
+              >
+                {splitValidation.remaining > 0
+                  ? `${splitValidation.remaining} ${splitValidation.unit} remaining`
+                  : splitValidation.remaining < 0
+                    ? `${Math.abs(splitValidation.remaining)} ${splitValidation.unit} over`
+                    : `Splits add up correctly`}
+              </p>
+            )}
+            {splitValidation && watchedSplitType === "shares" && (
+              <p className="text-sm text-muted-foreground">
+                Total: {splitValidation.total}{" "}
+                {splitValidation.total === 1 ? "share" : "shares"}
+              </p>
+            )}
           </Field>
+
+          {/* Split Preview */}
+          {splitPreview.results.length > 0 && (
+            <div className="rounded-xl border bg-muted/30 p-4">
+              <p className="mb-3 text-sm font-semibold">Split Preview</p>
+              <div className="flex flex-col gap-2">
+                {splitPreview.results.map((result) => {
+                  const member = members.find(
+                    (m) => m.userId === result.userId,
+                  );
+                  return (
+                    <div
+                      key={result.userId}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <span className="truncate">
+                        {member?.name ?? "Unknown"}
+                        {result.userId === currentUserId ? " (you)" : ""}
+                      </span>
+                      <span className="font-medium tabular-nums">
+                        {formatINR(result.amount)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {splitPreview.error && (
+            <p className="text-sm text-destructive">{splitPreview.error}</p>
+          )}
 
           <Button type="submit" size="lg" disabled={isPending}>
             {isPending && <Loader2 className="animate-spin" />}
