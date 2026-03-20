@@ -4,9 +4,9 @@ import {
   getMockGroupBalanceSummary,
   getMockGroupDetail,
   getMockGroupExpenses,
-  getMockGroupMembers,
 } from "@/lib/mock/group-detail";
 import { requireAuthenticatedUser } from "@/lib/auth/user";
+import { getGroupMembers } from "@/lib/queries/group-members";
 import { GroupDetailView } from "@/components/groups/group-detail-view";
 
 type GroupDetailPageProps = {
@@ -27,7 +27,7 @@ export default async function GroupDetailPage({
     getMockGroupDetail(id),
     getMockGroupExpenses(id),
     getMockGroupBalanceSummary(id),
-    getMockGroupMembers(id),
+    getGroupMembers(id),
   ]);
 
   if (!group) {
