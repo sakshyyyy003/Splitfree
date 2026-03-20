@@ -414,6 +414,15 @@ export type Database = {
         };
         Returns: Json;
       };
+      update_expense_with_splits: {
+        Args: {
+          _expense_id: string;
+          _expected_updated_at: string;
+          _expense_data: Json;
+          _splits_data: Json;
+        };
+        Returns: Json;
+      };
       is_group_admin: {
         Args: {
           _group_id: string;

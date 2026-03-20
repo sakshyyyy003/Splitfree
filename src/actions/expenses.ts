@@ -5,8 +5,10 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
   createExpenseWithSplitsSchema,
+  updateExpenseWithSplitsSchema,
   deleteExpenseSchema,
   type CreateExpenseWithSplitsInput,
+  type UpdateExpenseWithSplitsInput,
   type DeleteExpenseInput,
 } from "@/lib/validators/expense";
 import type { ActionResult } from "@/actions/auth";
@@ -62,6 +64,80 @@ export async function createExpense(
       error: {
         code: "create_failed",
         message: "Failed to create expense. Please try again.",
+      },
+    };
+  }
+
+  const expense = data as unknown as Expense;
+
+  if (expense.group_id) {
+    revalidatePath(`/groups/${expense.group_id}`);
+  }
+
+  return { data: expense, error: null };
+}
+
+export async function updateExpense(
+  input: UpdateExpenseWithSplitsInput,
+): Promise<ActionResult<Expense>> {
+  const parsed = updateExpenseWithSplitsSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      data: null,
+      error: {
+        code: "validation_error",
+        message: parsed.error.issues[0]?.message ?? "Invalid expense data",
+      },
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      data: null,
+      error: { code: "unauthorized", message: "You must be signed in" },
+    };
+  }
+
+  // Server-side enforcement: override created_by with the authenticated user's ID
+  const expenseData = {
+    ...parsed.data.expense,
+    created_by: user.id,
+  };
+
+  const { data, error: rpcError } = await supabase.rpc(
+    "update_expense_with_splits",
+    {
+      _expense_id: parsed.data.expense_id,
+      _expected_updated_at: parsed.data.expected_updated_at,
+      _expense_data: expenseData as unknown as Record<string, unknown>,
+      _splits_data: parsed.data.splits as unknown as Record<string, unknown>[],
+    },
+  );
+
+  if (rpcError) {
+    if (rpcError.message.includes("Conflict:")) {
+      return {
+        data: null,
+        error: {
+          code: "conflict",
+          message:
+            "This expense was modified by another user. Please refresh and try again.",
+        },
+      };
+    }
+
+    return {
+      data: null,
+      error: {
+        code: "update_failed",
+        message: "Failed to update expense. Please try again.",
       },
     };
   }

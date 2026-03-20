@@ -1,6 +1,6 @@
 import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { getGroupMembers } from "@/lib/queries/group-members";
-import { AddExpenseForm } from "@/components/expenses/add-expense-form";
+import { ExpenseForm } from "@/components/expenses/expense-form";
 
 type AddExpensePageProps = {
   params: Promise<{
@@ -30,10 +30,11 @@ export default async function AddExpensePage({ params }: AddExpensePageProps) {
         </p>
       </section>
 
-      <AddExpenseForm
+      <ExpenseForm
         groupId={groupId}
         members={members}
         currentUserId={user.id}
+        mode="create"
       />
     </div>
   );
