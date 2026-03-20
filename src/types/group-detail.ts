@@ -32,6 +32,7 @@ export type ExpenseSplitParticipant = {
 
 export type GroupExpenseDetail = GroupExpense & {
   groupId: string;
+  createdByUserId: string;
   splitType: "equal" | "exact" | "percentage" | "shares";
   participants: ExpenseSplitParticipant[];
 };

@@ -12,11 +12,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeleteExpenseButton } from "@/components/groups/delete-expense-button";
 import type { GroupDetail, GroupExpenseDetail } from "@/types/group-detail";
 
 type ExpenseDetailViewProps = {
   group: GroupDetail;
   expense: GroupExpenseDetail;
+  canDelete: boolean;
 };
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
@@ -62,6 +64,7 @@ const splitTypeLabels: Record<GroupExpenseDetail["splitType"], string> = {
 export function ExpenseDetailView({
   group,
   expense,
+  canDelete,
 }: ExpenseDetailViewProps) {
   const payerContribution = expense.participants.find(
     (participant) => participant.userId === expense.paidByUserId,
@@ -111,6 +114,11 @@ export function ExpenseDetailView({
                 <PencilLine className="size-4" />
                 Edit expense
               </Link>
+              <DeleteExpenseButton
+                expenseId={expense.id}
+                groupId={group.id}
+                canDelete={canDelete}
+              />
             </div>
           </div>
 

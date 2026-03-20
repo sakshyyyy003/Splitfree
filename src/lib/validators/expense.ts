@@ -98,6 +98,15 @@ export const createExpenseWithSplitsSchema = z
   );
 
 // -------------------------------------------------------
+// Delete expense schema
+// -------------------------------------------------------
+
+export const deleteExpenseSchema = z.object({
+  expense_id: z.uuid({ error: "Invalid expense ID" }),
+  group_id: z.uuid({ error: "Invalid group ID" }),
+});
+
+// -------------------------------------------------------
 // Inferred types
 // -------------------------------------------------------
 
@@ -106,3 +115,4 @@ export type SplitInput = z.infer<typeof splitSchema>;
 export type CreateExpenseWithSplitsInput = z.infer<
   typeof createExpenseWithSplitsSchema
 >;
+export type DeleteExpenseInput = z.infer<typeof deleteExpenseSchema>;
