@@ -411,6 +411,13 @@ export type Database = {
         Args: Record<string, never>;
         Returns: Json;
       };
+      create_direct_expense_with_splits: {
+        Args: {
+          _expense_data: Json;
+          _splits_data: Json;
+        };
+        Returns: Json;
+      };
       create_expense_with_splits: {
         Args: {
           _expense_data: Json;
