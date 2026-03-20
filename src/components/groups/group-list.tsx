@@ -31,7 +31,7 @@ const categoryLabels: Record<string, string> = {
 export function GroupList({ groups }: GroupListProps) {
   if (groups.length === 0) {
     return (
-      <Card className="border-dashed bg-gradient-to-br from-card via-card to-secondary/45">
+      <Card className="border-dashed bg-card">
         <CardHeader className="gap-3">
           <Badge variant="outline" className="w-fit">
             Groups
@@ -43,13 +43,13 @@ export function GroupList({ groups }: GroupListProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-[1.75rem] border border-border/70 bg-background/80 p-5 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-border bg-card p-5 text-sm text-muted-foreground">
             Create your first group to start tracking shared expenses and
             balances in one place.
           </div>
           <Link
             href="/groups/new"
-            className="mt-4 inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full border border-primary bg-primary px-5 text-sm font-bold whitespace-nowrap text-primary-foreground shadow-panel transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px sm:w-auto"
+            className="mt-4 inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-none border border-primary bg-primary px-5 text-sm font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px sm:w-auto"
           >
             Create your first group
           </Link>
@@ -70,7 +70,7 @@ export function GroupList({ groups }: GroupListProps) {
 
         return (
           <Link key={group.id} href={`/groups/${group.id}`} className="block">
-            <Card className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/35 transition-transform duration-150 hover:-translate-y-0.5">
+            <Card className="border-2 border-border bg-card transition-transform duration-150 hover:-translate-y-0.5">
               <CardHeader className="gap-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-2">
@@ -88,10 +88,6 @@ export function GroupList({ groups }: GroupListProps) {
                     <CardTitle>{group.name}</CardTitle>
                   </div>
                 </div>
-                <CardDescription className="min-h-10 text-sm leading-6">
-                  {group.description?.trim() ||
-                    "Shared expenses, balances, and settlements in one place."}
-                </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-4">
@@ -131,7 +127,7 @@ function MetricPill({
   valueClassName,
 }: MetricPillProps) {
   return (
-    <div className="rounded-[1.5rem] border border-border/70 bg-background/80 p-4">
+    <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
         <Icon className="size-3.5" />
         <span>{label}</span>

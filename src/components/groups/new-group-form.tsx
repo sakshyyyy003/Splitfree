@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImagePlus, Loader2, X } from "lucide-react";
+import { Camera, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -16,30 +16,17 @@ import {
 } from "@/lib/validators/group";
 import { createGroup } from "@/actions/group";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Field, FieldError } from "@/components/ui/field";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { FieldError } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 
-const categoryLabels: Record<GroupCategory, string> = {
-  trip: "Trip",
-  home: "Home",
-  couple: "Couple",
-  other: "Other",
+const categoryConfig: Record<
+  GroupCategory,
+  { label: string; emoji: string }
+> = {
+  trip: { label: "TRIP", emoji: "\u2708\uFE0F" },
+  home: { label: "HOME", emoji: "\uD83C\uDFE0" },
+  couple: { label: "COUPLE", emoji: "\u2764\uFE0F" },
+  other: { label: "OTHER", emoji: "\u25CF" },
 };
 
 export function NewGroupForm() {
@@ -110,112 +97,120 @@ export function NewGroupForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>New Group</CardTitle>
-        <CardDescription>
-          Create a group to start tracking shared expenses with friends.
-        </CardDescription>
-      </CardHeader>
+    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md sm:p-8">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col"
+      >
+        {/* Group Name */}
+        <div className="mb-6">
+          <label className="mb-3 block text-xs font-bold uppercase tracking-ultra">
+            Group Name
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. Goa Trip 2026"
+            autoComplete="off"
+            aria-invalid={!!errors.name}
+            className={cn(
+              "w-full border-2 border-gray-300 bg-transparent px-4 py-4 text-lg font-bold rounded-lg transition-colors focus:border-hotgreen focus:outline-none",
+              errors.name && "border-destructive",
+            )}
+            {...register("name")}
+          />
+          <FieldError>{errors.name?.message}</FieldError>
+        </div>
 
-      <CardContent>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-5"
-        >
-          {/* Cover Image Upload */}
-          <div className="flex flex-col gap-2">
-            <Label>Cover Image</Label>
-            {coverPreview ? (
-              <div className="relative overflow-hidden rounded-2xl border border-border">
-                <Image
-                  src={coverPreview}
-                  alt="Cover preview"
-                  width={600}
-                  height={200}
-                  className="h-40 w-full object-cover"
-                />
+        {/* Category Grid */}
+        <div className="mb-6">
+          <label className="mb-3 block text-xs font-bold uppercase tracking-ultra">
+            Category
+          </label>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {GROUP_CATEGORIES.map((cat) => {
+              const config = categoryConfig[cat];
+              const isSelected = selectedCategory === cat;
+
+              return (
                 <button
+                  key={cat}
                   type="button"
-                  onClick={handleRemoveCover}
-                  className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
-                  aria-label="Remove cover image"
+                  onClick={() =>
+                    setValue("category", cat, { shouldValidate: true })
+                  }
+                  className={cn(
+                    "flex flex-col items-center justify-center p-4 text-center text-sm font-bold transition-colors",
+                    isSelected
+                      ? "border-2 border-hotgreen bg-hotgreen/10"
+                      : "rounded-lg border-2 border-gray-200 hover:border-hotgreen",
+                  )}
                 >
-                  <X className="size-4" />
+                  <div className="mb-1 text-2xl">{config.emoji}</div>
+                  {config.label}
                 </button>
-              </div>
-            ) : (
+              );
+            })}
+          </div>
+          <FieldError>{errors.category?.message}</FieldError>
+        </div>
+
+        {/* Cover Photo */}
+        <div className="mb-8">
+          <label className="mb-2 block text-xs font-bold uppercase tracking-ultra">
+            Cover Photo
+          </label>
+          {coverPreview ? (
+            <div className="relative overflow-hidden rounded-lg border border-gray-200">
+              <Image
+                src={coverPreview}
+                alt="Cover preview"
+                width={600}
+                height={200}
+                className="h-40 w-full object-cover"
+              />
               <button
                 type="button"
-                onClick={handleCoverClick}
-                className={cn(
-                  "flex h-40 w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-secondary/50 text-muted-foreground transition-colors hover:border-ring hover:bg-secondary",
-                )}
+                onClick={handleRemoveCover}
+                className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+                aria-label="Remove cover image"
               >
-                <ImagePlus className="size-8" />
-                <span className="text-sm font-medium">
-                  Click to upload a cover image
-                </span>
+                <X className="size-4" />
               </button>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleFileChange}
-              className="sr-only"
-              aria-label="Upload cover image"
-            />
-            <p className="text-xs text-muted-foreground">
-              Optional. JPEG, PNG or WebP (max 5 MB).
-            </p>
-          </div>
-
-          {/* Group Name */}
-          <Field>
-            <Label htmlFor="name">Group Name</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="e.g. Goa Trip 2026"
-              autoComplete="off"
-              aria-invalid={!!errors.name}
-              {...register("name")}
-            />
-            <FieldError>{errors.name?.message}</FieldError>
-          </Field>
-
-          {/* Category */}
-          <Field>
-            <Label>Category</Label>
-            <Select
-              value={selectedCategory}
-              onValueChange={(val) =>
-                setValue("category", val as GroupCategory, {
-                  shouldValidate: true,
-                })
-              }
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleCoverClick}
+              className="flex items-center gap-2 rounded-sm border border-gray-200 bg-transparent px-3 py-2 text-xs text-textsec transition-colors hover:border-gray-400"
             >
-              <SelectTrigger className="w-full" aria-invalid={!!errors.category}>
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {GROUP_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {categoryLabels[cat]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError>{errors.category?.message}</FieldError>
-          </Field>
+              <Camera className="size-4" />
+              <span className="font-medium">Add cover photo</span>
+            </button>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleFileChange}
+            className="sr-only"
+            aria-label="Upload cover image"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Optional. JPEG, PNG or WebP (max 5 MB).
+          </p>
+        </div>
 
-          <Button type="submit" size="lg" disabled={isPending}>
-            {isPending && <Loader2 className="animate-spin" />}
-            Create Group
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        {/* Submit */}
+        <Button
+          type="submit"
+          size="lg"
+          disabled={isPending}
+          className="w-full bg-hotgreen py-5 text-lg text-black hover:bg-lime"
+        >
+          {isPending && <Loader2 className="animate-spin" />}
+          CREATE GROUP
+        </Button>
+      </form>
+    </div>
   );
 }

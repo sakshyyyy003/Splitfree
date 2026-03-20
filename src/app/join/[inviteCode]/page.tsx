@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getGroupByInviteCode } from "@/lib/queries/group";
@@ -58,7 +57,7 @@ export default async function JoinPage({ params }: JoinPageProps) {
 
     return (
       <Shell>
-        <Card className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/35">
+        <Card className="border-2 border-border bg-card">
           <CardHeader className="items-center gap-3 text-center">
             <CardTitle className="text-2xl">
               Join &ldquo;{group.name}&rdquo;
@@ -98,11 +97,8 @@ function Shell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center gap-2">
-          <div className="flex size-12 items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-subtle">
-            <Sparkles className="size-5" />
-          </div>
-          <p className="font-display text-lg font-bold tracking-tight">
-            SplitFree
+          <p className="text-xl font-bold tracking-tight">
+            SPLIT<span className="text-hotgreen">FREE</span>
           </p>
         </div>
         {children}

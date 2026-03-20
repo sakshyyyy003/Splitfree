@@ -18,28 +18,10 @@ import { createDirectExpense } from "@/actions/expenses";
 import type { ProfileResult } from "@/actions/search";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FieldError } from "@/components/ui/field";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Field, FieldError } from "@/components/ui/field";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
 import { UserSearch } from "@/components/ui/user-search";
 import { cn } from "@/lib/utils";
 
@@ -59,21 +41,21 @@ const EXPENSE_CATEGORIES = [
 
 type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
-const categoryLabels: Record<ExpenseCategory, string> = {
-  food: "Food",
-  transport: "Transport",
-  accommodation: "Accommodation",
-  entertainment: "Entertainment",
-  utilities: "Utilities",
-  shopping: "Shopping",
-  other: "Other",
+const categoryConfig: Record<ExpenseCategory, { label: string; emoji: string }> = {
+  food: { label: "Food", emoji: "🍽️" },
+  transport: { label: "Travel", emoji: "🚗" },
+  accommodation: { label: "Stay", emoji: "🏠" },
+  entertainment: { label: "Fun", emoji: "🎭" },
+  utilities: { label: "Bills", emoji: "⚡" },
+  shopping: { label: "Shopping", emoji: "🛒" },
+  other: { label: "Other", emoji: "●" },
 };
 
-const splitTypeLabels: Record<SplitType, string> = {
-  equal: "Equal",
-  exact: "Exact",
-  percentage: "Percentage",
-  shares: "Shares",
+const splitTypeConfig: Record<SplitType, { symbol: string; label: string }> = {
+  equal: { symbol: "=", label: "EQUAL" },
+  exact: { symbol: "$", label: "EXACT" },
+  percentage: { symbol: "%", label: "PERCENT" },
+  shares: { symbol: "#", label: "SHARES" },
 };
 
 const splitTypeInputLabels: Record<SplitType, string> = {
@@ -82,6 +64,8 @@ const splitTypeInputLabels: Record<SplitType, string> = {
   percentage: "Percentage (%)",
   shares: "Shares",
 };
+
+const avatarColors = ["bg-black text-white", "bg-hotgreen text-black", "bg-highlight text-black", "bg-gray-500 text-white"];
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -312,7 +296,6 @@ export function DirectExpenseForm({
 
   function handleFriendSelect(profile: ProfileResult) {
     setSelectedFriend(profile);
-    // Reset custom split values when friend changes
     setCustomSplitValues({});
   }
 
@@ -331,7 +314,6 @@ export function DirectExpenseForm({
 
   function handleSplitTypeChange(newType: SplitType) {
     setValue("split_type", newType, { shouldValidate: true });
-    // Reset custom values when switching split types to avoid stale data
     setCustomSplitValues({});
   }
 
@@ -425,7 +407,6 @@ export function DirectExpenseForm({
             amount: formValues.amount,
             currency: "INR",
             date: formValues.date,
-            // paid_by and created_by are enforced server-side
             paid_by: currentUserId,
             created_by: currentUserId,
             split_type: formValues.split_type,
@@ -456,276 +437,319 @@ export function DirectExpenseForm({
     : "Pick a date";
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Add Direct Expense</CardTitle>
-        <CardDescription>
-          Record a 1-on-1 expense with a friend, outside of any group.
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-5"
-        >
-          {/* Friend selection */}
-          <Field>
-            <Label>Split with</Label>
-            {selectedFriend ? (
-              <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-3">
-                <Avatar size="sm">
-                  {selectedFriend.avatar_url ? (
-                    <AvatarImage
-                      src={selectedFriend.avatar_url}
-                      alt={selectedFriend.name ?? selectedFriend.email}
-                    />
-                  ) : null}
-                  <AvatarFallback>
-                    {getInitials(selectedFriend.name, selectedFriend.email)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  {selectedFriend.name ? (
-                    <p className="truncate text-sm font-semibold">
-                      {selectedFriend.name}
-                    </p>
-                  ) : null}
-                  <p className="truncate text-sm text-muted-foreground">
-                    {selectedFriend.email}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={handleFriendRemove}
-                  aria-label="Remove selected friend"
-                >
-                  <X className="size-4" />
-                </Button>
-              </div>
-            ) : (
-              <UserSearch
-                onSelect={handleFriendSelect}
-                excludeUserIds={[currentUserId]}
-                placeholder="Search for a friend by name or email..."
-              />
-            )}
-            {!selectedFriend && (
-              <p className="text-sm text-muted-foreground">
-                Search and select the person you want to split this expense with.
-              </p>
-            )}
-          </Field>
-
-          {/* Description */}
-          <Field>
-            <Label htmlFor="description">Description</Label>
-            <Input
-              id="description"
-              type="text"
-              placeholder="e.g. Coffee at Blue Tokai"
-              autoComplete="off"
-              aria-invalid={!!errors.description}
-              {...register("description")}
-            />
-            <FieldError>{errors.description?.message}</FieldError>
-          </Field>
-
-          {/* Amount */}
-          <Field>
-            <Label htmlFor="amount">Amount (INR)</Label>
-            <Input
-              id="amount"
+    <div className="rounded-xl border-2 border-hotgreen bg-white p-6 sm:p-8">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col"
+      >
+        {/* Big Amount Input */}
+        <div className="mb-8 text-center">
+          <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
+            Amount
+          </label>
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-4xl font-bold text-textsec">₹</span>
+            <input
               type="number"
               inputMode="decimal"
               step="0.01"
               min="0.01"
-              placeholder="0.00"
+              placeholder="0"
               autoComplete="off"
               aria-invalid={!!errors.amount}
+              className="w-48 bg-transparent text-center font-bold focus:outline-none"
+              style={{ fontSize: "72px", lineHeight: 1 }}
               {...register("amount", { valueAsNumber: true })}
             />
-            <FieldError>{errors.amount?.message}</FieldError>
-          </Field>
+          </div>
+          <div className="mx-auto mt-2 h-1 w-32 bg-hotgreen" />
+          <FieldError>{errors.amount?.message}</FieldError>
+        </div>
 
-          {/* Date */}
-          <Field>
-            <Label>Date</Label>
-            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-              <PopoverTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !watchedDate && "text-muted-foreground",
-                    )}
+        {/* Split with */}
+        <div className="mb-6">
+          <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
+            Split with
+          </label>
+          {selectedFriend ? (
+            <div className="flex items-center gap-3 rounded-lg border-2 border-hotgreen bg-hotgreen/5 p-3">
+              <Avatar size="sm">
+                {selectedFriend.avatar_url ? (
+                  <AvatarImage
+                    src={selectedFriend.avatar_url}
+                    alt={selectedFriend.name ?? selectedFriend.email}
                   />
-                }
-              >
-                <CalendarIcon className="mr-2 size-4" />
-                {displayDate}
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={watchedDate ? new Date(watchedDate + "T00:00:00") : undefined}
-                  onSelect={handleDateSelect}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            <FieldError>{errors.date?.message}</FieldError>
-          </Field>
-
-          {/* Category */}
-          <Field>
-            <Label>Category</Label>
-            <Select
-              value={watchedCategory}
-              onValueChange={(val) =>
-                setValue("category", val as ExpenseCategory, {
-                  shouldValidate: true,
-                })
-              }
-            >
-              <SelectTrigger className="w-full" aria-invalid={!!errors.category}>
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {EXPENSE_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {categoryLabels[cat]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError>{errors.category?.message}</FieldError>
-          </Field>
-
-          {/* Notes */}
-          <Field>
-            <Label htmlFor="notes">Notes (optional)</Label>
-            <Textarea
-              id="notes"
-              placeholder="e.g. Paid via UPI"
-              autoComplete="off"
-              rows={2}
-              className="min-h-0"
-              {...register("notes")}
-            />
-            <FieldError>{errors.notes?.message}</FieldError>
-          </Field>
-
-          {/* Split Type */}
-          <Field>
-            <Label>Split type</Label>
-            <RadioGroup
-              value={watchedSplitType}
-              onValueChange={(val) =>
-                handleSplitTypeChange(val as SplitType)
-              }
-              className="flex flex-wrap gap-3"
-            >
-              {SPLIT_TYPES.map((type) => (
-                <label
-                  key={type}
-                  className="flex cursor-pointer items-center gap-2"
-                >
-                  <RadioGroupItem value={type} />
-                  <span className="text-sm">{splitTypeLabels[type]}</span>
-                </label>
-              ))}
-            </RadioGroup>
-            <FieldError>{errors.split_type?.message}</FieldError>
-          </Field>
-
-          {/* Split Configuration (non-equal only, shown when friend is selected) */}
-          {selectedFriend && watchedSplitType !== "equal" && (
-            <Field>
-              <Label>Split details</Label>
-              <div className="flex flex-col gap-3">
-                {participants.map((userId) => (
-                  <div key={userId} className="flex items-center gap-3">
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                      {getDisplayName(userId)}
-                    </span>
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      step={watchedSplitType === "shares" ? "1" : "0.01"}
-                      min="0"
-                      placeholder="0"
-                      className="w-28 text-right"
-                      value={customSplitValues[userId] ?? ""}
-                      onChange={(e) =>
-                        handleCustomValueChange(userId, e.target.value)
-                      }
-                      aria-label={`${splitTypeInputLabels[watchedSplitType]} for ${getDisplayName(userId)}`}
-                    />
-                  </div>
-                ))}
+                ) : null}
+                <AvatarFallback>
+                  {getInitials(selectedFriend.name, selectedFriend.email)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                {selectedFriend.name ? (
+                  <p className="truncate text-sm font-bold">
+                    {selectedFriend.name}
+                  </p>
+                ) : null}
+                <p className="truncate text-sm text-textsec">
+                  {selectedFriend.email}
+                </p>
               </div>
-              {/* Validation feedback */}
-              {splitValidation && watchedSplitType !== "shares" && (
-                <p
+              <button
+                type="button"
+                onClick={handleFriendRemove}
+                aria-label="Remove selected friend"
+                className="rounded-lg p-1 transition-colors hover:bg-black/5"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          ) : (
+            <UserSearch
+              onSelect={handleFriendSelect}
+              excludeUserIds={[currentUserId]}
+              placeholder="Search for a friend by name or email..."
+            />
+          )}
+          {!selectedFriend && (
+            <p className="mt-2 text-xs text-textsec">
+              Search and select the person you want to split this expense with.
+            </p>
+          )}
+        </div>
+
+        {/* Description */}
+        <div className="mb-6">
+          <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
+            Description
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. Coffee at Blue Tokai"
+            autoComplete="off"
+            aria-invalid={!!errors.description}
+            className={cn(
+              "w-full rounded-lg border-2 border-gray-300 bg-transparent px-4 py-4 text-lg font-bold transition-colors focus:border-hotgreen focus:outline-none",
+              errors.description && "border-destructive",
+            )}
+            {...register("description")}
+          />
+          <FieldError>{errors.description?.message}</FieldError>
+        </div>
+
+        {/* Date */}
+        <div className="mb-6">
+          <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
+            Date
+          </label>
+          <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+            <PopoverTrigger
+              render={
+                <button
+                  type="button"
                   className={cn(
-                    "text-sm",
-                    splitValidation.remaining === 0
-                      ? "text-muted-foreground"
-                      : "text-destructive",
+                    "flex w-full items-center gap-2 rounded-lg border-2 border-gray-300 bg-transparent px-4 py-4 text-left text-sm font-bold transition-colors hover:border-hotgreen",
+                    !watchedDate && "text-muted-foreground",
+                  )}
+                />
+              }
+            >
+              <CalendarIcon className="size-4" />
+              {displayDate}
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={watchedDate ? new Date(watchedDate + "T00:00:00") : undefined}
+                onSelect={handleDateSelect}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <FieldError>{errors.date?.message}</FieldError>
+        </div>
+
+        {/* Split Type */}
+        <div className="mb-6">
+          <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
+            Split Type
+          </label>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {SPLIT_TYPES.map((type) => {
+              const config = splitTypeConfig[type];
+              const isSelected = watchedSplitType === type;
+
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => handleSplitTypeChange(type)}
+                  className={cn(
+                    "p-4 text-center transition-colors",
+                    isSelected
+                      ? "border-2 border-hotgreen bg-hotgreen/10"
+                      : "rounded-lg border-2 border-gray-200 hover:border-hotgreen",
                   )}
                 >
-                  {splitValidation.remaining > 0
-                    ? `${splitValidation.remaining} ${splitValidation.unit} remaining`
-                    : splitValidation.remaining < 0
-                      ? `${Math.abs(splitValidation.remaining)} ${splitValidation.unit} over`
-                      : `Splits add up correctly`}
-                </p>
-              )}
-              {splitValidation && watchedSplitType === "shares" && (
-                <p className="text-sm text-muted-foreground">
-                  Total: {splitValidation.total}{" "}
-                  {splitValidation.total === 1 ? "share" : "shares"}
-                </p>
-              )}
-            </Field>
-          )}
+                  <div className="mb-1 text-xl font-bold">{config.symbol}</div>
+                  <div className="text-xs font-bold uppercase tracking-ultra">
+                    {config.label}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <FieldError>{errors.split_type?.message}</FieldError>
+        </div>
 
-          {/* Split Preview */}
-          {splitPreview.results.length > 0 && (
-            <div className="rounded-xl border bg-muted/30 p-4">
-              <p className="mb-3 text-sm font-semibold">Split Preview</p>
-              <div className="flex flex-col gap-2">
-                {splitPreview.results.map((result) => (
+        {/* Category Chips */}
+        <div className="mb-6">
+          <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
+            Category
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {EXPENSE_CATEGORIES.map((cat) => {
+              const config = categoryConfig[cat];
+              const isSelected = watchedCategory === cat;
+
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() =>
+                    setValue("category", cat, { shouldValidate: true })
+                  }
+                  className={cn(
+                    "px-4 py-2 text-xs font-bold transition-colors",
+                    isSelected
+                      ? "bg-black text-white"
+                      : "rounded-lg border border-gray-300 text-textsec hover:border-black",
+                  )}
+                >
+                  {config.emoji} {config.label}
+                </button>
+              );
+            })}
+          </div>
+          <FieldError>{errors.category?.message}</FieldError>
+        </div>
+
+        {/* Split Configuration (non-equal only, shown when friend is selected) */}
+        {selectedFriend && watchedSplitType !== "equal" && (
+          <div className="mb-6">
+            <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
+              Split Details
+            </label>
+            <div className="flex flex-col gap-3">
+              {participants.map((userId) => (
+                <div key={userId} className="flex items-center gap-3">
+                  <span className="min-w-0 flex-1 truncate text-sm font-bold">
+                    {getDisplayName(userId)}
+                  </span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step={watchedSplitType === "shares" ? "1" : "0.01"}
+                    min="0"
+                    placeholder="0"
+                    className="w-28 rounded-lg border-2 border-gray-300 bg-transparent px-3 py-2 text-right text-sm font-bold transition-colors focus:border-hotgreen focus:outline-none"
+                    value={customSplitValues[userId] ?? ""}
+                    onChange={(e) =>
+                      handleCustomValueChange(userId, e.target.value)
+                    }
+                    aria-label={`${splitTypeInputLabels[watchedSplitType]} for ${getDisplayName(userId)}`}
+                  />
+                </div>
+              ))}
+            </div>
+            {splitValidation && watchedSplitType !== "shares" && (
+              <p
+                className={cn(
+                  "mt-2 text-sm",
+                  splitValidation.remaining === 0
+                    ? "text-muted-foreground"
+                    : "text-destructive",
+                )}
+              >
+                {splitValidation.remaining > 0
+                  ? `${splitValidation.remaining} ${splitValidation.unit} remaining`
+                  : splitValidation.remaining < 0
+                    ? `${Math.abs(splitValidation.remaining)} ${splitValidation.unit} over`
+                    : `Splits add up correctly`}
+              </p>
+            )}
+            {splitValidation && watchedSplitType === "shares" && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Total: {splitValidation.total}{" "}
+                {splitValidation.total === 1 ? "share" : "shares"}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Split Preview */}
+        {splitPreview.results.length > 0 && (
+          <div className="mb-8 rounded-lg border border-gray-200 bg-background p-5">
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-ultra text-textsec">
+              Split Preview
+            </h4>
+            <div className="space-y-3">
+              {splitPreview.results.map((result, index) => {
+                const displayName = getDisplayName(result.userId);
+                const initials =
+                  result.userId === currentUserId
+                    ? currentUserName
+                        .split(" ")
+                        .map((p) => p[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase()
+                    : getInitials(selectedFriend?.name ?? null, selectedFriend?.email ?? "");
+                return (
                   <div
                     key={result.userId}
-                    className="flex items-center justify-between text-sm"
+                    className="flex items-center justify-between"
                   >
-                    <span className="truncate">
-                      {getDisplayName(result.userId)}
-                    </span>
-                    <span className="font-medium tabular-nums">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          "flex size-8 items-center justify-center rounded-full text-xs font-bold",
+                          avatarColors[index % avatarColors.length],
+                        )}
+                      >
+                        {initials}
+                      </div>
+                      <span className="text-sm font-bold">{displayName}</span>
+                    </div>
+                    <span className="font-bold tabular-nums">
                       {formatINR(result.amount)}
                     </span>
                   </div>
-                ))}
+                );
+              })}
+              <div className="mt-3 flex items-center justify-between border-t-2 border-black pt-3">
+                <span className="font-bold">Total</span>
+                <span className="text-lg font-bold">
+                  {formatINR(Number(watchedAmount) || 0)}
+                </span>
               </div>
             </div>
-          )}
-          {splitPreview.error && (
-            <p className="text-sm text-destructive">{splitPreview.error}</p>
-          )}
+          </div>
+        )}
+        {splitPreview.error && (
+          <p className="mb-6 text-sm text-destructive">{splitPreview.error}</p>
+        )}
 
-          <Button type="submit" size="lg" disabled={isPending || !selectedFriend}>
-            {isPending && <Loader2 className="animate-spin" />}
-            Add Expense
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        {/* Submit */}
+        <Button
+          type="submit"
+          size="lg"
+          disabled={isPending || !selectedFriend}
+          className="w-full bg-black py-5 text-lg text-white hover:bg-gray-900"
+        >
+          {isPending && <Loader2 className="animate-spin" />}
+          ADD EXPENSE
+        </Button>
+      </form>
+    </div>
   );
 }

@@ -10,9 +10,15 @@ import type { GroupMember } from "@/types/group-detail";
  * Joins `group_members` with `profiles` via the foreign key on `user_id`
  * and maps the result to the `GroupMember[]` shape used by the UI.
  */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function getGroupMembers(
   groupId: string,
 ): Promise<GroupMember[]> {
+  if (!UUID_RE.test(groupId)) {
+    return getMockGroupMembers(groupId);
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase

@@ -1,12 +1,15 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
+  Clock,
   LayoutDashboard,
   LogOut,
-  Sparkles,
+  Plus,
   UserRound,
+  Users,
 } from "lucide-react";
 
 import { signOut } from "@/actions/auth";
@@ -40,146 +43,95 @@ const navigationItems = [
   },
 ] as const;
 
-export function ProtectedShell({ children, user }: ProtectedShellProps) {
-  const pathname = usePathname();
-  const displayName = user.name?.trim() || user.email || "SplitFree member";
+type MobileNavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  match: (pathname: string, searchParams: URLSearchParams) => boolean;
+};
+
+const mobileNavLeft: MobileNavItem[] = [
+  {
+    href: "/dashboard?tab=groups",
+    label: "Groups",
+    icon: Users,
+    match: (p, sp) => p === "/dashboard" && (sp.get("tab") ?? "groups") === "groups",
+  },
+  {
+    href: "/dashboard?tab=people",
+    label: "People",
+    icon: UserRound,
+    match: (p, sp) => p === "/dashboard" && sp.get("tab") === "people",
+  },
+];
+
+const mobileNavRight: MobileNavItem[] = [
+  {
+    href: "/dashboard?tab=activity",
+    label: "Activity",
+    icon: Clock,
+    match: (p, sp) => p === "/dashboard" && sp.get("tab") === "activity",
+  },
+  {
+    href: PROFILE_ROUTE,
+    label: "Profile",
+    icon: UserRound,
+    match: (p) => p === PROFILE_ROUTE || p.startsWith(`${PROFILE_ROUTE}/`),
+  },
+];
+
+function MobileBottomNav({ pathname }: { pathname: string }) {
+  const searchParams = useSearchParams();
+
+  function renderTab(item: MobileNavItem) {
+    const isActive = item.match(pathname, searchParams);
+    const Icon = item.icon;
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={cn(
+          "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] font-bold uppercase tracking-wide-custom transition-colors",
+          isActive
+            ? "text-hotgreen"
+            : "text-white/50 hover:text-white",
+        )}
+      >
+        <div
+          className={cn(
+            "flex size-6 items-center justify-center",
+            isActive && "bg-hotgreen text-black rounded-sm",
+          )}
+        >
+          <Icon className="size-4" />
+        </div>
+        <span>{item.label}</span>
+      </Link>
+    );
+  }
 
   return (
-    <div className="min-h-screen lg:p-4">
-      <div className="flex min-h-screen lg:min-h-[calc(100vh-2rem)] lg:gap-4">
-        <aside className="hidden w-64 shrink-0 rounded-[2.25rem] border border-sidebar-border bg-sidebar px-5 py-6 text-sidebar-foreground shadow-soft lg:flex lg:flex-col">
-          <div className="flex items-center gap-3 px-2">
-            <div className="flex size-12 items-center justify-center rounded-3xl bg-sidebar-primary text-sidebar-primary-foreground shadow-subtle">
-              <Sparkles className="size-5" />
-            </div>
-            <div>
-              <p className="font-display text-lg font-bold tracking-tight">
-                SplitFree
-              </p>
-              <p className="text-sm text-sidebar-foreground/65">
-                Shared money, less friction
-              </p>
-            </div>
-          </div>
+    <nav className="fixed inset-x-0 bottom-0 z-30 bg-black border-t-2 border-hotgreen px-2 pb-3 pt-2 lg:hidden">
+      <div className="mx-auto flex max-w-md items-center">
+        {/* Left tabs */}
+        {mobileNavLeft.map(renderTab)}
 
-          <nav className="mt-8 space-y-2">
-            {navigationItems.map((item) => {
-              const isActive = item.match(pathname);
-              const Icon = item.icon;
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold transition-colors",
-                    isActive
-                      ? "border-sidebar-primary/10 bg-sidebar-primary text-sidebar-primary-foreground shadow-subtle"
-                      : "border-transparent text-sidebar-foreground/75 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  )}
-                >
-                  <Icon className="size-4" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="mt-auto rounded-[1.75rem] border border-sidebar-border bg-sidebar-accent/70 p-4">
-            <div className="flex items-center gap-3">
-              <Avatar size="sm" className="ring-1 ring-sidebar-border">
-                {user.avatarUrl ? (
-                  <AvatarImage src={user.avatarUrl} alt={displayName} />
-                ) : null}
-                <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
-                  {getInitials(displayName)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{displayName}</p>
-                <p className="truncate text-xs text-sidebar-foreground/65">
-                  {user.email ?? "Signed in"}
-                </p>
-              </div>
-            </div>
-
-            <form action={signOut} className="mt-4">
-              <Button
-                type="submit"
-                variant="secondary"
-                className="w-full justify-center border-sidebar-border bg-sidebar-primary/90 text-sidebar-primary-foreground hover:bg-sidebar-primary"
-              >
-                <LogOut className="size-4" />
-                Sign out
-              </Button>
-            </form>
-          </div>
-        </aside>
-
-        <div className="flex min-h-screen flex-1 flex-col lg:min-h-[calc(100vh-2rem)]">
-          <header className="sticky top-0 z-20 border-b border-border/80 bg-background/95 px-4 py-4 backdrop-blur lg:hidden">
-            <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-              <div>
-                <p className="font-display text-xl font-bold tracking-tight">
-                  SplitFree
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {getCurrentLabel(pathname)}
-                </p>
-              </div>
-              <Link href={PROFILE_ROUTE} aria-label="Open profile">
-                <Avatar size="sm">
-                  {user.avatarUrl ? (
-                    <AvatarImage src={user.avatarUrl} alt={displayName} />
-                  ) : null}
-                  <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
-                </Avatar>
-              </Link>
-            </div>
-          </header>
-
-          <main className="flex-1 px-4 py-6 pb-28 sm:px-6 lg:rounded-[2.25rem] lg:border lg:border-border/80 lg:bg-white/85 lg:px-8 lg:py-10 lg:pb-10 lg:shadow-soft">
-            <div className="mx-auto w-full max-w-7xl">{children}</div>
-          </main>
-
-          <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/80 bg-background/95 px-3 pb-3 pt-2 backdrop-blur lg:hidden">
-            <div className="mx-auto flex max-w-md items-center gap-2 rounded-[1.75rem] border border-border/80 bg-white/90 p-2 shadow-panel">
-              {navigationItems.map((item) => {
-                const isActive = item.match(pathname);
-                const Icon = item.icon;
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2 text-xs font-semibold transition-colors",
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                    )}
-                  >
-                    <Icon className="size-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-
-              <form action={signOut} className="flex-1">
-                <Button
-                  type="submit"
-                  variant="outline"
-                  className="h-full w-full flex-col gap-1 rounded-2xl px-3 py-2 text-xs font-semibold"
-                >
-                  <LogOut className="size-4" />
-                  Sign out
-                </Button>
-              </form>
-            </div>
-          </nav>
+        {/* Center CTA */}
+        <div className="flex flex-col items-center justify-center px-3 -mt-5">
+          <Link
+            href="/expenses/direct/new"
+            aria-label="Add new"
+            className="flex size-12 items-center justify-center rounded-full bg-hotgreen text-black shadow-[0_0_12px_rgba(0,255,100,0.4)]"
+          >
+            <Plus className="size-6" strokeWidth={3} />
+          </Link>
         </div>
+
+        {/* Right tabs */}
+        {mobileNavRight.map(renderTab)}
       </div>
-    </div>
+    </nav>
   );
 }
 
@@ -197,8 +149,106 @@ function getInitials(value: string) {
   return parts.map((part) => part[0]?.toUpperCase() ?? "").join("");
 }
 
-function getCurrentLabel(pathname: string) {
-  const currentItem = navigationItems.find((item) => item.match(pathname));
+export function ProtectedShell({ children, user }: ProtectedShellProps) {
+  const pathname = usePathname();
+  const displayName = user.name?.trim() || user.email || "SplitFree member";
 
-  return currentItem?.label ?? "Workspace";
+  return (
+    <div className="min-h-screen lg:p-4">
+      <div className="flex min-h-screen lg:min-h-[calc(100vh-2rem)] lg:gap-4">
+        {/* Desktop Sidebar */}
+        <aside className="hidden w-64 shrink-0 bg-sidebar px-5 py-6 text-sidebar-foreground lg:flex lg:flex-col">
+          <div className="flex items-center gap-3 px-2">
+            <p className="text-xl font-bold tracking-tight">
+              SPLIT<span className="text-hotgreen">FREE</span>
+            </p>
+          </div>
+
+          <nav className="mt-8 space-y-1">
+            {navigationItems.map((item) => {
+              const isActive = item.match(pathname);
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-ultra transition-colors",
+                    isActive
+                      ? "bg-hotgreen text-black"
+                      : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  )}
+                >
+                  <Icon className="size-4" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="mt-auto border-t border-sidebar-border pt-4">
+            <div className="flex items-center gap-3 px-2">
+              <Avatar size="sm">
+                {user.avatarUrl ? (
+                  <AvatarImage src={user.avatarUrl} alt={displayName} />
+                ) : null}
+                <AvatarFallback className="bg-hotgreen text-black">
+                  {getInitials(displayName)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold">{displayName}</p>
+                <p className="truncate text-xs text-sidebar-foreground/65">
+                  {user.email ?? "Signed in"}
+                </p>
+              </div>
+            </div>
+
+            <form action={signOut} className="mt-4">
+              <Button
+                type="submit"
+                variant="outline"
+                className="w-full justify-center border-sidebar-border bg-transparent text-sidebar-foreground hover:bg-hotgreen hover:text-black hover:border-hotgreen"
+              >
+                <LogOut className="size-4" />
+                Sign out
+              </Button>
+            </form>
+          </div>
+        </aside>
+
+        <div className="flex min-h-screen flex-1 flex-col lg:min-h-[calc(100vh-2rem)]">
+          {/* Mobile Header */}
+          <header className="sticky top-0 z-20 bg-black px-4 py-4 lg:hidden">
+            <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+              <p className="text-xl font-bold tracking-tight text-white">
+                SPLIT<span className="text-hotgreen">FREE</span>
+              </p>
+              <Link href={PROFILE_ROUTE} aria-label="Open profile">
+                <Avatar size="sm">
+                  {user.avatarUrl ? (
+                    <AvatarImage src={user.avatarUrl} alt={displayName} />
+                  ) : null}
+                  <AvatarFallback className="bg-hotgreen text-black">
+                    {getInitials(displayName)}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+            </div>
+          </header>
+
+          {/* Main Content */}
+          <main className="flex-1 px-4 py-6 pb-28 sm:px-6 lg:px-8 lg:py-10 lg:pb-10">
+            <div className="mx-auto w-full max-w-7xl">{children}</div>
+          </main>
+
+          {/* Mobile Bottom Nav */}
+          <Suspense>
+            <MobileBottomNav pathname={pathname} />
+          </Suspense>
+        </div>
+      </div>
+    </div>
+  );
 }
