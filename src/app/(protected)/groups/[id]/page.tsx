@@ -19,14 +19,12 @@ export default async function GroupDetailPage({
 }: GroupDetailPageProps) {
   const { id } = await params;
 
-  const [group, expenses, balancesResult, members] = await Promise.all([
+  const [group, expenses, balanceSummary, members] = await Promise.all([
     getMockGroupDetail(id),
     getMockGroupExpenses(id),
     getGroupBalances(id),
     getMockGroupMembers(id),
   ]);
-
-  const { balances, simplifiedDebts } = balancesResult;
 
   if (!group) {
     notFound();
@@ -36,8 +34,8 @@ export default async function GroupDetailPage({
     <GroupDetailView
       group={group}
       expenses={expenses}
-      balances={balances}
-      simplifiedDebts={simplifiedDebts}
+      balances={balanceSummary.balances}
+      simplifiedDebts={balanceSummary.simplifiedDebts}
       members={members}
     />
   );

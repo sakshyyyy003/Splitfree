@@ -3,8 +3,8 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type {
   GroupBalance,
-  GroupBalancesResult,
-  SimplifiedDebt,
+  GroupBalanceSummary,
+  GroupSimplifiedDebt,
 } from "@/types/group-detail";
 
 /**
@@ -29,7 +29,7 @@ type RawGroupBalancesResponse = {
 
 export async function getGroupBalances(
   groupId: string,
-): Promise<GroupBalancesResult> {
+): Promise<GroupBalanceSummary> {
   const supabase = await createClient();
 
   // 1. Call the Postgres function to get raw balances and simplified debts
@@ -102,13 +102,20 @@ export async function getGroupBalances(
     };
   });
 
-  // 6. Map simplified_debts (keys already match SimplifiedDebt shape)
-  const simplifiedDebts: SimplifiedDebt[] = raw.simplified_debts.map(
-    (debt) => ({
-      from: debt.from,
-      to: debt.to,
-      amount: debt.amount,
-    }),
+  // 6. Enrich simplified_debts with user names for the UI
+  const simplifiedDebts: GroupSimplifiedDebt[] = raw.simplified_debts.map(
+    (debt) => {
+      const fromMember = memberLookup.get(debt.from);
+      const toMember = memberLookup.get(debt.to);
+
+      return {
+        fromUserId: debt.from,
+        fromName: fromMember?.name ?? "Unknown",
+        toUserId: debt.to,
+        toName: toMember?.name ?? "Unknown",
+        amount: debt.amount,
+      };
+    },
   );
 
   return { balances, simplifiedDebts };

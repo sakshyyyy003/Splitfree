@@ -45,6 +45,19 @@ export type GroupBalance = {
   netBalance: number;
 };
 
+export type GroupSimplifiedDebt = {
+  fromUserId: string;
+  fromName: string;
+  toUserId: string;
+  toName: string;
+  amount: number;
+};
+
+export type GroupBalanceSummary = {
+  balances: GroupBalance[];
+  simplifiedDebts: GroupSimplifiedDebt[];
+};
+
 export type GroupMember = {
   userId: string;
   name: string;
@@ -54,13 +67,3 @@ export type GroupMember = {
   joinedAt: string;
 };
 
-export type SimplifiedDebt = {
-  from: string;
-  to: string;
-  amount: number;
-};
-
-export type GroupBalancesResult = {
-  balances: GroupBalance[];
-  simplifiedDebts: SimplifiedDebt[];
-};

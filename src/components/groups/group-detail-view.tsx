@@ -12,7 +12,7 @@ import type {
   GroupDetail,
   GroupExpense,
   GroupMember,
-  SimplifiedDebt,
+  GroupSimplifiedDebt,
 } from "@/types/group-detail";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +30,7 @@ type GroupDetailViewProps = {
   group: GroupDetail;
   expenses: GroupExpense[];
   balances: GroupBalance[];
-  simplifiedDebts: SimplifiedDebt[];
+  simplifiedDebts: GroupSimplifiedDebt[];
   members: GroupMember[];
 };
 
@@ -70,8 +70,31 @@ export function GroupDetailView({
   group,
   expenses,
   balances,
+  simplifiedDebts,
   members,
 }: GroupDetailViewProps) {
+  const sortedBalances = [...balances].sort((left, right) => {
+    const magnitudeDifference =
+      Math.abs(right.netBalance) - Math.abs(left.netBalance);
+
+    if (magnitudeDifference !== 0) {
+      return magnitudeDifference;
+    }
+
+    return right.netBalance - left.netBalance;
+  });
+
+  const maxBalanceMagnitude = Math.max(
+    ...sortedBalances.map((balance) => Math.abs(balance.netBalance)),
+    1,
+  );
+  const totalOwedBack = sortedBalances.reduce((sum, balance) => {
+    return balance.netBalance > 0 ? sum + balance.netBalance : sum;
+  }, 0);
+  const totalDue = sortedBalances.reduce((sum, balance) => {
+    return balance.netBalance < 0 ? sum + Math.abs(balance.netBalance) : sum;
+  }, 0);
+
   return (
     <div className="space-y-8">
       <section className="rounded-[2rem] border border-border/80 bg-gradient-to-br from-white via-card to-secondary/45 px-6 py-6 shadow-soft sm:px-7 sm:py-7">
@@ -173,35 +196,143 @@ export function GroupDetailView({
                 money still due.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {balances.map((balance) => (
-                <div
-                  key={balance.userId}
-                  className="flex items-center justify-between gap-4 rounded-[1.5rem] border border-border/70 bg-background/85 p-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar size="sm">
-                      {balance.avatarUrl ? (
-                        <AvatarImage src={balance.avatarUrl} alt={balance.name} />
-                      ) : null}
-                      <AvatarFallback>{getInitials(balance.name)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold">{balance.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {balance.role === "admin" ? "Admin" : "Member"}
-                      </p>
+            <CardContent className="space-y-6">
+              <div className="grid gap-3 md:grid-cols-3">
+                <BalanceSummaryCard
+                  label="Money owed back"
+                  value={formatCurrency(totalOwedBack, group.currency)}
+                  helper={`${sortedBalances.filter((balance) => balance.netBalance > 0).length} members in credit`}
+                  tone="positive"
+                />
+                <BalanceSummaryCard
+                  label="Money still due"
+                  value={formatCurrency(totalDue, group.currency)}
+                  helper={`${sortedBalances.filter((balance) => balance.netBalance < 0).length} members need to settle`}
+                  tone="negative"
+                />
+                <BalanceSummaryCard
+                  label="Suggested settlements"
+                  value={`${simplifiedDebts.length}`}
+                  helper={
+                    simplifiedDebts.length === 1
+                      ? "Only one transfer needed"
+                      : "Greedy simplified debt preview"
+                  }
+                  tone="neutral"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                  <span>Member balances</span>
+                  <span>Scaled to the largest net position</span>
+                </div>
+
+                {sortedBalances.map((balance) => (
+                  <div
+                    key={balance.userId}
+                    className="rounded-[1.5rem] border border-border/70 bg-background/85 p-4"
+                  >
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar size="sm">
+                          {balance.avatarUrl ? (
+                            <AvatarImage src={balance.avatarUrl} alt={balance.name} />
+                          ) : null}
+                          <AvatarFallback>{getInitials(balance.name)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold">{balance.name}</p>
+                            <Badge
+                              variant={
+                                balance.role === "admin" ? "default" : "outline"
+                              }
+                            >
+                              {balance.role === "admin" ? "Admin" : "Member"}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {balance.email}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-left md:text-right">
+                        <p className={`font-bold ${getBalanceTone(balance.netBalance)}`}>
+                          {getMemberBalanceCopy(balance.netBalance, group.currency)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Net position
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      <div className="flex justify-between text-xs font-medium text-muted-foreground">
+                        <span>Owes</span>
+                        <span>Owed back</span>
+                      </div>
+                      <div className="flex h-3 overflow-hidden rounded-full bg-secondary/80">
+                        <div className="flex-1 px-0.5 py-0.5">
+                          <div className="flex h-full justify-end">
+                            <div
+                              className="h-full rounded-full bg-rose-500/90"
+                              style={{
+                                width: `${getBalanceBarWidth(
+                                  balance.netBalance,
+                                  maxBalanceMagnitude,
+                                )}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex-1 px-0.5 py-0.5">
+                          <div
+                            className="h-full rounded-full bg-emerald-600/90"
+                            style={{
+                              width: `${getPositiveBalanceBarWidth(
+                                balance.netBalance,
+                                maxBalanceMagnitude,
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
+                ))}
+              </div>
 
-                  <div className="text-right">
-                    <p className={`font-bold ${getBalanceTone(balance.netBalance)}`}>
-                      {getNetBalanceCopy(balance.netBalance, group.currency)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{balance.email}</p>
-                  </div>
+              <div className="space-y-3">
+                <div>
+                  <h3 className="text-lg font-bold">Simplified settlements</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Minimized transfers based on the current net balances.
+                  </p>
                 </div>
-              ))}
+
+                {simplifiedDebts.length > 0 ? (
+                  <div className="grid gap-3">
+                    {simplifiedDebts.map((debt) => (
+                      <div
+                        key={`${debt.fromUserId}-${debt.toUserId}`}
+                        className="flex flex-col gap-2 rounded-[1.5rem] border border-border/70 bg-secondary/35 p-4 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <p className="font-semibold text-foreground">
+                          {debt.fromName} owes {debt.toName}{" "}
+                          {formatCurrency(debt.amount, group.currency)}
+                        </p>
+                        <Badge variant="secondary">Suggested transfer</Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-[1.5rem] border border-dashed border-border/80 bg-background/70 p-5 text-sm text-muted-foreground">
+                    Everyone is settled up. No transfers are needed right now.
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -270,6 +401,39 @@ function MetricCard({ icon: Icon, label, value, helper }: MetricCardProps) {
   );
 }
 
+type BalanceSummaryCardProps = {
+  label: string;
+  value: string;
+  helper: string;
+  tone: "positive" | "negative" | "neutral";
+};
+
+function BalanceSummaryCard({
+  label,
+  value,
+  helper,
+  tone,
+}: BalanceSummaryCardProps) {
+  const toneClass =
+    tone === "positive"
+      ? "bg-emerald-50 text-emerald-800"
+      : tone === "negative"
+        ? "bg-rose-50 text-rose-800"
+        : "bg-secondary/60 text-foreground";
+
+  return (
+    <div className="rounded-[1.5rem] border border-border/70 bg-background/80 p-4">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+        {label}
+      </p>
+      <p className={`mt-2 inline-flex rounded-full px-3 py-1 text-lg font-bold ${toneClass}`}>
+        {value}
+      </p>
+      <p className="mt-2 text-sm text-muted-foreground">{helper}</p>
+    </div>
+  );
+}
+
 function getNetBalanceCopy(amount: number, currency: string) {
   if (amount > 0) {
     return `You are owed ${formatCurrency(amount, currency)}`;
@@ -280,6 +444,18 @@ function getNetBalanceCopy(amount: number, currency: string) {
   }
 
   return "All settled up";
+}
+
+function getMemberBalanceCopy(amount: number, currency: string) {
+  if (amount > 0) {
+    return `Gets back ${formatCurrency(amount, currency)}`;
+  }
+
+  if (amount < 0) {
+    return `Owes ${formatCurrency(Math.abs(amount), currency)}`;
+  }
+
+  return "Settled up";
 }
 
 function formatCurrency(amount: number, currency: string) {
@@ -314,6 +490,22 @@ function getBalanceTone(amount: number) {
   }
 
   return "text-foreground";
+}
+
+function getBalanceBarWidth(amount: number, maxBalanceMagnitude: number) {
+  if (amount >= 0) {
+    return 0;
+  }
+
+  return (Math.abs(amount) / maxBalanceMagnitude) * 100;
+}
+
+function getPositiveBalanceBarWidth(amount: number, maxBalanceMagnitude: number) {
+  if (amount <= 0) {
+    return 0;
+  }
+
+  return (amount / maxBalanceMagnitude) * 100;
 }
 
 function formatUpdatedAt(value: string) {

@@ -6,6 +6,7 @@ import groupMembers from "../../../mockdata/group-members.json";
 
 import type {
   GroupBalance,
+  GroupBalanceSummary,
   GroupDetail,
   GroupExpenseDetail,
   GroupExpense,
@@ -17,7 +18,7 @@ type GroupCollection<T> = Record<string, T[]>;
 const details = groupDetails as GroupDetail[];
 const expenseDetailsById = expenseDetails as Record<string, GroupExpenseDetail>;
 const expensesByGroup = groupExpenses as GroupCollection<GroupExpense>;
-const balancesByGroup = groupBalances as GroupCollection<GroupBalance>;
+const balanceSummaryByGroup = groupBalances as Record<string, GroupBalanceSummary>;
 const membersByGroup = groupMembers as GroupCollection<GroupMember>;
 
 export async function getMockGroupDetail(groupId: string) {
@@ -29,7 +30,16 @@ export async function getMockGroupExpenses(groupId: string) {
 }
 
 export async function getMockGroupBalances(groupId: string) {
-  return balancesByGroup[groupId] ?? [];
+  return balanceSummaryByGroup[groupId]?.balances ?? [];
+}
+
+export async function getMockGroupBalanceSummary(groupId: string) {
+  return (
+    balanceSummaryByGroup[groupId] ?? {
+      balances: [] as GroupBalance[],
+      simplifiedDebts: [],
+    }
+  );
 }
 
 export async function getMockGroupMembers(groupId: string) {
