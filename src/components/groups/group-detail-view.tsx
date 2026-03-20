@@ -35,6 +35,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { GroupExpenseList } from "@/components/groups/group-expense-list";
+import { RemoveMemberButton } from "@/components/groups/remove-member-button";
 import { UserSearch } from "@/components/ui/user-search";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -452,6 +453,16 @@ export function GroupDetailView({
                         Joined {dateFormatter.format(new Date(member.joinedAt))}
                       </p>
                     </div>
+                    <RemoveMemberButton
+                      groupId={group.id}
+                      userId={member.userId}
+                      memberName={member.name}
+                      canRemove={
+                        isAdmin &&
+                        member.userId !== currentUserId &&
+                        member.role !== "admin"
+                      }
+                    />
                   </div>
                 ))}
               </div>

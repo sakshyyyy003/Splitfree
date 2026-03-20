@@ -10,7 +10,9 @@ import {
 } from "@/lib/validators/group";
 import {
   addMemberSchema,
+  removeMemberSchema,
   type AddMemberInput,
+  type RemoveMemberInput,
 } from "@/lib/validators/group-member";
 import type { ActionResult } from "@/actions/auth";
 
@@ -354,6 +356,184 @@ export async function addMemberToGroup(
   }
 
   revalidatePath(`/groups/${parsed.data.groupId}`);
+
+  return { data: null, error: null };
+}
+
+export async function removeMember(
+  input: RemoveMemberInput,
+): Promise<ActionResult<null>> {
+  const parsed = removeMemberSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      data: null,
+      error: {
+        code: "validation_error",
+        message: parsed.error.issues[0]?.message ?? "Invalid input",
+      },
+    };
+  }
+
+  const { groupId, userId: targetUserId } = parsed.data;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      data: null,
+      error: { code: "unauthorized", message: "You must be signed in" },
+    };
+  }
+
+  // Check the caller is an admin of this group
+  const { data: callerMembership } = await supabase
+    .from("group_members")
+    .select("role")
+    .eq("group_id", groupId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!callerMembership || callerMembership.role !== "admin") {
+    return {
+      data: null,
+      error: {
+        code: "forbidden",
+        message: "Only group admins can remove members",
+      },
+    };
+  }
+
+  // Prevent admins from removing themselves
+  if (targetUserId === user.id) {
+    return {
+      data: null,
+      error: {
+        code: "forbidden",
+        message: "You cannot remove yourself from the group",
+      },
+    };
+  }
+
+  // Verify the target user is actually a member of this group
+  const { data: targetMembership } = await supabase
+    .from("group_members")
+    .select("id")
+    .eq("group_id", groupId)
+    .eq("user_id", targetUserId)
+    .single();
+
+  if (!targetMembership) {
+    return {
+      data: null,
+      error: {
+        code: "not_found",
+        message: "This user is not a member of the group",
+      },
+    };
+  }
+
+  // Balance safety check: compute the target member's net balance
+  // Balance = (amount paid for expenses) - (their share of expense splits)
+  //         - (settlements they made) + (settlements received)
+  const { data: expensesPaid } = await supabase
+    .from("expenses")
+    .select("amount")
+    .eq("group_id", groupId)
+    .eq("paid_by", targetUserId)
+    .eq("is_deleted", false);
+
+  const totalPaid = (expensesPaid ?? []).reduce(
+    (sum, expense) => sum + expense.amount,
+    0,
+  );
+
+  // Get expense IDs for this group to query splits
+  const { data: groupExpenses } = await supabase
+    .from("expenses")
+    .select("id")
+    .eq("group_id", groupId)
+    .eq("is_deleted", false);
+
+  const expenseIds = (groupExpenses ?? []).map((e) => e.id);
+
+  let totalOwed = 0;
+
+  if (expenseIds.length > 0) {
+    const { data: splits } = await supabase
+      .from("expense_splits")
+      .select("amount")
+      .eq("user_id", targetUserId)
+      .in("expense_id", expenseIds);
+
+    totalOwed = (splits ?? []).reduce(
+      (sum, split) => sum + split.amount,
+      0,
+    );
+  }
+
+  const { data: settlementsPaid } = await supabase
+    .from("settlements")
+    .select("amount")
+    .eq("group_id", groupId)
+    .eq("paid_by", targetUserId);
+
+  const totalSettlementsPaid = (settlementsPaid ?? []).reduce(
+    (sum, s) => sum + s.amount,
+    0,
+  );
+
+  const { data: settlementsReceived } = await supabase
+    .from("settlements")
+    .select("amount")
+    .eq("group_id", groupId)
+    .eq("paid_to", targetUserId);
+
+  const totalSettlementsReceived = (settlementsReceived ?? []).reduce(
+    (sum, s) => sum + s.amount,
+    0,
+  );
+
+  // Net balance: positive = owed money, negative = owes money
+  const netBalance =
+    totalPaid - totalOwed - totalSettlementsPaid + totalSettlementsReceived;
+
+  // Round to avoid floating-point drift (same as balances.ts)
+  const roundedBalance = Math.round(netBalance * 100) / 100;
+
+  if (roundedBalance !== 0) {
+    return {
+      data: null,
+      error: {
+        code: "balance_not_zero",
+        message:
+          "This member has an outstanding balance. All debts must be settled before they can be removed.",
+      },
+    };
+  }
+
+  // Delete the member from the group
+  const { error: deleteError } = await supabase
+    .from("group_members")
+    .delete()
+    .eq("group_id", groupId)
+    .eq("user_id", targetUserId);
+
+  if (deleteError) {
+    return {
+      data: null,
+      error: {
+        code: "delete_failed",
+        message: "Failed to remove member. Please try again.",
+      },
+    };
+  }
+
+  revalidatePath(`/groups/${groupId}`);
 
   return { data: null, error: null };
 }
