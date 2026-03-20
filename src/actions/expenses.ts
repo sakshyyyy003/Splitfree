@@ -5,9 +5,11 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
   createExpenseWithSplitsSchema,
+  createDirectExpenseSchema,
   updateExpenseWithSplitsSchema,
   deleteExpenseSchema,
   type CreateExpenseWithSplitsInput,
+  type CreateDirectExpenseInput,
   type UpdateExpenseWithSplitsInput,
   type DeleteExpenseInput,
 } from "@/lib/validators/expense";
@@ -73,6 +75,67 @@ export async function createExpense(
   if (expense.group_id) {
     revalidatePath(`/groups/${expense.group_id}`);
   }
+
+  return { data: expense, error: null };
+}
+
+export async function createDirectExpense(
+  input: CreateDirectExpenseInput,
+): Promise<ActionResult<Expense>> {
+  const parsed = createDirectExpenseSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      data: null,
+      error: {
+        code: "validation_error",
+        message: parsed.error.issues[0]?.message ?? "Invalid expense data",
+      },
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      data: null,
+      error: { code: "unauthorized", message: "You must be signed in" },
+    };
+  }
+
+  // Server-side enforcement: paid_by and created_by must be the authenticated user
+  // The RLS insert policy requires created_by = auth.uid() AND paid_by = auth.uid()
+  const expenseData = {
+    ...parsed.data.expense,
+    paid_by: user.id,
+    created_by: user.id,
+  };
+
+  const { data, error: rpcError } = await supabase.rpc(
+    "create_direct_expense_with_splits",
+    {
+      _expense_data: expenseData as unknown as Record<string, unknown>,
+      _splits_data: parsed.data.splits as unknown as Record<string, unknown>[],
+    },
+  );
+
+  if (rpcError) {
+    return {
+      data: null,
+      error: {
+        code: "create_failed",
+        message: "Failed to create direct expense. Please try again.",
+      },
+    };
+  }
+
+  const expense = data as unknown as Expense;
+
+  revalidatePath("/dashboard");
 
   return { data: expense, error: null };
 }
