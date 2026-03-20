@@ -44,12 +44,20 @@ export default async function DashboardPage() {
             </p>
           </div>
 
-          <Link
-            href="/groups/new"
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-primary bg-primary px-4 text-sm font-bold whitespace-nowrap text-primary-foreground shadow-panel transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
-          >
-            New Group
-          </Link>
+          <div className="flex shrink-0 gap-2">
+            <Link
+              href="/expenses/direct/new"
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-4 text-sm font-bold whitespace-nowrap text-foreground shadow-panel transition-all outline-none select-none hover:bg-secondary active:translate-y-px"
+            >
+              Add Expense
+            </Link>
+            <Link
+              href="/groups/new"
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-primary bg-primary px-4 text-sm font-bold whitespace-nowrap text-primary-foreground shadow-panel transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
+            >
+              New Group
+            </Link>
+          </div>
         </div>
 
         <GroupList groups={groups} />
