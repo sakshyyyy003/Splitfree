@@ -108,7 +108,7 @@ export function GroupExpenseList({ groupId, expenses }: GroupExpenseListProps) {
 
   if (orderedExpenses.length === 0) {
     return (
-      <div className="rounded-[1.5rem] border border-dashed border-border/70 bg-background/70 px-5 py-10 text-center">
+      <div className="rounded-lg border border-dashed border-border bg-card px-5 py-10 text-center">
         <p className="text-sm font-semibold text-foreground">No expenses yet</p>
         <p className="mt-2 text-sm text-muted-foreground">
           This group does not have any mock expenses loaded.
@@ -121,7 +121,7 @@ export function GroupExpenseList({ groupId, expenses }: GroupExpenseListProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-border/70 bg-background/75 px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
         <div>
           <p className="text-sm font-semibold text-foreground">
             Showing {visibleExpenses.length} of {orderedExpenses.length} expenses
@@ -146,11 +146,11 @@ export function GroupExpenseList({ groupId, expenses }: GroupExpenseListProps) {
         return (
           <div
             key={expense.id}
-            className="rounded-[1.5rem] border border-border/70 bg-background/85 p-4"
+            className="rounded-lg border border-border bg-card p-4"
           >
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex min-w-0 gap-3">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
                   <Icon className="size-5" />
                 </div>
 
@@ -179,7 +179,7 @@ export function GroupExpenseList({ groupId, expenses }: GroupExpenseListProps) {
                 </div>
               </div>
 
-              <div className="shrink-0 rounded-2xl bg-secondary px-4 py-3 text-right">
+              <div className="shrink-0 rounded-lg bg-secondary px-4 py-3 text-right">
                 <p className="text-lg font-bold">
                   {formatCurrency(expense.amount, expense.currency)}
                 </p>

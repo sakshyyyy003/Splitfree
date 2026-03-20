@@ -750,7 +750,7 @@ export function ExpenseForm({
 
           {/* Split Preview */}
           {splitPreview.results.length > 0 && (
-            <div className="rounded-xl border bg-muted/30 p-4">
+            <div className="rounded-lg border bg-muted/30 p-4">
               <p className="mb-3 text-sm font-semibold">Split Preview</p>
               <div className="flex flex-col gap-2">
                 {splitPreview.results.map((result) => {

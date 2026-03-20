@@ -133,7 +133,7 @@ export function GroupDetailView({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] border border-border/80 bg-gradient-to-br from-white via-card to-secondary/45 px-6 py-6 shadow-soft sm:px-7 sm:py-7">
+      <section className="rounded-lg border border-2 border-border bg-card px-6 py-6 border-2 border-border sm:px-7 sm:py-7">
         <div className="flex flex-col gap-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-3">
@@ -163,7 +163,7 @@ export function GroupDetailView({
               </div>
             </div>
 
-            <div className="rounded-[1.75rem] border border-border/70 bg-background/85 px-5 py-4">
+            <div className="rounded-lg border border-border bg-card px-5 py-4">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
                 Your position
               </p>
@@ -210,7 +210,7 @@ export function GroupDetailView({
         </TabsList>
 
         <TabsContent value="expenses">
-          <Card className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/25">
+          <Card className="border-2 border-border bg-card">
             <CardHeader>
               <CardTitle>Expense feed</CardTitle>
               <CardDescription>
@@ -233,7 +233,7 @@ export function GroupDetailView({
         </TabsContent>
 
         <TabsContent value="balances">
-          <Card className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/25">
+          <Card className="border-2 border-border bg-card">
             <CardHeader>
               <CardTitle>Running balances</CardTitle>
               <CardDescription>
@@ -285,7 +285,7 @@ export function GroupDetailView({
                 {sortedBalances.map((balance) => (
                   <div
                     key={balance.userId}
-                    className="rounded-[1.5rem] border border-border/70 bg-background/85 p-4"
+                    className="rounded-lg border border-border bg-card p-4"
                   >
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div className="flex items-center gap-3">
@@ -371,7 +371,7 @@ export function GroupDetailView({
                     {simplifiedDebts.map((debt) => (
                       <div
                         key={`${debt.fromUserId}-${debt.toUserId}`}
-                        className="flex flex-col gap-2 rounded-[1.5rem] border border-border/70 bg-secondary/35 p-4 sm:flex-row sm:items-center sm:justify-between"
+                        className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <p className="font-semibold text-foreground">
                           {debt.fromName} owes {debt.toName}{" "}
@@ -391,7 +391,7 @@ export function GroupDetailView({
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-[1.5rem] border border-dashed border-border/80 bg-background/70 p-5 text-sm text-muted-foreground">
+                  <div className="rounded-lg border border-dashed border-2 border-border bg-card p-5 text-sm text-muted-foreground">
                     Everyone is settled up. No transfers are needed right now.
                   </div>
                 )}
@@ -401,7 +401,7 @@ export function GroupDetailView({
         </TabsContent>
 
         <TabsContent value="members">
-          <Card className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/25">
+          <Card className="border-2 border-border bg-card">
             <CardHeader>
               <CardTitle>Members</CardTitle>
               <CardDescription>
@@ -431,7 +431,7 @@ export function GroupDetailView({
                 {members.map((member) => (
                   <div
                     key={member.userId}
-                    className="flex items-center gap-3 rounded-[1.5rem] border border-border/70 bg-background/85 p-4"
+                    className="flex items-center gap-3 rounded-lg border border-border bg-card p-4"
                   >
                     <Avatar>
                       {member.avatarUrl ? (
@@ -483,7 +483,7 @@ type MetricCardProps = {
 
 function MetricCard({ icon: Icon, label, value, helper }: MetricCardProps) {
   return (
-    <div className="rounded-[1.5rem] border border-border/70 bg-background/80 p-4">
+    <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
         <Icon className="size-3.5" />
         <span>{label}</span>
@@ -512,14 +512,14 @@ function BalanceSummaryCard({
       ? "bg-emerald-50 text-emerald-800"
       : tone === "negative"
         ? "bg-rose-50 text-rose-800"
-        : "bg-secondary/60 text-foreground";
+        : "bg-secondary text-foreground";
 
   return (
-    <div className="rounded-[1.5rem] border border-border/70 bg-background/80 p-4">
+    <div className="rounded-lg border border-border bg-card p-4">
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
         {label}
       </p>
-      <p className={`mt-2 inline-flex rounded-full px-3 py-1 text-lg font-bold ${toneClass}`}>
+      <p className={`mt-2 inline-flex px-3 py-1 text-lg font-bold ${toneClass}`}>
         {value}
       </p>
       <p className="mt-2 text-sm text-muted-foreground">{helper}</p>

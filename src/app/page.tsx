@@ -2,159 +2,219 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-      <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        {/* Hero */}
-        <div className="overflow-hidden rounded-4xl border border-foreground/10 bg-white/75 shadow-soft">
-          <div className="p-6 sm:p-8 lg:p-10">
-            <div className="mb-8 flex flex-wrap items-center gap-3">
-              <span className="rounded-full border border-primary/15 bg-secondary px-4 py-1.5 text-xs font-bold uppercase tracking-[0.24em] text-primary">
-                Shared finance, stripped down
-              </span>
-              <span className="rounded-full border border-foreground/10 bg-white/80 px-4 py-1.5 text-xs font-semibold text-foreground/65">
-                INR only
-              </span>
-            </div>
-            <div className="max-w-3xl">
-              <h1 className="text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
-                Stop chasing screenshots.{" "}
-                <span className="text-primary">
-                  Splitfree keeps every shared rupee obvious.
+    <main>
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-black px-4 py-28 text-white sm:px-6 sm:py-40">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(0,210,106,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(0,210,106,0.07) 1px, transparent 1px)",
+            backgroundSize: "72px 72px",
+          }}
+        />
+
+        <div className="relative mx-auto max-w-7xl">
+          <div className="grid items-center gap-12 md:grid-cols-2 lg:gap-20">
+            <div>
+              <p className="mb-6 text-sm font-medium uppercase tracking-ultra text-hotgreen">
+                India&apos;s boldest expense splitter
+              </p>
+              <h1 className="mb-8 text-5xl font-bold leading-none sm:text-6xl lg:text-7xl">
+                SPLIT BILLS.
+                <br />
+                NOT{" "}
+                <span className="bg-highlight px-1.5 text-black">
+                  FRIENDSHIPS.
                 </span>
               </h1>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-foreground/72 sm:text-lg">
-                Built for trips, flats, couples, and team spends. Add expenses
-                in seconds, see exactly who owes whom, and settle with fewer
-                transactions.
+              <p className="mb-10 max-w-xl text-xl font-normal text-gray-400 sm:text-2xl">
+                No more awkward money talks. Track shared expenses, settle debts
+                instantly, stay friends forever.
+              </p>
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <Link
+                  href="/signup"
+                  className="bg-hotgreen px-10 py-5 text-center text-lg font-bold text-black transition-colors hover:bg-lime"
+                >
+                  GET STARTED FREE
+                </Link>
+                <Link
+                  href="/login"
+                  className="border-2 border-white px-10 py-5 text-center text-lg font-bold text-white transition-colors hover:bg-white hover:text-black"
+                >
+                  LOG IN
+                </Link>
+              </div>
+            </div>
+
+            {/* App preview card */}
+            <div className="hidden md:flex md:justify-center">
+              <div className="relative">
+                <div className="absolute -top-6 -right-6 h-20 w-20 bg-hotgreen opacity-20" />
+                <div className="absolute -bottom-6 -left-6 h-14 w-14 bg-highlight opacity-30" />
+
+                <div className="relative border-4 border-hotgreen bg-[#F5F5F0] text-black">
+                  <div className="flex items-center justify-between bg-black px-4 py-3 text-white">
+                    <div>
+                      <span className="text-sm font-bold">
+                        SPLIT<span className="text-hotgreen">FREE</span>
+                      </span>
+                      <p className="mt-0.5 text-[9px] uppercase tracking-wide text-gray-400">
+                        Goa Trip &middot; 4 people
+                      </p>
+                    </div>
+                    <div className="flex -space-x-2">
+                      <div className="flex size-6 items-center justify-center rounded-full border-2 border-black bg-hotgreen text-[9px] font-bold text-black">
+                        A
+                      </div>
+                      <div className="flex size-6 items-center justify-center rounded-full border-2 border-black bg-highlight text-[9px] font-bold text-black">
+                        K
+                      </div>
+                      <div className="flex size-6 items-center justify-center rounded-full border-2 border-black bg-gray-500 text-[9px] font-bold text-white">
+                        M
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 p-4">
+                    <div className="flex items-end justify-between bg-black p-4 text-white">
+                      <div>
+                        <p className="mb-1 text-[10px] uppercase tracking-ultra text-hotgreen">
+                          Net balance
+                        </p>
+                        <p className="text-4xl font-bold">+2,450</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="mb-1 bg-hotgreen px-2 py-0.5 text-[9px] font-bold text-black">
+                          &uarr; 12%
+                        </div>
+                        <p className="text-[9px] text-gray-400">vs last trip</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-hotgreen p-3 text-black">
+                        <p className="mb-1 text-[9px] uppercase tracking-ultra">
+                          Owed to you
+                        </p>
+                        <p className="text-xl font-bold">4,250</p>
+                      </div>
+                      <div className="border-2 border-black bg-white p-3">
+                        <p className="mb-1 text-[9px] uppercase tracking-ultra text-textsec">
+                          You owe
+                        </p>
+                        <p className="text-xl font-bold text-error">1,800</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Blocks */}
+      <div className="mx-auto max-w-7xl px-4 pt-16 sm:px-6">
+        {/* Block 1: White — numbered features */}
+        <div className="border border-gray-200 bg-white p-8 shadow-md sm:p-12">
+          <div className="grid gap-8 md:grid-cols-3">
+            <div>
+              <div className="mb-4 text-5xl font-bold text-hotgreen">01</div>
+              <h3 className="mb-3 text-2xl font-bold">ADD EXPENSES</h3>
+              <p className="text-lg text-textsec">
+                Snap a receipt or type the amount. Split equally or custom. Done
+                in 3 taps.
               </p>
             </div>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3.5 text-sm font-bold text-primary-foreground shadow-panel"
-              >
-                Start Tracking
-              </Link>
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-full border border-foreground/12 bg-white/80 px-6 py-3.5 text-sm font-bold text-foreground"
-              >
-                Log In
-              </Link>
+            <div>
+              <div className="mb-4 text-5xl font-bold text-hotgreen">02</div>
+              <h3 className="mb-3 text-2xl font-bold">TRACK BALANCES</h3>
+              <p className="text-lg text-textsec">
+                See who owes what, in real time. No spreadsheets. No mental
+                math.
+              </p>
             </div>
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-3xl border border-foreground/10 bg-white/85 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-foreground/45">
-                  Fast entry
-                </p>
-                <p className="mt-2 text-sm leading-6 text-foreground/75">
-                  Equal, exact, percentage, or shares without opening dense
-                  calculators.
-                </p>
+            <div>
+              <div className="mb-4 text-5xl font-bold text-hotgreen">03</div>
+              <h3 className="mb-3 text-2xl font-bold">SETTLE UP</h3>
+              <p className="text-lg text-textsec">
+                One tap to send money via UPI. Balances clear. Everyone&apos;s
+                happy.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Block 2: Black — Why Splitfree */}
+        <div className="bg-black p-8 text-white sm:p-12">
+          <div className="grid items-center gap-12 md:grid-cols-2">
+            <div>
+              <p className="mb-4 text-xs font-medium uppercase tracking-ultra text-hotgreen">
+                Why Splitfree?
+              </p>
+              <h2 className="mb-6 text-4xl font-bold leading-tight sm:text-5xl">
+                MONEY SHOULDN&apos;T
+                <br />
+                MAKE THINGS{" "}
+                <span className="bg-highlight px-1.5 text-black">WEIRD.</span>
+              </h2>
+              <p className="text-lg text-gray-400">
+                We built Splitfree because asking &quot;did you pay me
+                back?&quot; shouldn&apos;t ruin your weekend. Built for India,
+                powered by UPI.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-hotgreen p-6 text-black">
+                <div className="mb-1 text-4xl font-bold">2M+</div>
+                <div className="text-sm font-medium uppercase tracking-ultra">
+                  Users
+                </div>
               </div>
-              <div className="rounded-3xl border border-foreground/10 bg-white/85 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-foreground/45">
-                  Debt simplification
-                </p>
-                <p className="mt-2 text-sm leading-6 text-foreground/75">
-                  Surface only the payments that matter, like Aditi owes Rahul
-                  ₹640.
-                </p>
+              <div className="bg-white p-6 text-black">
+                <div className="mb-1 text-4xl font-bold">50Cr+</div>
+                <div className="text-sm font-medium uppercase tracking-ultra">
+                  Settled
+                </div>
               </div>
-              <div className="rounded-3xl border border-foreground/10 bg-white/85 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-foreground/45">
-                  Calm trust
-                </p>
-                <p className="mt-2 text-sm leading-6 text-foreground/75">
-                  Warm neutrals and strong contrast make the product feel
-                  reliable, not playful.
-                </p>
+              <div className="bg-white p-6 text-black">
+                <div className="mb-1 text-4xl font-bold">10L+</div>
+                <div className="text-sm font-medium uppercase tracking-ultra">
+                  Groups
+                </div>
+              </div>
+              <div className="bg-highlight p-6 text-black">
+                <div className="mb-1 text-4xl font-bold">4.8</div>
+                <div className="text-sm font-medium uppercase tracking-ultra">
+                  Rating
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Sidebar */}
-        <aside className="flex flex-col gap-6">
-          {/* Hero Snapshot */}
-          <div className="rounded-4xl border border-foreground/10 bg-foreground p-6 text-primary-foreground shadow-soft">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-primary-foreground/55">
-                  Hero Snapshot
-                </p>
-                <h2 className="mt-2 text-2xl font-bold">Goa Trip</h2>
-              </div>
-              <span className="rounded-full bg-primary-foreground/10 px-3 py-1 text-xs font-semibold">
-                Pinned
-              </span>
-            </div>
-            <div className="mt-6 rounded-3xl bg-primary-foreground/8 p-5">
-              <p className="text-sm text-primary-foreground/60">
-                Overall balance
-              </p>
-              <p className="mt-2 text-4xl font-extrabold">+₹2,480</p>
-              <p className="mt-2 text-sm text-chart-5">
-                You are owed across 3 groups
-              </p>
-              <div className="mt-5 space-y-3 text-sm">
-                <div className="flex items-center justify-between rounded-2xl bg-primary-foreground/8 px-4 py-3">
-                  <span>Aditi owes Rahul</span>
-                  <span className="font-bold text-chart-3">₹640</span>
-                </div>
-                <div className="flex items-center justify-between rounded-2xl bg-primary-foreground/8 px-4 py-3">
-                  <span>Flat 4B utilities</span>
-                  <span className="font-bold text-chart-5">Updated 2h ago</span>
-                </div>
-              </div>
-            </div>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <Link
-                href="/login"
-                className="rounded-2xl bg-sidebar-primary px-4 py-3 text-center text-sm font-bold text-primary"
-              >
-                Log in
-              </Link>
-              <Link
-                href="/signup"
-                className="rounded-2xl border border-primary-foreground/15 px-4 py-3 text-center text-sm font-bold"
-              >
-                Sign up
-              </Link>
-            </div>
-          </div>
-
-          {/* Pricing */}
-          <div className="rounded-4xl border border-foreground/10 bg-white/80 p-6 shadow-soft">
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-foreground/45">
-              Pricing
+        {/* Block 3: Green CTA */}
+        <div className="bg-hotgreen p-8 sm:p-12">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="mb-6 text-4xl font-bold text-black sm:text-5xl">
+              STOP KEEPING TABS.
+              <br />
+              START USING ONE.
+            </h2>
+            <p className="mb-8 text-lg text-black opacity-80">
+              Join thousands of Indians who split without the stress.
             </p>
-            <div className="mt-4 flex items-end justify-between gap-4">
-              <div>
-                <h3 className="text-3xl font-bold">Free</h3>
-                <p className="mt-1 text-sm text-foreground/65">
-                  Core expense sharing for trips, homes, couples, and one-off
-                  splits.
-                </p>
-              </div>
-              <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-primary">
-                v1
-              </span>
-            </div>
-            <ul className="mt-5 space-y-3 text-sm text-foreground/72">
-              <li className="rounded-2xl bg-secondary px-4 py-3">
-                Unlimited groups and expenses
-              </li>
-              <li className="rounded-2xl bg-secondary px-4 py-3">
-                Google or email authentication
-              </li>
-              <li className="rounded-2xl bg-secondary px-4 py-3">
-                Category analytics and settle-up history
-              </li>
-            </ul>
+            <Link
+              href="/signup"
+              className="inline-block bg-black px-12 py-5 text-lg font-bold text-white transition-colors hover:bg-gray-900"
+            >
+              GET STARTED NOW
+            </Link>
           </div>
-        </aside>
-      </section>
+        </div>
+      </div>
     </main>
   );
 }

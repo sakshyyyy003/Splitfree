@@ -473,7 +473,7 @@ export function DirectExpenseForm({
           <Field>
             <Label>Split with</Label>
             {selectedFriend ? (
-              <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-3">
+              <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
                 <Avatar size="sm">
                   {selectedFriend.avatar_url ? (
                     <AvatarImage
@@ -697,7 +697,7 @@ export function DirectExpenseForm({
 
           {/* Split Preview */}
           {splitPreview.results.length > 0 && (
-            <div className="rounded-xl border bg-muted/30 p-4">
+            <div className="rounded-lg border bg-muted/30 p-4">
               <p className="mb-3 text-sm font-semibold">Split Preview</p>
               <div className="flex flex-col gap-2">
                 {splitPreview.results.map((result) => (

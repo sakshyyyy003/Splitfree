@@ -73,7 +73,7 @@ export function ExpenseDetailView({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] border border-border/80 bg-gradient-to-br from-white via-card to-secondary/45 px-6 py-6 shadow-soft sm:px-7 sm:py-7">
+      <section className="rounded-lg border border-2 border-border bg-card px-6 py-6 border-2 border-border sm:px-7 sm:py-7">
         <div className="flex flex-col gap-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-3">
@@ -109,7 +109,7 @@ export function ExpenseDetailView({
             <div className="flex flex-wrap gap-3">
               <Link
                 href={`/groups/${group.id}/expenses/${expense.id}/edit`}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-background px-5 text-sm font-bold shadow-subtle transition-colors hover:bg-secondary"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-none border-2 border-foreground bg-background px-5 text-sm font-bold uppercase transition-colors hover:bg-secondary"
               >
                 <PencilLine className="size-4" />
                 Edit expense
@@ -152,7 +152,7 @@ export function ExpenseDetailView({
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.9fr)]">
-        <Card className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/25">
+        <Card className="border-2 border-border bg-card">
           <CardHeader>
             <CardTitle>Split breakdown</CardTitle>
           </CardHeader>
@@ -163,7 +163,7 @@ export function ExpenseDetailView({
               return (
                 <div
                   key={participant.userId}
-                  className="rounded-[1.5rem] border border-border/70 bg-background/85 p-4"
+                  className="rounded-lg border border-border bg-card p-4"
                 >
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-3">
@@ -217,7 +217,7 @@ export function ExpenseDetailView({
         </Card>
 
         <div className="space-y-6">
-          <Card className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/25">
+          <Card className="border-2 border-border bg-card">
             <CardHeader>
               <CardTitle>Expense notes</CardTitle>
             </CardHeader>
@@ -228,7 +228,7 @@ export function ExpenseDetailView({
             </CardContent>
           </Card>
 
-          <Card className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/25">
+          <Card className="border-2 border-border bg-card">
             <CardHeader>
               <CardTitle>Next step</CardTitle>
             </CardHeader>
@@ -268,7 +268,7 @@ type SplitAmountProps = {
 
 function MetricCard({ icon: Icon, label, value, helper }: MetricCardProps) {
   return (
-    <div className="rounded-[1.5rem] border border-border/70 bg-background/80 p-4">
+    <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
         <Icon className="size-3.5" />
         <span>{label}</span>

@@ -1,21 +1,14 @@
-@import "@fontsource/manrope/400.css";
-@import "@fontsource/manrope/500.css";
-@import "@fontsource/manrope/600.css";
-@import "@fontsource/manrope/700.css";
-@import "@fontsource/manrope/800.css";
+@import "@fontsource/space-grotesk/400.css";
 @import "@fontsource/space-grotesk/500.css";
 @import "@fontsource/space-grotesk/700.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -46,90 +39,59 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-hotgreen: #00D26A;
+  --color-lime: #84CC16;
+  --color-bgwarm: #FFFDF7;
+  --color-textsec: #404040;
+  --color-success: #22C55E;
+  --color-error: #FF3B30;
+  --color-highlight: #FACC15;
   --shadow-soft: var(--shadow-soft);
   --shadow-panel: var(--shadow-panel);
   --shadow-subtle: var(--shadow-subtle);
-  --radius-sm: calc(var(--radius) * 0.75);
-  --radius-md: calc(var(--radius) * 0.875);
-  --radius-lg: var(--radius);
-  --radius-xl: 1.5rem;
-  --radius-2xl: 2rem;
-  --radius-3xl: 2.25rem;
-  --radius-4xl: 2.5rem;
+  --radius-sm: calc(var(--radius) + 4px);
+  --radius-md: calc(var(--radius) + 6px);
+  --radius-lg: 10px;
+  --radius-xl: 18px;
 }
 
 :root {
-  --background: hsl(120 27% 98%);
-  --foreground: hsl(148 31% 10%);
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(148 31% 10%);
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(148 31% 10%);
-  --primary: hsl(157 53% 24%);
-  --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(135 50% 97%);
-  --secondary-foreground: hsl(148 31% 10%);
-  --muted: hsl(135 50% 97%);
-  --muted-foreground: hsl(148 12% 40%);
-  --accent: hsl(41 61% 92%);
-  --accent-foreground: hsl(148 31% 10%);
-  --destructive: hsl(9 63% 44%);
-  --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(129 19% 86%);
-  --input: hsl(129 19% 86%);
-  --ring: hsl(157 53% 24%);
-  --chart-1: hsl(157 53% 24%);
-  --chart-2: hsl(150 26% 54%);
-  --chart-3: hsl(27 100% 85%);
-  --chart-4: hsl(34 82% 68%);
-  --chart-5: hsl(142 45% 70%);
-  --radius: 1rem;
-  --sidebar: hsl(148 31% 10%);
-  --sidebar-foreground: hsl(0 0% 100%);
-  --sidebar-primary: hsl(136 62% 87%);
-  --sidebar-primary-foreground: hsl(157 53% 24%);
-  --sidebar-accent: hsl(148 21% 17%);
-  --sidebar-accent-foreground: hsl(0 0% 100%);
-  --sidebar-border: hsl(0 0% 100% / 0.10);
-  --sidebar-ring: hsl(136 62% 87%);
-  --shadow-soft: 0 22px 50px rgba(17, 32, 24, 0.10);
-  --shadow-panel: 0 10px 30px rgba(28, 92, 67, 0.10);
-  --shadow-subtle: 0 1px 2px rgba(17, 32, 24, 0.06);
-}
-
-.dark {
-  --background: hsl(147 33% 5%);
-  --foreground: hsl(0 0% 100%);
-  --card: hsl(148 21% 17%);
-  --card-foreground: hsl(0 0% 100%);
-  --popover: hsl(148 21% 17%);
-  --popover-foreground: hsl(0 0% 100%);
-  --primary: hsl(136 62% 87%);
-  --primary-foreground: hsl(157 53% 24%);
-  --secondary: hsl(148 21% 17%);
-  --secondary-foreground: hsl(0 0% 100%);
-  --muted: hsl(148 21% 17%);
-  --muted-foreground: hsl(0 0% 100% / 0.68);
-  --accent: hsl(157 22% 22%);
-  --accent-foreground: hsl(0 0% 100%);
-  --destructive: hsl(9 63% 44%);
-  --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(0 0% 100% / 0.10);
-  --input: hsl(0 0% 100% / 0.12);
-  --ring: hsl(136 62% 87%);
-  --chart-1: hsl(136 62% 87%);
-  --chart-2: hsl(150 26% 54%);
-  --chart-3: hsl(27 100% 85%);
-  --chart-4: hsl(34 82% 68%);
-  --chart-5: hsl(142 45% 70%);
-  --sidebar: hsl(147 33% 5%);
-  --sidebar-foreground: hsl(0 0% 100%);
-  --sidebar-primary: hsl(136 62% 87%);
-  --sidebar-primary-foreground: hsl(157 53% 24%);
-  --sidebar-accent: hsl(148 21% 17%);
-  --sidebar-accent-foreground: hsl(0 0% 100%);
-  --sidebar-border: hsl(0 0% 100% / 0.10);
-  --sidebar-ring: hsl(136 62% 87%);
+  --background: #F5F5F0;
+  --foreground: #000000;
+  --card: #FFFFFF;
+  --card-foreground: #000000;
+  --popover: #FFFFFF;
+  --popover-foreground: #000000;
+  --primary: #00D26A;
+  --primary-foreground: #000000;
+  --secondary: #FFFDF7;
+  --secondary-foreground: #000000;
+  --muted: #F5F5F0;
+  --muted-foreground: #404040;
+  --accent: #FACC15;
+  --accent-foreground: #000000;
+  --destructive: #FF3B30;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(0, 0, 0, 0.12);
+  --input: rgba(0, 0, 0, 0.12);
+  --ring: #00D26A;
+  --chart-1: #00D26A;
+  --chart-2: #22C55E;
+  --chart-3: #FACC15;
+  --chart-4: #84CC16;
+  --chart-5: #404040;
+  --radius: 0px;
+  --sidebar: #000000;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #00D26A;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: rgba(255, 255, 255, 0.10);
+  --sidebar-ring: #00D26A;
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-panel: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 @layer base {
@@ -141,10 +103,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    background:
-      radial-gradient(circle at top left, hsl(136 62% 87% / 0.9), transparent 30%),
-      radial-gradient(circle at top right, hsl(27 100% 85% / 0.5), transparent 24%),
-      linear-gradient(180deg, hsl(41 61% 92%) 0%, hsl(135 50% 97%) 22%, hsl(120 27% 98%) 100%);
+    background: #F5F5F0;
   }
   h1,
   h2,
@@ -167,5 +126,13 @@
 
   .shadow-subtle {
     box-shadow: var(--shadow-subtle);
+  }
+
+  .tracking-ultra {
+    letter-spacing: 0.3em;
+  }
+
+  .tracking-wide-custom {
+    letter-spacing: 0.15em;
   }
 }

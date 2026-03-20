@@ -44,7 +44,7 @@ export function OverallBalanceView({ balances }: OverallBalanceViewProps) {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_1.4fr]">
-        <Card className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/35">
+        <Card className="border-2 border-border bg-card">
           <CardHeader className="gap-3">
             <div className="flex items-center justify-between gap-3">
               <Badge variant="secondary" className="w-fit">
@@ -81,7 +81,7 @@ export function OverallBalanceView({ balances }: OverallBalanceViewProps) {
           </CardContent>
         </Card>
 
-        <Card className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/25">
+        <Card className="border-2 border-border bg-card">
           <CardHeader>
             <CardTitle>Per-person breakdown</CardTitle>
             <CardDescription>
@@ -91,7 +91,7 @@ export function OverallBalanceView({ balances }: OverallBalanceViewProps) {
           </CardHeader>
           <CardContent className="space-y-3">
             {counterparties.length === 0 ? (
-              <div className="rounded-[1.5rem] border border-dashed border-border/70 bg-background/80 p-5 text-sm text-muted-foreground">
+              <div className="rounded-lg border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
                 Everyone is settled. New counterparties will show up here as soon as
                 shared expenses land.
               </div>
@@ -99,7 +99,7 @@ export function OverallBalanceView({ balances }: OverallBalanceViewProps) {
               counterparties.map((counterparty) => (
                 <div
                   key={counterparty.userId}
-                  className="flex flex-col gap-4 rounded-[1.5rem] border border-border/70 bg-background/85 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex min-w-0 items-start gap-3">
                     <Avatar>
@@ -179,7 +179,7 @@ function SummaryPill({
   toneClassName,
 }: SummaryPillProps) {
   return (
-    <div className="rounded-[1.5rem] border border-border/70 bg-background/80 p-4">
+    <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
         <Icon className="size-3.5" />
         <span>{label}</span>

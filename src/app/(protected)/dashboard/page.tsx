@@ -18,7 +18,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] border border-border/80 bg-gradient-to-br from-white via-card to-secondary/45 px-6 py-6 shadow-soft sm:px-7 sm:py-7">
+      <section className="rounded-lg border-2 border-border bg-card px-6 py-6 sm:px-7 sm:py-7">
         <div className="space-y-2">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Dashboard
@@ -47,13 +47,13 @@ export default async function DashboardPage() {
           <div className="flex shrink-0 gap-2">
             <Link
               href="/expenses/direct/new"
-              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-4 text-sm font-bold whitespace-nowrap text-foreground shadow-panel transition-all outline-none select-none hover:bg-secondary active:translate-y-px"
+              className="inline-flex h-10 items-center justify-center gap-1.5 border-2 border-foreground bg-background px-4 text-sm font-bold uppercase whitespace-nowrap text-foreground transition-all outline-none select-none hover:bg-secondary active:translate-y-px"
             >
               Add Expense
             </Link>
             <Link
               href="/groups/new"
-              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-primary bg-primary px-4 text-sm font-bold whitespace-nowrap text-primary-foreground shadow-panel transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
+              className="inline-flex h-10 items-center justify-center gap-1.5 border border-primary bg-primary px-4 text-sm font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
             >
               New Group
             </Link>

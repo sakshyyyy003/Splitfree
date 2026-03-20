@@ -238,10 +238,10 @@ export function SettleUpForm({
                   isSelected ? handleDeselect() : handleDebtSelect(index)
                 }
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition-colors",
+                  "flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-colors",
                   isSelected
                     ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                    : "border-border/70 bg-background/85 hover:bg-secondary/50",
+                    : "border-border bg-card hover:bg-secondary/50",
                 )}
               >
                 <Avatar size="sm">

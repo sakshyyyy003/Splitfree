@@ -51,9 +51,9 @@ export function JoinGroupCard({ group, inviteCode }: JoinGroupCardProps) {
   }
 
   return (
-    <Card className="border-border/80 bg-gradient-to-br from-white via-card to-secondary/35">
+    <Card className="border-2 border-border bg-card">
       <CardHeader className="items-center gap-3 text-center">
-        <div className="flex size-14 items-center justify-center rounded-full bg-primary/10">
+        <div className="flex size-14 items-center justify-center bg-primary/10">
           <UsersRound className="size-7 text-primary" />
         </div>
         <Badge variant="secondary">

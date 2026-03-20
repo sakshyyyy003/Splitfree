@@ -127,7 +127,7 @@ export function NewGroupForm() {
           <div className="flex flex-col gap-2">
             <Label>Cover Image</Label>
             {coverPreview ? (
-              <div className="relative overflow-hidden rounded-2xl border border-border">
+              <div className="relative overflow-hidden rounded-lg border border-border">
                 <Image
                   src={coverPreview}
                   alt="Cover preview"
@@ -149,7 +149,7 @@ export function NewGroupForm() {
                 type="button"
                 onClick={handleCoverClick}
                 className={cn(
-                  "flex h-40 w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-secondary/50 text-muted-foreground transition-colors hover:border-ring hover:bg-secondary",
+                  "flex h-40 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-secondary/50 text-muted-foreground transition-colors hover:border-ring hover:bg-secondary",
                 )}
               >
                 <ImagePlus className="size-8" />
