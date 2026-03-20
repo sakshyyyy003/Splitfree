@@ -14,7 +14,8 @@ import {
   type SplitType,
 } from "@/lib/validators/expense";
 import { calculateSplit, type SplitResult } from "@/lib/algorithms/splits";
-import { createExpense } from "@/actions/expenses";
+import { createExpense, updateExpense } from "@/actions/expenses";
+import type { ExpenseForEdit } from "@/lib/queries/expenses";
 import type { GroupMember } from "@/types/group-detail";
 
 import { Button } from "@/components/ui/button";
@@ -98,7 +99,7 @@ type CustomSplitValues = Record<string, number>;
 // Form-level schema (UI fields only, not the full payload)
 // -------------------------------------------------------
 
-const addExpenseFormSchema = z.object({
+const expenseFormSchema = z.object({
   description: z
     .string()
     .min(1, { error: "Description is required" })
@@ -113,36 +114,79 @@ const addExpenseFormSchema = z.object({
   category: z.enum(EXPENSE_CATEGORIES, { error: "Invalid category" }),
 });
 
-type AddExpenseFormValues = z.infer<typeof addExpenseFormSchema>;
+type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
 
 // -------------------------------------------------------
 // Props
 // -------------------------------------------------------
 
-type AddExpenseFormProps = {
+type ExpenseFormProps = {
   groupId: string;
   members: GroupMember[];
   currentUserId: string;
+  mode: "create" | "edit";
+  initialData?: ExpenseForEdit;
+  expectedUpdatedAt?: string;
 };
+
+// -------------------------------------------------------
+// Helpers — derive initial state from edit data
+// -------------------------------------------------------
+
+function deriveInitialParticipants(
+  members: GroupMember[],
+  initialData?: ExpenseForEdit,
+): string[] {
+  if (!initialData) {
+    return members.map((m) => m.userId);
+  }
+  return initialData.splits.map((s) => s.user_id);
+}
+
+function deriveInitialCustomSplitValues(
+  initialData?: ExpenseForEdit,
+): CustomSplitValues {
+  if (!initialData || initialData.split_type === "equal") {
+    return {};
+  }
+
+  const values: CustomSplitValues = {};
+
+  for (const split of initialData.splits) {
+    if (initialData.split_type === "exact") {
+      values[split.user_id] = split.amount;
+    } else {
+      // percentage and shares use share_value
+      values[split.user_id] = split.share_value ?? 0;
+    }
+  }
+
+  return values;
+}
 
 // -------------------------------------------------------
 // Component
 // -------------------------------------------------------
 
-export function AddExpenseForm({
+export function ExpenseForm({
   groupId,
   members,
   currentUserId,
-}: AddExpenseFormProps) {
+  mode,
+  initialData,
+  expectedUpdatedAt,
+}: ExpenseFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
-    () => members.map((m) => m.userId),
+    () => deriveInitialParticipants(members, initialData),
   );
   const [customSplitValues, setCustomSplitValues] = useState<CustomSplitValues>(
-    {},
+    () => deriveInitialCustomSplitValues(initialData),
   );
+
+  const isEditMode = mode === "edit";
 
   const {
     register,
@@ -150,16 +194,25 @@ export function AddExpenseForm({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<AddExpenseFormValues>({
-    resolver: zodResolver(addExpenseFormSchema),
-    defaultValues: {
-      description: "",
-      amount: undefined as unknown as number,
-      date: format(new Date(), "yyyy-MM-dd"),
-      paid_by: currentUserId,
-      split_type: "equal",
-      category: "other",
-    },
+  } = useForm<ExpenseFormValues>({
+    resolver: zodResolver(expenseFormSchema),
+    defaultValues: isEditMode && initialData
+      ? {
+          description: initialData.description,
+          amount: initialData.amount,
+          date: initialData.date,
+          paid_by: initialData.paid_by,
+          split_type: initialData.split_type,
+          category: initialData.category as ExpenseCategory,
+        }
+      : {
+          description: "",
+          amount: undefined as unknown as number,
+          date: format(new Date(), "yyyy-MM-dd"),
+          paid_by: currentUserId,
+          split_type: "equal",
+          category: "other",
+        },
   });
 
   const watchedAmount = watch("amount");
@@ -333,7 +386,7 @@ export function AddExpenseForm({
     setDatePickerOpen(false);
   }
 
-  function buildSplitsPayload(formValues: AddExpenseFormValues) {
+  function buildSplitsPayload(formValues: ExpenseFormValues) {
     if (selectedParticipants.length === 0) {
       throw new Error("At least one participant is required");
     }
@@ -391,7 +444,7 @@ export function AddExpenseForm({
     }));
   }
 
-  function onSubmit(formValues: AddExpenseFormValues) {
+  function onSubmit(formValues: ExpenseFormValues) {
     if (selectedParticipants.length === 0) {
       toast.error("Please select at least one participant");
       return;
@@ -400,6 +453,41 @@ export function AddExpenseForm({
     startTransition(async () => {
       try {
         const splits = buildSplitsPayload(formValues);
+
+        if (isEditMode && initialData && expectedUpdatedAt) {
+          const result = await updateExpense({
+            expense_id: initialData.id,
+            expected_updated_at: expectedUpdatedAt,
+            expense: {
+              group_id: groupId,
+              description: formValues.description,
+              amount: formValues.amount,
+              currency: "INR",
+              date: formValues.date,
+              paid_by: formValues.paid_by,
+              created_by: currentUserId,
+              split_type: formValues.split_type,
+              category: formValues.category,
+              is_recurring: false,
+            },
+            splits,
+          });
+
+          if (result.error) {
+            if (result.error.code === "conflict") {
+              toast.error(
+                "This expense was modified by someone else. Please refresh and try again.",
+              );
+              return;
+            }
+            toast.error(result.error.message);
+            return;
+          }
+
+          toast.success("Expense updated successfully!");
+          router.push(`/groups/${groupId}/expenses/${initialData.id}`);
+          return;
+        }
 
         const result = await createExpense({
           expense: {
@@ -439,9 +527,11 @@ export function AddExpenseForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Add Expense</CardTitle>
+        <CardTitle>{isEditMode ? "Edit Expense" : "Add Expense"}</CardTitle>
         <CardDescription>
-          Record a shared expense for this group.
+          {isEditMode
+            ? "Update the expense details and split configuration."
+            : "Record a shared expense for this group."}
         </CardDescription>
       </CardHeader>
 
@@ -691,7 +781,7 @@ export function AddExpenseForm({
 
           <Button type="submit" size="lg" disabled={isPending}>
             {isPending && <Loader2 className="animate-spin" />}
-            Add Expense
+            {isEditMode ? "Update Expense" : "Add Expense"}
           </Button>
         </form>
       </CardContent>
