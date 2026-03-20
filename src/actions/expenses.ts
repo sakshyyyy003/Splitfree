@@ -5,7 +5,9 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
   createExpenseWithSplitsSchema,
+  deleteExpenseSchema,
   type CreateExpenseWithSplitsInput,
+  type DeleteExpenseInput,
 } from "@/lib/validators/expense";
 import type { ActionResult } from "@/actions/auth";
 import type { Tables } from "@/types/database";
@@ -71,4 +73,98 @@ export async function createExpense(
   }
 
   return { data: expense, error: null };
+}
+
+export async function deleteExpense(
+  input: DeleteExpenseInput,
+): Promise<ActionResult<null>> {
+  const parsed = deleteExpenseSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      data: null,
+      error: {
+        code: "validation_error",
+        message: parsed.error.issues[0]?.message ?? "Invalid input",
+      },
+    };
+  }
+
+  const { expense_id, group_id } = parsed.data;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      data: null,
+      error: { code: "unauthorized", message: "You must be signed in" },
+    };
+  }
+
+  // Fetch the expense to verify it exists and is not already deleted
+  const { data: expense, error: fetchError } = await supabase
+    .from("expenses")
+    .select("id, created_by, group_id, is_deleted")
+    .eq("id", expense_id)
+    .single();
+
+  if (fetchError || !expense) {
+    return {
+      data: null,
+      error: { code: "not_found", message: "Expense not found" },
+    };
+  }
+
+  if (expense.is_deleted) {
+    return {
+      data: null,
+      error: { code: "already_deleted", message: "Expense is already deleted" },
+    };
+  }
+
+  // Authorization: user must be the expense creator or a group admin
+  if (expense.created_by !== user.id) {
+    const { data: membership } = await supabase
+      .from("group_members")
+      .select("role")
+      .eq("group_id", group_id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (membership?.role !== "admin") {
+      return {
+        data: null,
+        error: {
+          code: "forbidden",
+          message: "Only the expense creator or a group admin can delete this expense",
+        },
+      };
+    }
+  }
+
+  // Soft-delete the expense
+  const { error: updateError } = await supabase
+    .from("expenses")
+    .update({ is_deleted: true })
+    .eq("id", expense_id)
+    .select()
+    .single();
+
+  if (updateError) {
+    return {
+      data: null,
+      error: {
+        code: "delete_failed",
+        message: "Failed to delete expense. Please try again.",
+      },
+    };
+  }
+
+  revalidatePath(`/groups/${group_id}`);
+
+  return { data: null, error: null };
 }
