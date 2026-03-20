@@ -12,6 +12,7 @@ import type {
   GroupDetail,
   GroupExpense,
   GroupMember,
+  SimplifiedDebt,
 } from "@/types/group-detail";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ type GroupDetailViewProps = {
   group: GroupDetail;
   expenses: GroupExpense[];
   balances: GroupBalance[];
+  simplifiedDebts: SimplifiedDebt[];
   members: GroupMember[];
 };
 

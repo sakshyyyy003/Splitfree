@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 
 import {
-  getMockGroupBalances,
   getMockGroupDetail,
   getMockGroupExpenses,
   getMockGroupMembers,
 } from "@/lib/mock/group-detail";
+import { getGroupBalances } from "@/lib/queries/balances";
 import { GroupDetailView } from "@/components/groups/group-detail-view";
 
 type GroupDetailPageProps = {
@@ -19,12 +19,14 @@ export default async function GroupDetailPage({
 }: GroupDetailPageProps) {
   const { id } = await params;
 
-  const [group, expenses, balances, members] = await Promise.all([
+  const [group, expenses, balancesResult, members] = await Promise.all([
     getMockGroupDetail(id),
     getMockGroupExpenses(id),
-    getMockGroupBalances(id),
+    getGroupBalances(id),
     getMockGroupMembers(id),
   ]);
+
+  const { balances, simplifiedDebts } = balancesResult;
 
   if (!group) {
     notFound();
@@ -35,6 +37,7 @@ export default async function GroupDetailPage({
       group={group}
       expenses={expenses}
       balances={balances}
+      simplifiedDebts={simplifiedDebts}
       members={members}
     />
   );
