@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -802,6 +803,5 @@ export async function deleteGroup(
   }
 
   revalidatePath("/dashboard");
-
-  return { data: { deleted: true }, error: null };
+  redirect("/dashboard");
 }
