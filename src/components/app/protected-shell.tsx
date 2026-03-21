@@ -32,13 +32,21 @@ const navigationItems = [
     href: "/dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
-    match: (pathname: string) => pathname === "/dashboard",
+    match: (pathname: string, searchParams: URLSearchParams) =>
+      pathname === "/dashboard" && searchParams.get("tab") !== "activity",
+  },
+  {
+    href: "/dashboard?tab=activity",
+    label: "Activity",
+    icon: Clock,
+    match: (pathname: string, searchParams: URLSearchParams) =>
+      pathname === "/dashboard" && searchParams.get("tab") === "activity",
   },
   {
     href: PROFILE_ROUTE,
     label: "Profile",
     icon: UserRound,
-    match: (pathname: string) =>
+    match: (pathname: string, _searchParams: URLSearchParams) =>
       pathname === PROFILE_ROUTE || pathname.startsWith(`${PROFILE_ROUTE}/`),
   },
 ] as const;
@@ -151,6 +159,7 @@ function getInitials(value: string) {
 
 export function ProtectedShell({ children, user }: ProtectedShellProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const displayName = user.name?.trim() || user.email || "SplitFree member";
 
   return (
@@ -166,7 +175,7 @@ export function ProtectedShell({ children, user }: ProtectedShellProps) {
 
           <nav className="mt-8 space-y-1">
             {navigationItems.map((item) => {
-              const isActive = item.match(pathname);
+              const isActive = item.match(pathname, searchParams);
               const Icon = item.icon;
 
               return (

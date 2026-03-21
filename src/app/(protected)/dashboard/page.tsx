@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
+import { MobileBalanceBanner } from "@/components/dashboard/overall-balance-view";
+import { getActivityFeed } from "@/lib/queries/activity";
 import { getOverallBalances } from "@/lib/queries/balances";
 import { getDashboardGroups } from "@/lib/queries/group";
 import { getDashboardUser } from "@/lib/queries/profile";
@@ -10,15 +12,16 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
-  const [groups, overallBalances, dashboardUser, params] = await Promise.all([
-    getDashboardGroups(),
-    getOverallBalances(),
-    getDashboardUser(),
-    searchParams,
-  ]);
+  const [groups, overallBalances, activityFeed, dashboardUser, params] =
+    await Promise.all([
+      getDashboardGroups(),
+      getOverallBalances(),
+      getActivityFeed(),
+      getDashboardUser(),
+      searchParams,
+    ]);
   const activeTab = params.tab ?? "groups";
-  const firstName =
-    dashboardUser.name?.trim().split(/\s+/)[0] ?? dashboardUser.email ?? "there";
+  const displayName = dashboardUser.name ?? dashboardUser.email ?? "there";
 
   const groupsHeader = (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -46,16 +49,40 @@ export default async function DashboardPage({
     </div>
   );
 
-  return (
-    <div className="space-y-8">
-      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-        Welcome back, {firstName}
-      </h1>
+  const peopleHeader = (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="space-y-1">
+        <h2 className="text-2xl font-bold tracking-tight">People</h2>
+        <p className="text-sm text-muted-foreground">
+          Individual balances across all your shared groups.
+        </p>
+      </div>
 
+      <Link
+        href="/expenses/direct/new"
+        className="inline-flex h-10 items-center justify-center gap-1.5 border border-primary bg-primary px-4 text-sm font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
+      >
+        Add Expense
+      </Link>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      {activeTab !== "activity" && (
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-[30px] font-bold leading-10 tracking-[-0.9px]">
+            Welcome back, {displayName}
+          </h1>
+          <MobileBalanceBanner summary={overallBalances.summary} />
+        </div>
+      )}
       <DashboardTabs
         overallBalances={overallBalances}
         groups={groups}
         groupsHeader={groupsHeader}
+        peopleHeader={peopleHeader}
+        activityFeed={activityFeed}
         activeTab={activeTab}
       />
     </div>

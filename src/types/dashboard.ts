@@ -21,8 +21,8 @@ export type DashboardCounterpartyBalance = {
   groupCount: number;
   groupLabel: string;
   lastActivityAt: string;
-  settleGroupId: string;
-  settleGroupName: string;
+  settleGroupId: string | null;
+  settleGroupName: string | null;
 };
 
 export type DashboardOverallBalances = {

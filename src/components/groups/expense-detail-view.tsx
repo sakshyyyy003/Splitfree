@@ -3,7 +3,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CalendarDays,
-  CircleDollarSign,
+  IndianRupee,
   PencilLine,
   ReceiptText,
   UsersRound,
@@ -124,7 +124,7 @@ export function ExpenseDetailView({
 
           <div className="grid gap-3 md:grid-cols-4">
             <MetricCard
-              icon={CircleDollarSign}
+              icon={IndianRupee}
               label="Amount"
               value={formatCurrency(expense.amount, expense.currency)}
               helper={expense.splitSummary}

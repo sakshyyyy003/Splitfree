@@ -23,6 +23,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { FieldError } from "@/components/ui/field";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserSearch } from "@/components/ui/user-search";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 // -------------------------------------------------------
@@ -53,7 +60,7 @@ const categoryConfig: Record<ExpenseCategory, { label: string; emoji: string }> 
 
 const splitTypeConfig: Record<SplitType, { symbol: string; label: string }> = {
   equal: { symbol: "=", label: "EQUAL" },
-  exact: { symbol: "$", label: "EXACT" },
+  exact: { symbol: "₹", label: "EXACT" },
   percentage: { symbol: "%", label: "PERCENT" },
   shares: { symbol: "#", label: "SHARES" },
 };
@@ -110,6 +117,7 @@ const directExpenseFormSchema = z.object({
   date: z.string().min(1, { error: "Date is required" }),
   split_type: z.enum(SPLIT_TYPES, { error: "Invalid split type" }),
   category: z.enum(EXPENSE_CATEGORIES, { error: "Invalid category" }),
+  paid_by: z.string().min(1, { error: "Please select who paid" }),
   notes: z
     .string()
     .max(5000, { error: "Notes must be 5000 characters or fewer" })
@@ -155,6 +163,7 @@ export function DirectExpenseForm({
       date: format(new Date(), "yyyy-MM-dd"),
       split_type: "equal",
       category: "other",
+      paid_by: currentUserId,
       notes: "",
     },
   });
@@ -163,6 +172,7 @@ export function DirectExpenseForm({
   const watchedDate = watch("date");
   const watchedSplitType = watch("split_type");
   const watchedCategory = watch("category");
+  const watchedPaidBy = watch("paid_by");
 
   // The two participants are always the current user and the selected friend
   const participants = useMemo<string[]>(() => {
@@ -407,7 +417,7 @@ export function DirectExpenseForm({
             amount: formValues.amount,
             currency: "INR",
             date: formValues.date,
-            paid_by: currentUserId,
+            paid_by: formValues.paid_by,
             created_by: currentUserId,
             split_type: formValues.split_type,
             category: formValues.category,
@@ -437,7 +447,7 @@ export function DirectExpenseForm({
     : "Pick a date";
 
   return (
-    <div className="rounded-xl border-2 border-hotgreen bg-white p-6 sm:p-8">
+    <div className="rounded-xl bg-white p-6 sm:p-8">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col"
@@ -457,7 +467,7 @@ export function DirectExpenseForm({
               placeholder="0"
               autoComplete="off"
               aria-invalid={!!errors.amount}
-              className="w-48 bg-transparent text-center font-bold focus:outline-none"
+              className="min-w-[1ch] bg-transparent text-center font-bold focus:outline-none [appearance:textfield] [field-sizing:content] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               style={{ fontSize: "72px", lineHeight: 1 }}
               {...register("amount", { valueAsNumber: true })}
             />
@@ -507,7 +517,7 @@ export function DirectExpenseForm({
             <UserSearch
               onSelect={handleFriendSelect}
               excludeUserIds={[currentUserId]}
-              placeholder="Search for a friend by name or email..."
+              placeholder="Search for a friend or group"
             />
           )}
           {!selectedFriend && (
@@ -515,6 +525,44 @@ export function DirectExpenseForm({
               Search and select the person you want to split this expense with.
             </p>
           )}
+        </div>
+
+        {/* Paid By */}
+        <div className="mb-6">
+          <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
+            Paid by
+          </label>
+          <Select
+            value={watchedPaidBy}
+            onValueChange={(val) =>
+              setValue("paid_by", val as string, { shouldValidate: true })
+            }
+          >
+            <SelectTrigger className="w-full" aria-invalid={!!errors.paid_by}>
+              <SelectValue placeholder="Select who paid">
+                {(value: string) => {
+                  if (value === currentUserId) return `${currentUserName} (you)`;
+                  if (selectedFriend && value === selectedFriend.id)
+                    return selectedFriend.name ?? selectedFriend.email;
+                  return "Select who paid";
+                }}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={currentUserId} label={`${currentUserName} (you)`}>
+                {currentUserName} (you)
+              </SelectItem>
+              {selectedFriend && (
+                <SelectItem
+                  value={selectedFriend.id}
+                  label={selectedFriend.name ?? selectedFriend.email}
+                >
+                  {selectedFriend.name ?? selectedFriend.email}
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+          <FieldError>{errors.paid_by?.message}</FieldError>
         </div>
 
         {/* Description */}
@@ -584,10 +632,10 @@ export function DirectExpenseForm({
                   type="button"
                   onClick={() => handleSplitTypeChange(type)}
                   className={cn(
-                    "p-4 text-center transition-colors",
+                    "rounded-lg p-4 text-center transition-colors",
                     isSelected
                       ? "border-2 border-hotgreen bg-hotgreen/10"
-                      : "rounded-lg border-2 border-gray-200 hover:border-hotgreen",
+                      : "border-2 border-gray-200 hover:border-hotgreen",
                   )}
                 >
                   <div className="mb-1 text-xl font-bold">{config.symbol}</div>
@@ -619,10 +667,10 @@ export function DirectExpenseForm({
                     setValue("category", cat, { shouldValidate: true })
                   }
                   className={cn(
-                    "px-4 py-2 text-xs font-bold transition-colors",
+                    "rounded-lg px-4 py-2 text-xs font-bold transition-colors",
                     isSelected
                       ? "bg-black text-white"
-                      : "rounded-lg border border-gray-300 text-textsec hover:border-black",
+                      : "border border-gray-300 text-textsec hover:border-black",
                   )}
                 >
                   {config.emoji} {config.label}
@@ -744,7 +792,7 @@ export function DirectExpenseForm({
           type="submit"
           size="lg"
           disabled={isPending || !selectedFriend}
-          className="w-full bg-black py-5 text-lg text-white hover:bg-gray-900"
+          className="w-full border-0 bg-black py-5 text-lg text-white hover:bg-gray-900"
         >
           {isPending && <Loader2 className="animate-spin" />}
           ADD EXPENSE

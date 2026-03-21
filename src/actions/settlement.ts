@@ -52,10 +52,12 @@ export async function recordSettlement(
     };
   }
 
+  const groupId = parsed.data.group_id ?? null;
+
   const { data, error: insertError } = await supabase
     .from("settlements")
     .insert({
-      group_id: parsed.data.group_id,
+      group_id: groupId,
       paid_by,
       paid_to,
       amount: parsed.data.amount,
@@ -74,7 +76,10 @@ export async function recordSettlement(
     };
   }
 
-  revalidatePath(`/groups/${parsed.data.group_id}`);
+  if (groupId) {
+    revalidatePath(`/groups/${groupId}`);
+  }
+  revalidatePath("/dashboard");
 
   return { data, error: null };
 }

@@ -255,15 +255,17 @@ export async function joinGroup(
   }
 
   // Add as member
-  const { error: memberError } = await supabase
+  const { data: newMember, error: memberError } = await supabase
     .from("group_members")
     .insert({
       group_id: group.id,
       user_id: user.id,
       role: "member",
-    });
+    })
+    .select("id")
+    .single();
 
-  if (memberError) {
+  if (memberError || !newMember) {
     return {
       data: null,
       error: {
@@ -272,6 +274,22 @@ export async function joinGroup(
       },
     };
   }
+
+  // Log activity — fire-and-forget, don't block on failure
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("name")
+    .eq("id", user.id)
+    .single();
+
+  await supabase.from("activity_log").insert({
+    group_id: group.id,
+    actor_id: user.id,
+    action: "member_added",
+    entity_type: "member",
+    entity_id: newMember.id,
+    metadata: { member_name: profile?.name ?? "Unknown" },
+  });
 
   revalidatePath("/dashboard");
   revalidatePath(`/groups/${group.id}`);
@@ -338,15 +356,17 @@ export async function addMemberToGroup(
   }
 
   // Add as member
-  const { error: insertError } = await supabase
+  const { data: newMember, error: insertError } = await supabase
     .from("group_members")
     .insert({
       group_id: parsed.data.groupId,
       user_id: parsed.data.userId,
       role: "member",
-    });
+    })
+    .select("id")
+    .single();
 
-  if (insertError) {
+  if (insertError || !newMember) {
     return {
       data: null,
       error: {
@@ -355,6 +375,23 @@ export async function addMemberToGroup(
       },
     };
   }
+
+  // Log activity
+  const { data: addedProfile } = await supabase
+    .from("profiles")
+    .select("name")
+    .eq("id", parsed.data.userId)
+    .single();
+
+  await supabase.from("activity_log").insert({
+    group_id: parsed.data.groupId,
+    actor_id: user.id,
+    action: "member_added",
+    entity_type: "member",
+    entity_id: newMember.id,
+    target_user_id: parsed.data.userId,
+    metadata: { member_name: addedProfile?.name ?? "Unknown" },
+  });
 
   revalidatePath(`/groups/${parsed.data.groupId}`);
 
@@ -517,6 +554,13 @@ export async function removeMember(
     };
   }
 
+  // Fetch the target member's profile before deletion
+  const { data: removedProfile } = await supabase
+    .from("profiles")
+    .select("name")
+    .eq("id", targetUserId)
+    .single();
+
   // Delete the member from the group
   const { error: deleteError } = await supabase
     .from("group_members")
@@ -533,6 +577,17 @@ export async function removeMember(
       },
     };
   }
+
+  // Log activity
+  await supabase.from("activity_log").insert({
+    group_id: groupId,
+    actor_id: user.id,
+    action: "member_removed",
+    entity_type: "member",
+    entity_id: targetMembership.id,
+    target_user_id: targetUserId,
+    metadata: { member_name: removedProfile?.name ?? "Unknown" },
+  });
 
   revalidatePath(`/groups/${groupId}`);
 

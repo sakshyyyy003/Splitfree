@@ -7,7 +7,7 @@ const ACCEPTED_COVER_MIME_TYPES = [
   "image/webp",
 ];
 
-export const GROUP_CATEGORIES = ["trip", "home", "couple", "other"] as const;
+export const GROUP_CATEGORIES = ["trip", "home", "couple", "work", "friends", "other"] as const;
 export type GroupCategory = (typeof GROUP_CATEGORIES)[number];
 
 export const createGroupSchema = z.object({

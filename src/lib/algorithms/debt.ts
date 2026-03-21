@@ -24,7 +24,7 @@ export type MemberBalance = {
 export type SimplifiedDebt = {
   fromUserId: string;
   toUserId: string;
-  /** Always positive — the dollar amount the debtor pays the creditor. */
+  /** Always positive — the rupee amount the debtor pays the creditor. */
   amount: number;
 };
 
@@ -36,7 +36,7 @@ function toCents(amount: number): number {
   return Math.round(amount * 100);
 }
 
-function toDollars(cents: number): number {
+function toRupees(cents: number): number {
   return cents / 100;
 }
 
@@ -89,7 +89,7 @@ export function simplifyDebts(balances: MemberBalance[]): SimplifiedDebt[] {
       debts.push({
         fromUserId: debtors[j].userId,
         toUserId: creditors[i].userId,
-        amount: toDollars(settle),
+        amount: toRupees(settle),
       });
     }
 
