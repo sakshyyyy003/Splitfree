@@ -6,7 +6,7 @@ import { z } from "zod/v4";
 
 export const settlementSchema = z
   .object({
-    group_id: z.uuid({ error: "Invalid group ID" }),
+    group_id: z.uuid({ error: "Invalid group ID" }).nullable().optional(),
     paid_by: z.uuid({ error: "Invalid paid_by user ID" }),
     paid_to: z.uuid({ error: "Invalid paid_to user ID" }),
     amount: z

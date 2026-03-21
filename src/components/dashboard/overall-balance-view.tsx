@@ -123,87 +123,65 @@ export function CounterpartyBreakdown({
   counterparties: DashboardCounterpartyBalance[];
   currency: string;
 }) {
+  if (counterparties.length === 0) {
+    return (
+      <Card className="border-dashed bg-card p-6">
+        <p className="text-lg font-bold">No balances yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          New counterparties will show up here as soon as shared expenses land.
+        </p>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="border-2 border-border bg-card">
-      <CardHeader>
-        <CardTitle>Per-person breakdown</CardTitle>
-        <CardDescription>
-          Focus on the biggest swings first and jump into the group that matters
-          most for each balance.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {counterparties.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
-            Everyone is settled. New counterparties will show up here as soon as
-            shared expenses land.
-          </div>
-        ) : (
-          counterparties.map((counterparty) => (
-            <div
-              key={counterparty.userId}
-              className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex min-w-0 items-start gap-3">
-                <Avatar>
-                  {counterparty.avatarUrl ? (
-                    <AvatarImage
-                      src={counterparty.avatarUrl}
-                      alt={counterparty.name}
-                    />
-                  ) : null}
-                  <AvatarFallback>
-                    {getInitials(counterparty.name)}
-                  </AvatarFallback>
-                </Avatar>
-
-                <div className="min-w-0 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold">{counterparty.name}</p>
-                    <Badge variant="outline">
-                      {formatCounterpartyDirection(
-                        counterparty.netBalance,
-                        currency
-                      )}
-                    </Badge>
-                  </div>
-                  <p className="truncate text-sm text-muted-foreground">
-                    {counterparty.email}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Shared across {counterparty.groupLabel}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Last activity{" "}
-                    {dateTimeFormatter.format(
-                      new Date(counterparty.lastActivityAt)
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-col items-start gap-3 sm:items-end">
-                <p
-                  className={`text-lg font-bold ${getBalanceTone(counterparty.netBalance)}`}
-                >
-                  {getBalanceHeadline(counterparty.netBalance, currency)}
-                </p>
-                <Button
-                  render={
-                    <Link href={`/groups/${counterparty.settleGroupId}`} />
-                  }
-                  size="sm"
-                  variant="outline"
-                >
-                  Settle via {counterparty.settleGroupName}
-                  <ArrowRight className="size-4" />
-                </Button>
-              </div>
+    <div className="flex flex-col gap-3">
+      {counterparties.map((counterparty) => (
+        <Card
+          key={counterparty.userId}
+          className="flex flex-row items-center overflow-clip bg-white px-6 py-5"
+        >
+          <div className="flex flex-1 items-center gap-[18px]">
+            <Avatar>
+              {counterparty.avatarUrl ? (
+                <AvatarImage
+                  src={counterparty.avatarUrl}
+                  alt={counterparty.name}
+                />
+              ) : null}
+              <AvatarFallback>
+                {getInitials(counterparty.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <p className="text-lg font-bold leading-[24.75px]">
+                {counterparty.name}
+              </p>
+              <p className="text-sm font-medium leading-6 text-[#7e7e7e]">
+                {counterparty.settleGroupId
+                  ? `Shared across ${counterparty.groupLabel}`
+                  : counterparty.groupLabel}
+              </p>
             </div>
-          ))
-        )}
-      </CardContent>
-    </Card>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <p
+              className={`text-base font-bold leading-6 ${getBalanceTone(counterparty.netBalance)}`}
+            >
+              {getBalanceHeadline(counterparty.netBalance, currency)}
+            </p>
+            {counterparty.netBalance !== 0 && (
+              <Link
+                href={`/expenses/direct/settle?with=${counterparty.userId}`}
+                className="inline-flex h-8 items-center justify-center gap-1.5 border border-primary bg-primary px-3 text-xs font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
+              >
+                Settle Up
+              </Link>
+            )}
+          </div>
+        </Card>
+      ))}
+    </div>
   );
 }
 

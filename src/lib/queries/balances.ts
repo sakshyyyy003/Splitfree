@@ -335,7 +335,7 @@ function buildEmptyOverallBalances(): DashboardOverallBalances {
 }
 
 function buildGroupLabel(groupNames: string[]): string {
-  if (groupNames.length === 0) return "No groups";
+  if (groupNames.length === 0) return "Direct expenses";
   if (groupNames.length === 1) return groupNames[0];
   return `${groupNames.length} groups`;
 }
@@ -432,9 +432,11 @@ export async function getOverallBalances(): Promise<DashboardOverallBalances> {
         .map((gid) => groupLookup.get(gid)?.name)
         .filter((name): name is string => name != null);
 
-      // Use the first group as the settle group
-      const settleGroupId = entry.group_ids[0] ?? "";
-      const settleGroupName = groupLookup.get(settleGroupId)?.name ?? "";
+      // Use the first group as the settle group (null for 1-1 only counterparties)
+      const settleGroupId = entry.group_ids[0] ?? null;
+      const settleGroupName = settleGroupId
+        ? (groupLookup.get(settleGroupId)?.name ?? null)
+        : null;
 
       return {
         userId: entry.user_id,

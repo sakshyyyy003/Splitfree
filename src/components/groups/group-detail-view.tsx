@@ -163,13 +163,24 @@ export function GroupDetailView({
               </div>
             </div>
 
-            <div className="rounded-lg border border-border bg-card px-5 py-4">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                Your position
-              </p>
-              <p className={`mt-2 text-2xl font-bold ${getBalanceTone(group.netBalance)}`}>
-                {getNetBalanceCopy(group.netBalance, group.currency)}
-              </p>
+            <div className="flex flex-col items-end gap-3">
+              <div className="rounded-lg border border-border bg-card px-5 py-4">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                  Your position
+                </p>
+                <p className={`mt-2 text-2xl font-bold ${getBalanceTone(group.netBalance)}`}>
+                  {getNetBalanceCopy(group.netBalance, group.currency)}
+                </p>
+              </div>
+              {simplifiedDebts.length > 0 && (
+                <Link
+                  href={`/groups/${group.id}/settle`}
+                  className={buttonVariants({ size: "lg" })}
+                >
+                  <Handshake className="size-4" />
+                  Settle Up
+                </Link>
+              )}
             </div>
           </div>
 

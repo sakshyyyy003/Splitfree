@@ -13,6 +13,7 @@ type DashboardTabsProps = {
   overallBalances: DashboardOverallBalances;
   groups: DashboardGroup[];
   groupsHeader: React.ReactNode;
+  peopleHeader: React.ReactNode;
   activityFeed: ActivityFeedResult;
   activeTab: string;
 };
@@ -21,6 +22,7 @@ export function DashboardTabs({
   overallBalances,
   groups,
   groupsHeader,
+  peopleHeader,
   activityFeed,
   activeTab,
 }: DashboardTabsProps) {
@@ -39,10 +41,13 @@ export function DashboardTabs({
       {/* Mobile: content driven by bottom nav tab (no visible tab bar) */}
       <div className="lg:hidden">
         {activeTab === "people" ? (
-          <CounterpartyBreakdown
-            counterparties={counterparties}
-            currency={summary.currency}
-          />
+          <div className="space-y-4">
+            {peopleHeader}
+            <CounterpartyBreakdown
+              counterparties={counterparties}
+              currency={summary.currency}
+            />
+          </div>
         ) : activeTab === "activity" ? (
           activityContent
         ) : (
@@ -72,7 +77,8 @@ export function DashboardTabs({
               <GroupList groups={groups} />
             </TabsContent>
 
-            <TabsContent value="people" className="mt-6">
+            <TabsContent value="people" className="mt-6 space-y-4">
+              {peopleHeader}
               <CounterpartyBreakdown
                 counterparties={counterparties}
                 currency={summary.currency}

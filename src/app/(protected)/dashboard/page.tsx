@@ -49,6 +49,24 @@ export default async function DashboardPage({
     </div>
   );
 
+  const peopleHeader = (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="space-y-1">
+        <h2 className="text-2xl font-bold tracking-tight">People</h2>
+        <p className="text-sm text-muted-foreground">
+          Individual balances across all your shared groups.
+        </p>
+      </div>
+
+      <Link
+        href="/expenses/direct/new"
+        className="inline-flex h-10 items-center justify-center gap-1.5 border border-primary bg-primary px-4 text-sm font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
+      >
+        Add Expense
+      </Link>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       {activeTab !== "activity" && (
@@ -63,6 +81,7 @@ export default async function DashboardPage({
         overallBalances={overallBalances}
         groups={groups}
         groupsHeader={groupsHeader}
+        peopleHeader={peopleHeader}
         activityFeed={activityFeed}
         activeTab={activeTab}
       />
