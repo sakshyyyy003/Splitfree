@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import Image from "next/image";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera, Loader2 } from "lucide-react";
@@ -117,7 +117,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Personal Information</CardTitle>
+        <CardTitle>Profile picture</CardTitle>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-6">
@@ -135,16 +135,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
           >
             <Avatar className="size-20">
               {avatarUrl ? (
-                <AvatarImage
-                  render={
-                    <Image
-                      src={avatarUrl}
-                      alt="Your avatar"
-                      width={80}
-                      height={80}
-                    />
-                  }
-                />
+                <AvatarImage src={avatarUrl} alt="Your avatar" />
               ) : (
                 <AvatarFallback className="text-lg">
                   {initials}

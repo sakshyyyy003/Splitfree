@@ -46,26 +46,26 @@ export function MobileBalanceBanner({
   let tone: string;
 
   if (netBalance > 0) {
-    label = "You are owed";
+    label = "Overall, you get";
     amount = formatCurrency(totalOwed, currency);
-    tone = "text-emerald-700";
+    tone = "text-[#007a55]";
   } else if (netBalance < 0) {
-    label = "You owe";
+    label = "Overall, you owe";
     amount = formatCurrency(totalYouOwe, currency);
     tone = "text-rose-700";
   } else {
-    label = "You're all settled up";
+    label = "All settled up";
     amount = "";
     tone = "text-foreground";
   }
 
   return (
-    <div className="flex items-baseline gap-2 px-1 pt-1 pb-3 border-b border-border">
+    <div className="flex items-end gap-2 pt-1">
       <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
         {label}
       </span>
       {amount ? (
-        <span className={`text-2xl font-bold ${tone}`}>{amount}</span>
+        <span className={`text-2xl font-bold leading-8 ${tone}`}>{amount}</span>
       ) : null}
     </div>
   );

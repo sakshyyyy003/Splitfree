@@ -324,7 +324,7 @@ function isMissingOverallBalancesFunction(message: string): boolean {
 function buildEmptyOverallBalances(): DashboardOverallBalances {
   return {
     summary: {
-      currency: "USD",
+      currency: "INR",
       totalOwed: 0,
       totalYouOwe: 0,
       netBalance: 0,
@@ -453,7 +453,7 @@ export async function getOverallBalances(): Promise<DashboardOverallBalances> {
 
   return {
     summary: {
-      currency: "USD",
+      currency: "INR",
       totalOwed: raw.summary.total_owed,
       totalYouOwe: raw.summary.total_you_owe,
       netBalance: raw.summary.net_balance,

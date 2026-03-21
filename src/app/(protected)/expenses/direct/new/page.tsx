@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { getProfile } from "@/lib/queries/profile";
 import { DirectExpenseForm } from "@/components/expenses/direct-expense-form";
@@ -11,16 +13,16 @@ export default async function NewDirectExpensePage() {
   return (
     <div className="mx-auto max-w-lg space-y-8">
       <section className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          Expenses
-        </p>
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-textsec transition-colors hover:text-black"
+        >
+          <ArrowLeft className="size-4" />
+          Back
+        </Link>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
           Add a direct expense
         </h1>
-        <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-          Record a one-on-one expense with someone outside of a group and choose
-          how to split it.
-        </p>
       </section>
 
       <DirectExpenseForm

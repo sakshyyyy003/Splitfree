@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { getGroupMembers } from "@/lib/queries/group-members";
 import { ExpenseForm } from "@/components/expenses/expense-form";
@@ -19,15 +21,16 @@ export default async function AddExpensePage({ params }: AddExpensePageProps) {
   return (
     <div className="mx-auto max-w-lg space-y-8">
       <section className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          Expenses
-        </p>
+        <Link
+          href={`/groups/${groupId}`}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-textsec transition-colors hover:text-black"
+        >
+          <ArrowLeft className="size-4" />
+          Back
+        </Link>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
           Add a new expense
         </h1>
-        <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-          Record a shared expense and choose how to split it among group members.
-        </p>
       </section>
 
       <ExpenseForm

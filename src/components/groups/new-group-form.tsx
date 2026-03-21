@@ -23,10 +23,12 @@ const categoryConfig: Record<
   GroupCategory,
   { label: string; emoji: string }
 > = {
-  trip: { label: "TRIP", emoji: "\u2708\uFE0F" },
-  home: { label: "HOME", emoji: "\uD83C\uDFE0" },
-  couple: { label: "COUPLE", emoji: "\u2764\uFE0F" },
-  other: { label: "OTHER", emoji: "\u25CF" },
+  trip: { label: "TRIP", emoji: "✈️" },
+  home: { label: "HOME", emoji: "🏠" },
+  couple: { label: "COUPLE", emoji: "❤️" },
+  work: { label: "WORK", emoji: "💼" },
+  friends: { label: "FRIENDS", emoji: "🎉" },
+  other: { label: "OTHER", emoji: "🌀" },
 };
 
 export function NewGroupForm() {
@@ -51,6 +53,8 @@ export function NewGroupForm() {
   });
 
   const selectedCategory = watch("category");
+  const watchedName = watch("name");
+  const hasName = watchedName.trim().length > 0;
 
   function handleCoverClick() {
     fileInputRef.current?.click();
@@ -126,7 +130,7 @@ export function NewGroupForm() {
           <label className="mb-3 block text-xs font-bold uppercase tracking-ultra">
             Category
           </label>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-3 gap-3">
             {GROUP_CATEGORIES.map((cat) => {
               const config = categoryConfig[cat];
               const isSelected = selectedCategory === cat;
@@ -139,10 +143,10 @@ export function NewGroupForm() {
                     setValue("category", cat, { shouldValidate: true })
                   }
                   className={cn(
-                    "flex flex-col items-center justify-center p-4 text-center text-sm font-bold transition-colors",
+                    "flex flex-col items-center justify-center rounded-lg p-4 text-center text-sm font-bold transition-colors",
                     isSelected
                       ? "border-2 border-hotgreen bg-hotgreen/10"
-                      : "rounded-lg border-2 border-gray-200 hover:border-hotgreen",
+                      : "border-2 border-gray-200 hover:border-hotgreen",
                   )}
                 >
                   <div className="mb-1 text-2xl">{config.emoji}</div>
@@ -205,7 +209,12 @@ export function NewGroupForm() {
           type="submit"
           size="lg"
           disabled={isPending}
-          className="w-full bg-hotgreen py-5 text-lg text-black hover:bg-lime"
+          className={cn(
+            "w-full border-0 py-5 text-lg transition-opacity",
+            hasName
+              ? "bg-hotgreen text-black hover:bg-lime"
+              : "cursor-not-allowed bg-hotgreen/30 text-black/40 hover:bg-hotgreen/30",
+          )}
         >
           {isPending && <Loader2 className="animate-spin" />}
           CREATE GROUP

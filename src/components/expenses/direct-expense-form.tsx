@@ -53,7 +53,7 @@ const categoryConfig: Record<ExpenseCategory, { label: string; emoji: string }> 
 
 const splitTypeConfig: Record<SplitType, { symbol: string; label: string }> = {
   equal: { symbol: "=", label: "EQUAL" },
-  exact: { symbol: "$", label: "EXACT" },
+  exact: { symbol: "₹", label: "EXACT" },
   percentage: { symbol: "%", label: "PERCENT" },
   shares: { symbol: "#", label: "SHARES" },
 };
@@ -437,7 +437,7 @@ export function DirectExpenseForm({
     : "Pick a date";
 
   return (
-    <div className="rounded-xl border-2 border-hotgreen bg-white p-6 sm:p-8">
+    <div className="rounded-xl bg-white p-6 sm:p-8">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col"
@@ -457,7 +457,7 @@ export function DirectExpenseForm({
               placeholder="0"
               autoComplete="off"
               aria-invalid={!!errors.amount}
-              className="w-48 bg-transparent text-center font-bold focus:outline-none"
+              className="min-w-[1ch] bg-transparent text-center font-bold focus:outline-none [appearance:textfield] [field-sizing:content] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               style={{ fontSize: "72px", lineHeight: 1 }}
               {...register("amount", { valueAsNumber: true })}
             />
@@ -584,10 +584,10 @@ export function DirectExpenseForm({
                   type="button"
                   onClick={() => handleSplitTypeChange(type)}
                   className={cn(
-                    "p-4 text-center transition-colors",
+                    "rounded-lg p-4 text-center transition-colors",
                     isSelected
                       ? "border-2 border-hotgreen bg-hotgreen/10"
-                      : "rounded-lg border-2 border-gray-200 hover:border-hotgreen",
+                      : "border-2 border-gray-200 hover:border-hotgreen",
                   )}
                 >
                   <div className="mb-1 text-xl font-bold">{config.symbol}</div>
@@ -619,10 +619,10 @@ export function DirectExpenseForm({
                     setValue("category", cat, { shouldValidate: true })
                   }
                   className={cn(
-                    "px-4 py-2 text-xs font-bold transition-colors",
+                    "rounded-lg px-4 py-2 text-xs font-bold transition-colors",
                     isSelected
                       ? "bg-black text-white"
-                      : "rounded-lg border border-gray-300 text-textsec hover:border-black",
+                      : "border border-gray-300 text-textsec hover:border-black",
                   )}
                 >
                   {config.emoji} {config.label}
@@ -744,7 +744,7 @@ export function DirectExpenseForm({
           type="submit"
           size="lg"
           disabled={isPending || !selectedFriend}
-          className="w-full bg-black py-5 text-lg text-white hover:bg-gray-900"
+          className="w-full border-0 bg-black py-5 text-lg text-white hover:bg-gray-900"
         >
           {isPending && <Loader2 className="animate-spin" />}
           ADD EXPENSE

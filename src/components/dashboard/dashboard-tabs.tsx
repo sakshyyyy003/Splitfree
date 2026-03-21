@@ -3,17 +3,17 @@
 import { useRouter } from "next/navigation";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  MobileBalanceBanner,
-  CounterpartyBreakdown,
-} from "@/components/dashboard/overall-balance-view";
+import { ActivityFeed } from "@/components/dashboard/activity-feed";
+import { CounterpartyBreakdown } from "@/components/dashboard/overall-balance-view";
 import { GroupList } from "@/components/groups/group-list";
 import type { DashboardOverallBalances, DashboardGroup } from "@/types/dashboard";
+import type { ActivityFeedResult } from "@/types/activity";
 
 type DashboardTabsProps = {
   overallBalances: DashboardOverallBalances;
   groups: DashboardGroup[];
   groupsHeader: React.ReactNode;
+  activityFeed: ActivityFeedResult;
   activeTab: string;
 };
 
@@ -21,16 +21,21 @@ export function DashboardTabs({
   overallBalances,
   groups,
   groupsHeader,
+  activityFeed,
   activeTab,
 }: DashboardTabsProps) {
   const { summary, counterparties } = overallBalances;
   const router = useRouter();
 
+  const activityContent = (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold tracking-tight">Recent activity</h2>
+      <ActivityFeed initial={activityFeed} />
+    </div>
+  );
+
   return (
     <div className="space-y-4">
-      {/* Balance banner — shown on all viewports */}
-      <MobileBalanceBanner summary={summary} />
-
       {/* Mobile: content driven by bottom nav tab (no visible tab bar) */}
       <div className="lg:hidden">
         {activeTab === "people" ? (
@@ -38,6 +43,8 @@ export function DashboardTabs({
             counterparties={counterparties}
             currency={summary.currency}
           />
+        ) : activeTab === "activity" ? (
+          activityContent
         ) : (
           <div className="space-y-4">
             {groupsHeader}
@@ -48,27 +55,31 @@ export function DashboardTabs({
 
       {/* Desktop: tab switcher + content */}
       <div className="hidden lg:block">
-        <Tabs
-          value={activeTab}
-          onValueChange={(tab) => router.push(`/dashboard?tab=${tab}`)}
-        >
-          <TabsList className="w-full">
-            <TabsTrigger value="groups">Groups</TabsTrigger>
-            <TabsTrigger value="people">People</TabsTrigger>
-          </TabsList>
+        {activeTab === "activity" ? (
+          activityContent
+        ) : (
+          <Tabs
+            value={activeTab}
+            onValueChange={(tab) => router.push(`/dashboard?tab=${tab}`)}
+          >
+            <TabsList className="w-full">
+              <TabsTrigger value="groups">Groups</TabsTrigger>
+              <TabsTrigger value="people">People</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="groups" className="mt-6 space-y-4">
-            {groupsHeader}
-            <GroupList groups={groups} />
-          </TabsContent>
+            <TabsContent value="groups" className="mt-6 space-y-4">
+              {groupsHeader}
+              <GroupList groups={groups} />
+            </TabsContent>
 
-          <TabsContent value="people" className="mt-6">
-            <CounterpartyBreakdown
-              counterparties={counterparties}
-              currency={summary.currency}
-            />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="people" className="mt-6">
+              <CounterpartyBreakdown
+                counterparties={counterparties}
+                currency={summary.currency}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );

@@ -32,7 +32,7 @@ function toCents(amount: number): number {
   return Math.round(amount * 100);
 }
 
-function toDollars(cents: number): number {
+function toRupees(cents: number): number {
   return cents / 100;
 }
 
@@ -66,7 +66,7 @@ export function calculateEqualSplit(
   return participantIds.map((userId, index) => {
     const isLast = index === participantIds.length - 1;
     const cents = isLast ? perPersonCents + remainderCents : perPersonCents;
-    return { userId, amount: toDollars(cents), shareValue: 1 };
+    return { userId, amount: toRupees(cents), shareValue: 1 };
   });
 }
 
@@ -100,13 +100,13 @@ export function calculateExactSplit(
 
   if (sumCents !== totalCents) {
     throw new Error(
-      `Exact amounts must sum to the total. Expected ${toDollars(totalCents)}, got ${toDollars(sumCents)}`,
+      `Exact amounts must sum to the total. Expected ${toRupees(totalCents)}, got ${toRupees(sumCents)}`,
     );
   }
 
   return assignments.map(({ userId, amount }) => ({
     userId,
-    amount: toDollars(toCents(amount)),
+    amount: toRupees(toCents(amount)),
     shareValue: null,
   }));
 }
@@ -152,7 +152,7 @@ export function calculatePercentageSplit(
     const cents = isLast
       ? perPersonCents[index] + remainderCents
       : perPersonCents[index];
-    return { userId, amount: toDollars(cents), shareValue: percent };
+    return { userId, amount: toRupees(cents), shareValue: percent };
   });
 }
 
@@ -195,7 +195,7 @@ export function calculateSharesSplit(
     const cents = isLast
       ? perPersonCents[index] + remainderCents
       : perPersonCents[index];
-    return { userId, amount: toDollars(cents), shareValue: shares };
+    return { userId, amount: toRupees(cents), shareValue: shares };
   });
 }
 
