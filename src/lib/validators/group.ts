@@ -29,4 +29,16 @@ export const coverImageSchema = z
     error: "Cover image must be smaller than 5 MB",
   });
 
+export const updateGroupSchema = z.object({
+  groupId: z.uuid({ error: "Invalid group ID" }),
+  name: z
+    .string()
+    .min(1, { error: "Group name is required" })
+    .max(100, { error: "Group name must be 100 characters or fewer" }),
+  category: z.enum(GROUP_CATEGORIES, {
+    error: "Please select a category",
+  }),
+});
+
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
+export type UpdateGroupInput = z.infer<typeof updateGroupSchema>;

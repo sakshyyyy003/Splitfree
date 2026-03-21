@@ -1,11 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import {
   createGroupSchema,
   coverImageSchema,
+  updateGroupSchema,
   type CreateGroupInput,
 } from "@/lib/validators/group";
 import {
@@ -592,4 +594,214 @@ export async function removeMember(
   revalidatePath(`/groups/${groupId}`);
 
   return { data: null, error: null };
+}
+
+export async function updateGroup(
+  _prevState: ActionResult<{ groupId: string }> | null,
+  formData: FormData,
+): Promise<ActionResult<{ groupId: string }>> {
+  const rawFields = {
+    groupId: formData.get("groupId"),
+    name: formData.get("name"),
+    category: formData.get("category"),
+  };
+
+  const parsed = updateGroupSchema.safeParse(rawFields);
+
+  if (!parsed.success) {
+    return {
+      data: null,
+      error: {
+        code: "validation_error",
+        message: parsed.error.issues[0]?.message ?? "Please check your input and try again",
+      },
+    };
+  }
+
+  const { groupId, name, category } = parsed.data;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      data: null,
+      error: { code: "unauthorized", message: "You must be signed in" },
+    };
+  }
+
+  // Check the user is an admin of this group
+  const { data: membership } = await supabase
+    .from("group_members")
+    .select("role")
+    .eq("group_id", groupId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!membership || membership.role !== "admin") {
+    return {
+      data: null,
+      error: {
+        code: "forbidden",
+        message: "Only group admins can update group settings",
+      },
+    };
+  }
+
+  // Update group row
+  const { error: updateError } = await supabase
+    .from("groups")
+    .update({ name, category })
+    .eq("id", groupId);
+
+  if (updateError) {
+    return {
+      data: null,
+      error: {
+        code: "update_failed",
+        message: "Failed to update group. Please try again.",
+      },
+    };
+  }
+
+  // Handle cover image
+  const removeCover = formData.get("removeCover") === "true";
+  const coverFile = formData.get("coverImage");
+
+  if (removeCover) {
+    // List and remove all files in the group's cover folder
+    const { data: existingFiles } = await supabase.storage
+      .from(COVERS_BUCKET)
+      .list(groupId);
+
+    if (existingFiles && existingFiles.length > 0) {
+      const filePaths = existingFiles.map((f) => `${groupId}/${f.name}`);
+      await supabase.storage.from(COVERS_BUCKET).remove(filePaths);
+    }
+  } else if (coverFile instanceof File && coverFile.size > 0) {
+    // Validate the cover image
+    const fileParsed = coverImageSchema.safeParse(coverFile);
+
+    if (!fileParsed.success) {
+      return {
+        data: null,
+        error: {
+          code: "validation_error",
+          message: fileParsed.error.issues[0]?.message ?? "Invalid cover image",
+        },
+      };
+    }
+
+    const validatedCover = fileParsed.data;
+    const ext = getFileExtension(validatedCover.type);
+    const filePath = `${groupId}/cover.${ext}`;
+
+    // Remove any existing cover files first (may have different extension)
+    const { data: existingFiles } = await supabase.storage
+      .from(COVERS_BUCKET)
+      .list(groupId);
+
+    if (existingFiles && existingFiles.length > 0) {
+      const oldPaths = existingFiles.map((f) => `${groupId}/${f.name}`);
+      await supabase.storage.from(COVERS_BUCKET).remove(oldPaths);
+    }
+
+    const { error: uploadError } = await supabase.storage
+      .from(COVERS_BUCKET)
+      .upload(filePath, validatedCover, {
+        cacheControl: "3600",
+        contentType: validatedCover.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      // Non-fatal: group was updated, just log upload failure
+      console.error("Cover image upload failed:", uploadError.message);
+    }
+  }
+
+  revalidatePath(`/groups/${groupId}`);
+  revalidatePath("/dashboard");
+
+  return { data: { groupId }, error: null };
+}
+
+export async function deleteGroup(
+  _prevState: ActionResult<{ deleted: true }> | null,
+  formData: FormData,
+): Promise<ActionResult<{ deleted: true }>> {
+  const groupId = formData.get("groupId");
+
+  if (typeof groupId !== "string" || !groupId) {
+    return {
+      data: null,
+      error: {
+        code: "validation_error",
+        message: "Group ID is required",
+      },
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      data: null,
+      error: { code: "unauthorized", message: "You must be signed in" },
+    };
+  }
+
+  // Check the user is an admin of this group
+  const { data: membership } = await supabase
+    .from("group_members")
+    .select("role")
+    .eq("group_id", groupId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!membership || membership.role !== "admin") {
+    return {
+      data: null,
+      error: {
+        code: "forbidden",
+        message: "Only group admins can delete a group",
+      },
+    };
+  }
+
+  // Delete cover files from storage
+  const { data: existingFiles } = await supabase.storage
+    .from(COVERS_BUCKET)
+    .list(groupId);
+
+  if (existingFiles && existingFiles.length > 0) {
+    const filePaths = existingFiles.map((f) => `${groupId}/${f.name}`);
+    await supabase.storage.from(COVERS_BUCKET).remove(filePaths);
+  }
+
+  // Delete the group row (cascades to group_members via FK)
+  const { error: deleteError } = await supabase
+    .from("groups")
+    .delete()
+    .eq("id", groupId);
+
+  if (deleteError) {
+    return {
+      data: null,
+      error: {
+        code: "delete_failed",
+        message: "Failed to delete group. Please try again.",
+      },
+    };
+  }
+
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }

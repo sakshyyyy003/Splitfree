@@ -10,6 +10,7 @@ import {
   Loader2,
   Plus,
   ReceiptText,
+  Settings,
   UsersRound,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -172,15 +173,26 @@ export function GroupDetailView({
                   {getNetBalanceCopy(group.netBalance, group.currency)}
                 </p>
               </div>
-              {simplifiedDebts.length > 0 && (
-                <Link
-                  href={`/groups/${group.id}/settle`}
-                  className={buttonVariants({ size: "lg" })}
-                >
-                  <Handshake className="size-4" />
-                  Settle Up
-                </Link>
-              )}
+              <div className="flex items-center gap-2">
+                {simplifiedDebts.length > 0 && (
+                  <Link
+                    href={`/groups/${group.id}/settle`}
+                    className={buttonVariants({ size: "lg" })}
+                  >
+                    <Handshake className="size-4" />
+                    Settle Up
+                  </Link>
+                )}
+                {isAdmin && (
+                  <Link
+                    href={`/groups/${group.id}/settings`}
+                    className={buttonVariants({ size: "lg", variant: "outline" })}
+                    aria-label="Group settings"
+                  >
+                    <Settings className="size-4" />
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
 
