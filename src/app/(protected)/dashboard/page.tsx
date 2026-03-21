@@ -1,11 +1,9 @@
 import Link from "next/link";
 
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
-import {
-  getMockDashboardGroups,
-  getMockDashboardUser,
-} from "@/lib/mock/dashboard";
 import { getOverallBalances } from "@/lib/queries/balances";
+import { getDashboardGroups } from "@/lib/queries/group";
+import { getDashboardUser } from "@/lib/queries/profile";
 
 export default async function DashboardPage({
   searchParams,
@@ -13,9 +11,9 @@ export default async function DashboardPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const [groups, overallBalances, dashboardUser, params] = await Promise.all([
-    getMockDashboardGroups(),
+    getDashboardGroups(),
     getOverallBalances(),
-    getMockDashboardUser(),
+    getDashboardUser(),
     searchParams,
   ]);
   const activeTab = params.tab ?? "groups";

@@ -223,12 +223,13 @@ export async function joinGroup(
     };
   }
 
-  // Look up group by invite code
-  const { data: group, error: groupError } = await supabase
-    .from("groups")
-    .select("id, name")
-    .eq("invite_code", inviteCode)
-    .single();
+  // Look up group by invite code (uses SECURITY DEFINER to bypass RLS)
+  const { data: rpcResult, error: groupError } = await supabase.rpc(
+    "lookup_group_by_invite_code",
+    { _invite_code: inviteCode },
+  );
+
+  const group = rpcResult?.[0] ?? null;
 
   if (groupError || !group) {
     return {
@@ -500,7 +501,7 @@ export async function removeMember(
 
   // Net balance: positive = owed money, negative = owes money
   const netBalance =
-    totalPaid - totalOwed - totalSettlementsPaid + totalSettlementsReceived;
+    totalPaid - totalOwed + totalSettlementsPaid - totalSettlementsReceived;
 
   // Round to avoid floating-point drift (same as balances.ts)
   const roundedBalance = Math.round(netBalance * 100) / 100;

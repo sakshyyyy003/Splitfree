@@ -162,11 +162,11 @@ async function getGroupBalancesFallback(
   for (const settlement of settlements ?? []) {
     balanceByUser.set(
       settlement.paid_by,
-      (balanceByUser.get(settlement.paid_by) ?? 0) - settlement.amount,
+      (balanceByUser.get(settlement.paid_by) ?? 0) + settlement.amount,
     );
     balanceByUser.set(
       settlement.paid_to,
-      (balanceByUser.get(settlement.paid_to) ?? 0) + settlement.amount,
+      (balanceByUser.get(settlement.paid_to) ?? 0) - settlement.amount,
     );
   }
 

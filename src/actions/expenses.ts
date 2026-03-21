@@ -61,6 +61,12 @@ export async function createExpense(
   );
 
   if (rpcError) {
+    console.error("[createExpense] RPC error:", {
+      code: rpcError.code,
+      message: rpcError.message,
+      details: rpcError.details,
+      hint: rpcError.hint,
+    });
     return {
       data: null,
       error: {
@@ -177,9 +183,9 @@ export async function updateExpense(
   const { data, error: rpcError } = await supabase.rpc(
     "update_expense_with_splits",
     {
+      _expense_data: expenseData as unknown as Record<string, unknown>,
       _expense_id: parsed.data.expense_id,
       _expected_updated_at: parsed.data.expected_updated_at,
-      _expense_data: expenseData as unknown as Record<string, unknown>,
       _splits_data: parsed.data.splits as unknown as Record<string, unknown>[],
     },
   );

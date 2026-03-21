@@ -1,11 +1,9 @@
 import { notFound } from "next/navigation";
 
-import {
-  getMockGroupBalanceSummary,
-  getMockGroupDetail,
-  getMockGroupExpenses,
-} from "@/lib/mock/group-detail";
 import { requireAuthenticatedUser } from "@/lib/auth/user";
+import { getGroupBalances } from "@/lib/queries/balances";
+import { getGroupExpenses } from "@/lib/queries/expenses";
+import { getGroupDetail } from "@/lib/queries/group";
 import { getGroupMembers } from "@/lib/queries/group-members";
 import { GroupDetailView } from "@/components/groups/group-detail-view";
 
@@ -24,9 +22,9 @@ export default async function GroupDetailPage({
   ]);
 
   const [group, expenses, balanceSummary, members] = await Promise.all([
-    getMockGroupDetail(id),
-    getMockGroupExpenses(id),
-    getMockGroupBalanceSummary(id),
+    getGroupDetail(id),
+    getGroupExpenses(id),
+    getGroupBalances(id),
     getGroupMembers(id),
   ]);
 

@@ -17,7 +17,7 @@ export type SplitType = (typeof SPLIT_TYPES)[number];
 export type SplitResult = {
   userId: string;
   amount: number;
-  shareValue?: number;
+  shareValue: number | null;
 };
 
 type ExactAssignment = { userId: string; amount: number };
@@ -66,7 +66,7 @@ export function calculateEqualSplit(
   return participantIds.map((userId, index) => {
     const isLast = index === participantIds.length - 1;
     const cents = isLast ? perPersonCents + remainderCents : perPersonCents;
-    return { userId, amount: toDollars(cents) };
+    return { userId, amount: toDollars(cents), shareValue: 1 };
   });
 }
 
@@ -107,6 +107,7 @@ export function calculateExactSplit(
   return assignments.map(({ userId, amount }) => ({
     userId,
     amount: toDollars(toCents(amount)),
+    shareValue: null,
   }));
 }
 
