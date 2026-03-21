@@ -2,10 +2,8 @@ import { notFound } from "next/navigation";
 
 import { ExpenseDetailView } from "@/components/groups/expense-detail-view";
 import { requireAuthenticatedUser } from "@/lib/auth/user";
-import {
-  getMockExpenseDetail,
-  getMockGroupDetail,
-} from "@/lib/mock/group-detail";
+import { getExpenseDetail } from "@/lib/queries/expenses";
+import { getGroupDetail } from "@/lib/queries/group";
 import { getGroupMembers } from "@/lib/queries/group-members";
 
 type ExpenseDetailPageProps = {
@@ -22,8 +20,8 @@ export default async function ExpenseDetailPage({
 
   const [user, group, expense] = await Promise.all([
     requireAuthenticatedUser(),
-    getMockGroupDetail(id),
-    getMockExpenseDetail(id, expenseId),
+    getGroupDetail(id),
+    getExpenseDetail(id, expenseId),
   ]);
 
   if (!group || !expense) {

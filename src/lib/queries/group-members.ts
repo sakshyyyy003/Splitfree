@@ -1,23 +1,12 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { getMockGroupMembers } from "@/lib/mock/group-detail";
 import type { GroupMember } from "@/types/group-detail";
-
-/**
- * Fetches all members of a group with their profile data.
- *
- * Joins `group_members` with `profiles` via the foreign key on `user_id`
- * and maps the result to the `GroupMember[]` shape used by the UI.
- */
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function getGroupMembers(
   groupId: string,
 ): Promise<GroupMember[]> {
-  if (!UUID_RE.test(groupId)) {
-    return getMockGroupMembers(groupId);
-  }
+  if (!groupId) return [];
 
   const supabase = await createClient();
 
@@ -28,18 +17,10 @@ export async function getGroupMembers(
     .order("joined_at", { ascending: true });
 
   if (error) {
-    if (
-      error.message.includes("Could not find the table") &&
-      error.message.includes("schema cache")
-    ) {
-      return getMockGroupMembers(groupId);
-    }
-
     throw new Error(`Failed to fetch group members: ${error.message}`);
   }
 
   return data.map((member) => {
-    // Supabase returns the joined profile as an object (single relation via FK)
     const profile = member.profiles as unknown as {
       name: string;
       email: string;

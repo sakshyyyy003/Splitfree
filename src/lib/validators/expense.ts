@@ -69,7 +69,7 @@ export const splitSchema = z.object({
   share_value: z
     .number()
     .min(0, { error: "Share value must be zero or greater" })
-    .optional(),
+    .nullable(),
 });
 
 // -------------------------------------------------------

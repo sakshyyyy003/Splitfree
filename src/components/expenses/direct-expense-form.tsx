@@ -331,7 +331,7 @@ export function DirectExpenseForm({
   function buildSplitsPayload(formValues: DirectExpenseFormValues): {
     user_id: string;
     amount: number;
-    share_value?: number;
+    share_value: number | null;
   }[] {
     if (!selectedFriend) {
       throw new Error("Please select a friend");

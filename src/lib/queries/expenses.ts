@@ -2,6 +2,11 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import type { SplitType } from "@/lib/algorithms/splits";
+import type {
+  GroupExpense,
+  GroupExpenseDetail,
+  ExpenseSplitParticipant,
+} from "@/types/group-detail";
 
 // -------------------------------------------------------
 // Types
@@ -105,5 +110,163 @@ export async function getExpenseForEdit(
       amount: split.amount,
       share_value: split.share_value,
     })),
+  };
+}
+
+// -------------------------------------------------------
+// Group expenses list
+// -------------------------------------------------------
+
+function buildSplitSummary(
+  splitType: string,
+  participantCount: number,
+): string {
+  const label =
+    ({
+      equal: "equally",
+      exact: "by exact amounts",
+      percentage: "by percentage",
+      shares: "by shares",
+    } as Record<string, string>)[splitType] ?? "equally";
+  return `Split ${label} among ${participantCount} ${participantCount === 1 ? "person" : "people"}`;
+}
+
+export async function getGroupExpenses(
+  groupId: string,
+): Promise<GroupExpense[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("expenses")
+    .select(
+      `
+      id,
+      description,
+      amount,
+      currency,
+      category,
+      paid_by,
+      split_type,
+      date,
+      notes,
+      created_at,
+      profiles!expenses_paid_by_fkey (name),
+      expense_splits (user_id)
+    `,
+    )
+    .eq("group_id", groupId)
+    .eq("is_deleted", false)
+    .order("date", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    id: row.id,
+    title: row.description,
+    amount: row.amount,
+    currency: row.currency,
+    category: row.category,
+    paidByUserId: row.paid_by,
+    paidByName:
+      (row.profiles as unknown as { name: string } | null)?.name ?? "Unknown",
+    splitSummary: buildSplitSummary(row.split_type, row.expense_splits.length),
+    incurredOn: row.date,
+    createdAt: row.created_at,
+    notes: row.notes,
+  }));
+}
+
+// -------------------------------------------------------
+// Single expense detail
+// -------------------------------------------------------
+
+export async function getExpenseDetail(
+  groupId: string,
+  expenseId: string,
+): Promise<GroupExpenseDetail | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("expenses")
+    .select(
+      `
+      id,
+      group_id,
+      description,
+      amount,
+      currency,
+      category,
+      paid_by,
+      created_by,
+      split_type,
+      date,
+      notes,
+      created_at,
+      profiles!expenses_paid_by_fkey (name),
+      expense_splits (
+        user_id,
+        amount,
+        share_value
+      )
+    `,
+    )
+    .eq("id", expenseId)
+    .eq("group_id", groupId)
+    .eq("is_deleted", false)
+    .single();
+
+  if (error || !data) return null;
+
+  // Batch-fetch profiles for all split participants
+  const participantIds = data.expense_splits.map((s) => s.user_id);
+
+  const { data: profiles } =
+    participantIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, name, email, avatar_url")
+          .in("id", participantIds)
+      : { data: [] };
+
+  const profileMap = new Map(
+    (profiles ?? []).map((p) => [p.id, p]),
+  );
+
+  const participants: ExpenseSplitParticipant[] = data.expense_splits.map(
+    (split) => {
+      const profile = profileMap.get(split.user_id);
+      return {
+        userId: split.user_id,
+        name: profile?.name ?? "Unknown",
+        email: profile?.email ?? "",
+        avatarUrl: profile?.avatar_url ?? null,
+        paidAmount: split.user_id === data.paid_by ? data.amount : 0,
+        owedAmount: split.amount,
+      };
+    },
+  );
+
+  const paidByName =
+    (data.profiles as unknown as { name: string } | null)?.name ?? "Unknown";
+
+  return {
+    id: data.id,
+    groupId: data.group_id!,
+    title: data.description,
+    amount: data.amount,
+    currency: data.currency,
+    category: data.category,
+    paidByUserId: data.paid_by,
+    paidByName,
+    createdByUserId: data.created_by,
+    splitType: data.split_type as GroupExpenseDetail["splitType"],
+    splitSummary: buildSplitSummary(
+      data.split_type,
+      data.expense_splits.length,
+    ),
+    incurredOn: data.date,
+    createdAt: data.created_at,
+    notes: data.notes,
+    participants,
   };
 }
