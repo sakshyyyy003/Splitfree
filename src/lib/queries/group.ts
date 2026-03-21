@@ -166,6 +166,7 @@ export async function getGroupDetail(
     { data: groupExpenseRows },
     { data: settlementsPaidByUser },
     { data: settlementsReceivedByUser },
+    { data: coverFiles },
   ] = await Promise.all([
     supabase
       .from("group_members")
@@ -201,6 +202,7 @@ export async function getGroupDetail(
       .select("amount")
       .eq("group_id", groupId)
       .eq("paid_to", user.id),
+    supabase.storage.from("group-covers").list(groupId, { limit: 10 }),
   ]);
 
   const expenseCount = (expenses ?? []).length;
@@ -238,6 +240,16 @@ export async function getGroupDetail(
   const netBalance =
     Math.round((paid - owed + settPaid - settReceived) * 100) / 100;
 
+  // Resolve cover image URL from storage
+  const coverFile = (coverFiles ?? []).find(
+    (f) => f.name !== ".emptyFolderPlaceholder",
+  );
+  const coverImageUrl = coverFile
+    ? supabase.storage
+        .from("group-covers")
+        .getPublicUrl(`${groupId}/${coverFile.name}`).data.publicUrl
+    : null;
+
   return {
     id: group.id,
     name: group.name,
@@ -253,7 +265,7 @@ export async function getGroupDetail(
     expenseCount,
     totalSpent: Math.round(totalSpent * 100) / 100,
     settledAmount: Math.round(settledAmount * 100) / 100,
-    coverImageUrl: null,
+    coverImageUrl,
   };
 }
 
