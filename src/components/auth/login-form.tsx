@@ -135,7 +135,7 @@ export function LoginForm() {
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-primary underline-offset-4 hover:underline">
+          <Link href="/signup" className="text-primary underline-offset-4 hover:underline" aria-label="Sign up for a new account">
             Sign up
           </Link>
         </p>

@@ -4,14 +4,10 @@ import { useTransition } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  ArrowUpRight,
-  Coins,
   Handshake,
   Loader2,
   Plus,
-  ReceiptText,
   Settings,
-  UsersRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,6 +16,7 @@ import type {
   GroupDetail,
   GroupExpense,
   GroupMember,
+  GroupSettlement,
   GroupSimplifiedDebt,
 } from "@/types/group-detail";
 import { addMemberToGroup } from "@/actions/group";
@@ -43,6 +40,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 type GroupDetailViewProps = {
   group: GroupDetail;
   expenses: GroupExpense[];
+  settlements: GroupSettlement[];
   balances: GroupBalance[];
   simplifiedDebts: GroupSimplifiedDebt[];
   members: GroupMember[];
@@ -61,29 +59,19 @@ const dateFormatter = new Intl.DateTimeFormat("en-IN", {
   year: "numeric",
 });
 
-const dateTimeFormatter = new Intl.DateTimeFormat("en-IN", {
-  day: "numeric",
-  month: "short",
-  hour: "numeric",
-  minute: "2-digit",
-});
-
-const categoryLabels: Record<string, string> = {
-  trip: "Trip",
-  home: "Home",
-  couple: "Couple",
-  other: "Other",
-  food: "Food",
-  transport: "Transport",
-  accommodation: "Accommodation",
-  entertainment: "Entertainment",
-  utilities: "Utilities",
-  shopping: "Shopping",
+const categoryEmojis: Record<string, string> = {
+  trip: "✈️",
+  home: "🏠",
+  couple: "❤️",
+  work: "💼",
+  friends: "🎉",
+  other: "🌀",
 };
 
 export function GroupDetailView({
   group,
   expenses,
+  settlements,
   balances,
   simplifiedDebts,
   members,
@@ -134,93 +122,85 @@ export function GroupDetailView({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-lg border border-2 border-border bg-card px-6 py-6 border-2 border-border sm:px-7 sm:py-7">
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-3">
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ArrowLeft className="size-4" />
-                Back to dashboard
-              </Link>
+      <section>
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Back to dashboard
+        </Link>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="secondary">
-                  {categoryLabels[group.category] ?? group.category}
-                </Badge>
-                {group.isPinned ? <Badge variant="outline">Pinned</Badge> : null}
-                <Badge variant="outline">{formatUpdatedAt(group.updatedAt)}</Badge>
-              </div>
-
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                  {group.name}
-                </h1>
-                <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-                  {group.description}
-                </p>
-              </div>
+        <div className="mt-10 flex flex-col gap-[6px]">
+          <div className="flex items-center justify-between px-1 py-2">
+            <div className="flex flex-col gap-[13px]">
+              <p className="text-[26px] leading-4">
+                {categoryEmojis[group.category] ?? categoryEmojis.other}
+              </p>
+              <h1 className="text-[28px] font-bold leading-10 tracking-[-0.9px]">
+                {group.name}
+              </h1>
             </div>
 
-            <div className="flex flex-col items-end gap-3">
-              <div className="rounded-lg border border-border bg-card px-5 py-4">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                  Your position
-                </p>
-                <p className={`mt-2 text-2xl font-bold ${getBalanceTone(group.netBalance)}`}>
-                  {getNetBalanceCopy(group.netBalance, group.currency)}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {simplifiedDebts.length > 0 && (
-                  <Link
-                    href={`/groups/${group.id}/settle`}
-                    className={buttonVariants({ size: "lg" })}
-                  >
-                    <Handshake className="size-4" />
-                    Settle Up
-                  </Link>
-                )}
-                {isAdmin && (
-                  <Link
-                    href={`/groups/${group.id}/settings`}
-                    className={buttonVariants({ size: "lg", variant: "outline" })}
-                    aria-label="Group settings"
-                  >
-                    <Settings className="size-4" />
-                  </Link>
-                )}
-              </div>
+            <div className="flex items-center gap-2">
+              {simplifiedDebts.length > 0 && (
+                <Link
+                  href={`/groups/${group.id}/settle`}
+                  className={buttonVariants({ size: "sm", variant: "outline" })}
+                >
+                  <Handshake className="size-4 sm:hidden" />
+                  <span className="hidden sm:inline">Settle Up</span>
+                </Link>
+              )}
+              <Link
+                href={`/groups/${group.id}/expenses/new`}
+                className={buttonVariants({ size: "sm" })}
+              >
+                <Plus className="size-4" />
+                <span className="hidden sm:inline">Add Expense</span>
+              </Link>
+              {isAdmin && (
+                <Link
+                  href={`/groups/${group.id}/settings`}
+                  className={buttonVariants({ size: "sm", variant: "outline" })}
+                  aria-label="Group settings"
+                >
+                  <Settings className="size-4" />
+                </Link>
+              )}
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-4">
-            <MetricCard
-              icon={ReceiptText}
-              label="Expenses"
-              value={`${group.expenseCount} logged`}
-              helper="Running total in this group"
-            />
-            <MetricCard
-              icon={Coins}
-              label="Total spend"
-              value={formatCurrency(group.totalSpent, group.currency)}
-              helper="Across all tracked expenses"
-            />
-            <MetricCard
-              icon={ArrowUpRight}
-              label="Settled"
-              value={formatCurrency(group.settledAmount, group.currency)}
-              helper="Already recorded as paid back"
-            />
-            <MetricCard
-              icon={UsersRound}
-              label="Members"
-              value={`${members.length} active`}
-              helper={`Created ${dateFormatter.format(new Date(group.createdAt))}`}
-            />
+          <div className="flex flex-col gap-0.5 px-[5px]">
+            <p className="text-[18px] leading-7">
+              <span className="font-medium">
+                {group.netBalance > 0
+                  ? "Overall, you'll get "
+                  : group.netBalance < 0
+                    ? "Overall, you owe "
+                    : "All settled up"}
+              </span>
+              {group.netBalance !== 0 && (
+                <span className={`font-bold ${group.netBalance > 0 ? "text-[#007a55]" : "text-rose-700"}`}>
+                  {formatCurrency(Math.abs(group.netBalance), group.currency)}
+                </span>
+              )}
+            </p>
+
+            {simplifiedDebts.length > 0 && (
+              <div className="flex flex-col pb-[3px] text-[16px]">
+                {simplifiedDebts.map((debt) => (
+                  <div key={`${debt.fromUserId}-${debt.toUserId}`} className="flex gap-[5px] leading-7">
+                    <p className="font-medium text-black/70">
+                      {debt.fromName} owes {debt.toName}
+                    </p>
+                    <p className="font-bold text-[#007a55]">
+                      {formatCurrency(debt.amount, group.currency)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -233,26 +213,7 @@ export function GroupDetailView({
         </TabsList>
 
         <TabsContent value="expenses">
-          <Card className="border-2 border-border bg-card">
-            <CardHeader>
-              <CardTitle>Expense feed</CardTitle>
-              <CardDescription>
-                Recent group spends with category icons and mock pagination.
-              </CardDescription>
-              <CardAction>
-                <Link
-                  href={`/groups/${group.id}/expenses/new`}
-                  className={buttonVariants({ size: "sm" })}
-                >
-                  <Plus className="size-4" />
-                  Add Expense
-                </Link>
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              <GroupExpenseList groupId={group.id} expenses={expenses} />
-            </CardContent>
-          </Card>
+          <GroupExpenseList groupId={group.id} expenses={expenses} settlements={settlements} currentUserId={currentUserId} isUserSettled={group.netBalance === 0} />
         </TabsContent>
 
         <TabsContent value="balances">
@@ -497,26 +458,6 @@ export function GroupDetailView({
   );
 }
 
-type MetricCardProps = {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-  helper: string;
-};
-
-function MetricCard({ icon: Icon, label, value, helper }: MetricCardProps) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-        <Icon className="size-3.5" />
-        <span>{label}</span>
-      </div>
-      <p className="mt-2 text-lg font-bold">{value}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{helper}</p>
-    </div>
-  );
-}
-
 type BalanceSummaryCardProps = {
   label: string;
   value: string;
@@ -548,18 +489,6 @@ function BalanceSummaryCard({
       <p className="mt-2 text-sm text-muted-foreground">{helper}</p>
     </div>
   );
-}
-
-function getNetBalanceCopy(amount: number, currency: string) {
-  if (amount > 0) {
-    return `You are owed ${formatCurrency(amount, currency)}`;
-  }
-
-  if (amount < 0) {
-    return `You owe ${formatCurrency(Math.abs(amount), currency)}`;
-  }
-
-  return "All settled up";
 }
 
 function getMemberBalanceCopy(amount: number, currency: string) {
@@ -624,6 +553,3 @@ function getPositiveBalanceBarWidth(amount: number, maxBalanceMagnitude: number)
   return (amount / maxBalanceMagnitude) * 100;
 }
 
-function formatUpdatedAt(value: string) {
-  return `Updated ${dateTimeFormatter.format(new Date(value))}`;
-}

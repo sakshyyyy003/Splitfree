@@ -27,6 +27,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -49,10 +50,10 @@
   --shadow-soft: var(--shadow-soft);
   --shadow-panel: var(--shadow-panel);
   --shadow-subtle: var(--shadow-subtle);
-  --radius-sm: calc(var(--radius) + 4px);
-  --radius-md: calc(var(--radius) + 6px);
-  --radius-lg: 10px;
-  --radius-xl: 18px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
 }
 
 :root {

@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { getGroupBalances } from "@/lib/queries/balances";
@@ -24,17 +26,17 @@ export default async function SettleUpPage({ params }: SettleUpPageProps) {
 
   return (
     <div className="mx-auto max-w-lg space-y-8">
-      <section className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          Settlements
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Settle up
-        </h1>
-        <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-          Record a payment between group members to settle outstanding balances.
-        </p>
-      </section>
+      <Link
+        href={`/groups/${groupId}`}
+        className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" />
+        Back to group
+      </Link>
+
+      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+        Settle up
+      </h1>
 
       <Suspense>
         <SettleUpForm

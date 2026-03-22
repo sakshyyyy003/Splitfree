@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, HandCoins, ReceiptIndianRupee } from "lucide-react";
 
 import type {
+  CounterpartyBreakdownEntry,
   DashboardCounterpartyBalance,
   DashboardOverallBalances,
   DashboardOverallBalanceSummary,
@@ -136,51 +137,70 @@ export function CounterpartyBreakdown({
 
   return (
     <div className="flex flex-col gap-3">
-      {counterparties.map((counterparty) => (
-        <Card
-          key={counterparty.userId}
-          className="flex flex-row items-center overflow-clip bg-white px-6 py-5"
-        >
-          <div className="flex flex-1 items-center gap-[18px]">
-            <Avatar>
-              {counterparty.avatarUrl ? (
-                <AvatarImage
-                  src={counterparty.avatarUrl}
-                  alt={counterparty.name}
-                />
-              ) : null}
-              <AvatarFallback>
-                {getInitials(counterparty.name)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <p className="text-lg font-bold leading-[24.75px]">
-                {counterparty.name}
-              </p>
-              <p className="text-sm font-medium leading-6 text-[#7e7e7e]">
-                {counterparty.settleGroupId
-                  ? `Shared across ${counterparty.groupLabel}`
-                  : counterparty.groupLabel}
-              </p>
+      {counterparties.map((counterparty) => {
+        const activeBreakdowns = counterparty.breakdowns.filter(
+          (b) => b.amount !== 0,
+        );
+
+        return (
+          <Card
+            key={counterparty.userId}
+            className="overflow-clip bg-white px-6 py-5"
+          >
+            <div className="flex flex-row items-center">
+              <div className="flex flex-1 items-center gap-[18px]">
+                <Avatar>
+                  {counterparty.avatarUrl ? (
+                    <AvatarImage
+                      src={counterparty.avatarUrl}
+                      alt={counterparty.name}
+                    />
+                  ) : null}
+                  <AvatarFallback>
+                    {getInitials(counterparty.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <p className="text-lg font-bold leading-[24.75px]">
+                  {counterparty.name}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <div className="text-right">
+                  {counterparty.netBalance === 0 ? (
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Settled up
+                    </p>
+                  ) : (
+                    <div className={`${counterparty.netBalance > 0 ? "text-[#007a55]" : "text-rose-700"}`}>
+                      <p className="text-sm font-medium leading-6">
+                        {counterparty.netBalance > 0 ? "You get" : "You owe"}
+                      </p>
+                      <p className="text-base font-bold leading-6">
+                        {formatCurrency(Math.abs(counterparty.netBalance), currency)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {counterparty.netBalance !== 0 && (
+                  <Link
+                    href={`/expenses/direct/settle?with=${counterparty.userId}`}
+                    className="inline-flex h-8 items-center justify-center gap-1.5 border border-primary bg-primary px-3 text-xs font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
+                  >
+                    Settle Up
+                  </Link>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-3">
-            <p
-              className={`text-base font-bold leading-6 ${getBalanceTone(counterparty.netBalance)}`}
-            >
-              {getBalanceHeadline(counterparty.netBalance, currency)}
-            </p>
-            {counterparty.netBalance !== 0 && (
-              <Link
-                href={`/expenses/direct/settle?with=${counterparty.userId}`}
-                className="inline-flex h-8 items-center justify-center gap-1.5 border border-primary bg-primary px-3 text-xs font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
-              >
-                Settle Up
-              </Link>
+            {activeBreakdowns.length > 0 && (
+              <PersonBreakdownTree
+                name={counterparty.name}
+                breakdowns={activeBreakdowns}
+                currency={currency}
+              />
             )}
-          </div>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </div>
   );
 }
@@ -229,6 +249,50 @@ function SummaryPill({
         <span>{label}</span>
       </div>
       <p className={`mt-2 text-lg font-bold ${toneClassName}`}>{value}</p>
+    </div>
+  );
+}
+
+function PersonBreakdownTree({
+  name,
+  breakdowns,
+  currency,
+}: {
+  name: string;
+  breakdowns: CounterpartyBreakdownEntry[];
+  currency: string;
+}) {
+  return (
+    <div className="relative ml-[29px] mt-2 border-l border-border pl-[18px]">
+      {breakdowns.map((b, index) => {
+        const isLast = index === breakdowns.length - 1;
+        const isOwed = b.amount > 0;
+        const isDirect = b.groupId === null;
+
+        let label: string;
+        if (isDirect) {
+          label = isOwed
+            ? `${name} owes you ${formatCurrency(Math.abs(b.amount), currency)} as direct expense`
+            : `You owe ${name} ${formatCurrency(Math.abs(b.amount), currency)} as direct expense`;
+        } else {
+          label = isOwed
+            ? `${name} owes you ${formatCurrency(b.amount, currency)} (${b.groupName})`
+            : `You owe ${name} ${formatCurrency(Math.abs(b.amount), currency)} (${b.groupName})`;
+        }
+
+        return (
+          <div
+            key={b.groupId ?? "direct"}
+            className={`relative py-[3px] before:absolute before:left-[-18px] before:top-1/2 before:h-px before:w-[18px] before:bg-border ${isLast ? "after:absolute after:left-[-19px] after:top-1/2 after:bottom-[-1px] after:w-[2px] after:bg-white" : ""}`}
+          >
+            <p
+              className={`text-[13px] leading-5 ${isOwed ? "text-[#007a55]" : "text-rose-700"}`}
+            >
+              {label}
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }

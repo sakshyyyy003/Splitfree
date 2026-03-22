@@ -1,9 +1,12 @@
 import "server-only"
 
+import { cache } from "react"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
-export async function createClient() {
+// React cache deduplicates within a single server request.
+// Multiple queries calling createClient() reuse the same instance.
+export const createClient = cache(async () => {
   const cookieStore = await cookies()
 
   return createServerClient(
@@ -27,4 +30,4 @@ export async function createClient() {
       },
     },
   )
-}
+})

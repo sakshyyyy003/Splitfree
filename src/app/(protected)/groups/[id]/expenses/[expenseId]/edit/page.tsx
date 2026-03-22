@@ -1,4 +1,6 @@
 import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { getExpenseForEdit } from "@/lib/queries/expenses";
@@ -40,6 +42,14 @@ export default async function EditExpensePage({
 
   return (
     <div className="mx-auto max-w-lg space-y-8">
+      <Link
+        href={`/groups/${groupId}/expenses/${expenseId}`}
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" />
+        Back to expense
+      </Link>
+
       <section className="space-y-2">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           Expenses

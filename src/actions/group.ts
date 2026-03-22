@@ -256,18 +256,17 @@ export async function joinGroup(
     return { data: { groupId: group.id }, error: null };
   }
 
-  // Add as member
-  const { data: newMember, error: memberError } = await supabase
+  // Add as member (plain insert — no .select() to avoid SELECT RLS blocking
+  // the RETURNING clause before the user is recognised as a member)
+  const { error: memberError } = await supabase
     .from("group_members")
     .insert({
       group_id: group.id,
       user_id: user.id,
       role: "member",
-    })
-    .select("id")
-    .single();
+    });
 
-  if (memberError || !newMember) {
+  if (memberError) {
     return {
       data: null,
       error: {
@@ -284,12 +283,20 @@ export async function joinGroup(
     .eq("id", user.id)
     .single();
 
+  // Fetch the new membership id for the activity log
+  const { data: newMembership } = await supabase
+    .from("group_members")
+    .select("id")
+    .eq("group_id", group.id)
+    .eq("user_id", user.id)
+    .single();
+
   await supabase.from("activity_log").insert({
     group_id: group.id,
     actor_id: user.id,
     action: "member_added",
     entity_type: "member",
-    entity_id: newMember.id,
+    entity_id: newMembership?.id ?? group.id,
     metadata: { member_name: profile?.name ?? "Unknown" },
   });
 

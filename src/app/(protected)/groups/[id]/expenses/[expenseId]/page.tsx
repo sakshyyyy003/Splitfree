@@ -18,10 +18,11 @@ export default async function ExpenseDetailPage({
 }: ExpenseDetailPageProps) {
   const { id, expenseId } = await params;
 
-  const [user, group, expense] = await Promise.all([
-    requireAuthenticatedUser(),
+  const user = await requireAuthenticatedUser();
+
+  const [group, expense] = await Promise.all([
     getGroupDetail(id),
-    getExpenseDetail(id, expenseId),
+    getExpenseDetail(id, expenseId, user.id),
   ]);
 
   if (!group || !expense) {
@@ -36,6 +37,8 @@ export default async function ExpenseDetailPage({
   const canDelete = isExpenseCreator || isGroupAdmin;
 
   return (
-    <ExpenseDetailView group={group} expense={expense} canDelete={canDelete} />
+    <div className="mx-auto max-w-[800px]">
+      <ExpenseDetailView group={group} expense={expense} canDelete={canDelete} />
+    </div>
   );
 }

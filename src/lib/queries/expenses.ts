@@ -133,6 +133,7 @@ function buildSplitSummary(
 
 export async function getGroupExpenses(
   groupId: string,
+  currentUserId: string,
 ): Promise<GroupExpense[]> {
   const supabase = await createClient();
 
@@ -151,7 +152,7 @@ export async function getGroupExpenses(
       notes,
       created_at,
       profiles!expenses_paid_by_fkey (name),
-      expense_splits (user_id)
+      expense_splits (user_id, amount)
     `,
     )
     .eq("group_id", groupId)
@@ -160,20 +161,40 @@ export async function getGroupExpenses(
 
   if (error || !data) return [];
 
-  return data.map((row) => ({
-    id: row.id,
-    title: row.description,
-    amount: row.amount,
-    currency: row.currency,
-    category: row.category,
-    paidByUserId: row.paid_by,
-    paidByName:
-      (row.profiles as unknown as { name: string } | null)?.name ?? "Unknown",
-    splitSummary: buildSplitSummary(row.split_type, row.expense_splits.length),
-    incurredOn: row.date,
-    createdAt: row.created_at,
-    notes: row.notes,
-  }));
+  return data.map((row) => {
+    const userSplit = row.expense_splits.find(
+      (split) => split.user_id === currentUserId,
+    );
+    const userOwed = userSplit?.amount ?? 0;
+    // If the current user paid, they get back (total - their share).
+    // If someone else paid, the current user owes their share.
+    const currentUserBalance =
+      row.paid_by === currentUserId
+        ? row.amount - userOwed
+        : -userOwed;
+
+    const isSelfExpense =
+      row.paid_by === currentUserId &&
+      row.expense_splits.length === 1 &&
+      row.expense_splits[0].user_id === currentUserId;
+
+    return {
+      id: row.id,
+      title: row.description,
+      amount: row.amount,
+      currency: row.currency,
+      category: row.category,
+      paidByUserId: row.paid_by,
+      paidByName:
+        (row.profiles as unknown as { name: string } | null)?.name ?? "Unknown",
+      splitSummary: buildSplitSummary(row.split_type, row.expense_splits.length),
+      incurredOn: row.date,
+      createdAt: row.created_at,
+      notes: row.notes,
+      currentUserBalance,
+      isSelfExpense,
+    };
+  });
 }
 
 // -------------------------------------------------------
@@ -183,6 +204,7 @@ export async function getGroupExpenses(
 export async function getExpenseDetail(
   groupId: string,
   expenseId: string,
+  currentUserId: string,
 ): Promise<GroupExpenseDetail | null> {
   const supabase = await createClient();
 
@@ -267,6 +289,19 @@ export async function getExpenseDetail(
     incurredOn: data.date,
     createdAt: data.created_at,
     notes: data.notes,
+    currentUserBalance: (() => {
+      const userSplit = data.expense_splits.find(
+        (s) => s.user_id === currentUserId,
+      );
+      const userOwed = userSplit?.amount ?? 0;
+      return data.paid_by === currentUserId
+        ? data.amount - userOwed
+        : -userOwed;
+    })(),
+    isSelfExpense:
+      data.paid_by === currentUserId &&
+      data.expense_splits.length === 1 &&
+      data.expense_splits[0].user_id === currentUserId,
     participants,
   };
 }

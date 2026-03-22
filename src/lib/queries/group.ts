@@ -54,12 +54,22 @@ export async function getDashboardGroups(): Promise<DashboardGroup[]> {
     memberCountMap.set(m.group_id, (memberCountMap.get(m.group_id) ?? 0) + 1);
   }
 
-  // 3. Batch-fetch balance data across all groups
+  // 3. Batch-fetch balance data across all groups + per-group simplified debts
+  const rpcPromises = groupIds.map(async (groupId) => {
+    const { data, error } = await supabase.rpc("calculate_group_balances", {
+      p_group_id: groupId,
+    });
+    if (error) return { groupId, debts: [] as { from: string; to: string; amount: number }[] };
+    const raw = data as unknown as { simplified_debts?: { from: string; to: string; amount: number }[] };
+    return { groupId, debts: raw?.simplified_debts ?? [] };
+  });
+
   const [
     { data: expensesPaid },
     { data: allGroupExpenses },
     { data: settlementsPaid },
     { data: settlementsReceived },
+    ...balanceResults
   ] = await Promise.all([
     supabase
       .from("expenses")
@@ -82,6 +92,7 @@ export async function getDashboardGroups(): Promise<DashboardGroup[]> {
       .select("group_id, amount")
       .in("group_id", groupIds)
       .eq("paid_to", user.id),
+    ...rpcPromises,
   ]);
 
   // Build expense_id -> group_id map for attributing splits
@@ -119,6 +130,52 @@ export async function getDashboardGroups(): Promise<DashboardGroup[]> {
     balanceMap.set(s.group_id, (balanceMap.get(s.group_id) ?? 0) - s.amount);
   }
 
+  // 5. Build per-group counterparty breakdowns from simplified debts
+  const debtUserIds = new Set<string>();
+  for (const result of balanceResults) {
+    for (const debt of result.debts) {
+      if (debt.from === user.id) debtUserIds.add(debt.to);
+      else if (debt.to === user.id) debtUserIds.add(debt.from);
+    }
+  }
+
+  const { data: profiles } =
+    debtUserIds.size > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, name")
+          .in("id", [...debtUserIds])
+      : { data: [] };
+
+  const profileMap = new Map<string, string>();
+  for (const p of profiles ?? []) {
+    profileMap.set(p.id, p.name ?? "Unknown");
+  }
+
+  const counterpartyMap = new Map<
+    string,
+    { userId: string; name: string; amount: number }[]
+  >();
+  for (const result of balanceResults) {
+    const counterparties: { userId: string; name: string; amount: number }[] = [];
+    for (const debt of result.debts) {
+      if (debt.from === user.id) {
+        counterparties.push({
+          userId: debt.to,
+          name: profileMap.get(debt.to) ?? "Unknown",
+          amount: -debt.amount,
+        });
+      } else if (debt.to === user.id) {
+        counterparties.push({
+          userId: debt.from,
+          name: profileMap.get(debt.from) ?? "Unknown",
+          amount: debt.amount,
+        });
+      }
+    }
+    counterpartyMap.set(result.groupId, counterparties);
+  }
+
   return groups.map((g) => ({
     id: g.id,
     name: g.name,
@@ -127,6 +184,7 @@ export async function getDashboardGroups(): Promise<DashboardGroup[]> {
     currency: g.currency,
     memberCount: memberCountMap.get(g.id) ?? 0,
     netBalance: Math.round((balanceMap.get(g.id) ?? 0) * 100) / 100,
+    counterparties: counterpartyMap.get(g.id) ?? [],
     isPinned: g.is_pinned,
     isArchived: g.is_archived,
     createdAt: g.created_at,
@@ -150,7 +208,7 @@ export async function getGroupDetail(
   const { data: group, error: groupError } = await supabase
     .from("groups")
     .select(
-      "id, name, description, category, currency, is_pinned, is_archived, created_at, updated_at",
+      "id, name, description, category, currency, is_pinned, is_archived, created_at, updated_at, invite_code",
     )
     .eq("id", groupId)
     .single();
@@ -258,6 +316,7 @@ export async function getGroupDetail(
     currency: group.currency,
     memberCount: memberCount ?? 0,
     netBalance,
+    counterparties: [],
     isPinned: group.is_pinned,
     isArchived: group.is_archived,
     createdAt: group.created_at,
@@ -266,6 +325,7 @@ export async function getGroupDetail(
     totalSpent: Math.round(totalSpent * 100) / 100,
     settledAmount: Math.round(settledAmount * 100) / 100,
     coverImageUrl,
+    inviteCode: group.invite_code,
   };
 }
 

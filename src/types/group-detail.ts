@@ -5,6 +5,7 @@ export type GroupDetail = DashboardGroup & {
   totalSpent: number;
   settledAmount: number;
   coverImageUrl: string | null;
+  inviteCode: string;
 };
 
 export type GroupExpense = {
@@ -19,6 +20,8 @@ export type GroupExpense = {
   incurredOn: string;
   createdAt: string;
   notes: string | null;
+  currentUserBalance: number;
+  isSelfExpense: boolean;
 };
 
 export type ExpenseSplitParticipant = {
@@ -57,6 +60,17 @@ export type GroupSimplifiedDebt = {
 export type GroupBalanceSummary = {
   balances: GroupBalance[];
   simplifiedDebts: GroupSimplifiedDebt[];
+};
+
+export type GroupSettlement = {
+  id: string;
+  amount: number;
+  paidByUserId: string;
+  paidByName: string;
+  paidToUserId: string;
+  paidToName: string;
+  notes: string | null;
+  createdAt: string;
 };
 
 export type GroupMember = {
