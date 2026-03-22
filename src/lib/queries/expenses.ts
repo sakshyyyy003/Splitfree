@@ -157,7 +157,8 @@ export async function getGroupExpenses(
     )
     .eq("group_id", groupId)
     .eq("is_deleted", false)
-    .order("date", { ascending: false });
+    .order("date", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (error || !data) return [];
 

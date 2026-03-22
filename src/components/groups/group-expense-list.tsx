@@ -77,7 +77,14 @@ export function GroupExpenseList({ groupId, expenses, settlements, currentUserId
       data: s,
       date: new Date(s.createdAt),
     })),
-  ].sort((a, b) => b.date.getTime() - a.date.getTime());
+  ].sort((a, b) => {
+    const dateDiff = b.date.getTime() - a.date.getTime();
+    if (dateDiff !== 0) return dateDiff;
+    // Same date — show most recently created first
+    const aCreated = new Date(a.type === "expense" ? a.data.createdAt : a.data.createdAt).getTime();
+    const bCreated = new Date(b.type === "expense" ? b.data.createdAt : b.data.createdAt).getTime();
+    return bCreated - aCreated;
+  });
 
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(feed.length / PAGE_SIZE);
