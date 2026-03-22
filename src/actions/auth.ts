@@ -20,8 +20,19 @@ export type ActionResult<T> =
   | { data: T; error: null }
   | { data: null; error: { code: string; message: string } };
 
+/**
+ * Returns a safe internal redirect path, rejecting open-redirect attempts.
+ */
+function getSafeRedirect(redirectTo?: string | null): string {
+  if (redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")) {
+    return redirectTo;
+  }
+  return AUTHENTICATED_REDIRECT;
+}
+
 export async function signIn(
   formData: LoginInput,
+  redirectTo?: string | null,
 ): Promise<ActionResult<null>> {
   const parsed = loginSchema.safeParse(formData);
 
@@ -49,11 +60,12 @@ export async function signIn(
   }
 
   revalidatePath("/", "layout");
-  redirect(AUTHENTICATED_REDIRECT);
+  redirect(getSafeRedirect(redirectTo));
 }
 
 export async function signUp(
   formData: SignupInput,
+  redirectTo?: string | null,
 ): Promise<ActionResult<null>> {
   const parsed = signupSchema.safeParse(formData);
 
@@ -84,7 +96,7 @@ export async function signUp(
   }
 
   revalidatePath("/", "layout");
-  redirect(AUTHENTICATED_REDIRECT);
+  redirect(getSafeRedirect(redirectTo));
 }
 
 export async function signInWithGoogle(): Promise<ActionResult<null>> {
