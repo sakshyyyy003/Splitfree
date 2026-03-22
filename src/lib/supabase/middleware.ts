@@ -56,9 +56,14 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  // Authenticated users visiting an auth route (login/signup) → send to dashboard.
+  // Authenticated users visiting an auth route (login/signup) → honour redirectTo or send to dashboard.
   if (user && isAuthRoute) {
-    const redirectUrl = new URL(AUTHENTICATED_REDIRECT, request.nextUrl.origin)
+    const redirectTo = request.nextUrl.searchParams.get("redirectTo")
+    const target =
+      redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+        ? redirectTo
+        : AUTHENTICATED_REDIRECT
+    const redirectUrl = new URL(target, request.nextUrl.origin)
     return NextResponse.redirect(redirectUrl)
   }
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -22,6 +23,8 @@ import {
 } from "@/components/ui/card";
 
 export function SignupForm() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo");
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -35,7 +38,7 @@ export function SignupForm() {
   async function onSubmit(data: SignupInput) {
     setServerError(null);
 
-    const result = await signUp(data);
+    const result = await signUp(data, redirectTo);
 
     if (result?.error) {
       setServerError(result.error.message);
@@ -130,7 +133,7 @@ export function SignupForm() {
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link href="/login" className="text-primary underline-offset-4 hover:underline">
+          <Link href={redirectTo ? `/login?redirectTo=${encodeURIComponent(redirectTo)}` : "/login"} className="text-primary underline-offset-4 hover:underline">
             Log in
           </Link>
         </p>
