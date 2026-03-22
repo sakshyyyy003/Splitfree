@@ -111,28 +111,34 @@ export async function recordSettlement(
   }
 
   if (groupPortion > 0) {
-    // 2. Find the shared group with the largest debt in the same direction
-    const targetGroupId = await findGroupWithLargestDebt(
+    // 2. Find all shared groups with simplified debt, sorted by highest first
+    const groupDebts = await findGroupsWithSimplifiedDebts(
       supabase,
       paid_by,
       paid_to,
     );
 
-    if (targetGroupId) {
+    let remaining = groupPortion;
+    for (const { groupId, amount } of groupDebts) {
+      if (remaining <= 0) break;
+      const portion = Math.min(remaining, amount);
       inserts.push({
-        group_id: targetGroupId,
+        group_id: groupId,
         paid_by,
         paid_to,
-        amount: groupPortion,
+        amount: Math.round(portion * 100) / 100,
         notes: parsed.data.notes ?? null,
       });
-    } else {
-      // No matching group debt — record as direct
+      remaining = Math.round((remaining - portion) * 100) / 100;
+    }
+
+    // If there's still remaining after all groups, record as direct
+    if (remaining > 0) {
       inserts.push({
         group_id: null,
         paid_by,
         paid_to,
-        amount: groupPortion,
+        amount: remaining,
         notes: parsed.data.notes ?? null,
       });
     }
@@ -254,15 +260,20 @@ async function computeDirectDebt(
   return Math.round(Math.max(0, netDirect) * 100) / 100;
 }
 
+type GroupSimplifiedDebtEntry = {
+  groupId: string;
+  amount: number;
+};
+
 /**
- * Find the shared group where paid_by owes paid_to the most.
- * Returns the group_id or null if no group debt exists.
+ * Find all shared groups where paid_by owes paid_to (using simplified debts).
+ * Returns groups sorted by highest simplified debt first (descending).
  */
-async function findGroupWithLargestDebt(
+async function findGroupsWithSimplifiedDebts(
   supabase: Awaited<ReturnType<typeof createClient>>,
   paidBy: string,
   paidTo: string,
-): Promise<string | null> {
+): Promise<GroupSimplifiedDebtEntry[]> {
   // Find groups where both users are members
   const { data: paidByGroups } = await supabase
     .from("group_members")
@@ -279,78 +290,36 @@ async function findGroupWithLargestDebt(
     .map((g) => g.group_id)
     .filter((gid) => paidByGroupIds.has(gid));
 
-  if (sharedGroupIds.length === 0) return null;
+  if (sharedGroupIds.length === 0) return [];
 
-  // For each shared group, compute the debt paid_by owes paid_to
-  let largestDebt = 0;
-  let largestGroupId: string | null = null;
+  const results: GroupSimplifiedDebtEntry[] = [];
 
   for (const gid of sharedGroupIds) {
-    // Expenses paid_to paid in this group (paid_by owes their split)
-    const { data: expensesByPaidTo } = await supabase
-      .from("expenses")
-      .select("id")
-      .eq("group_id", gid)
-      .eq("paid_by", paidTo)
-      .eq("is_deleted", false);
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      "calculate_group_balances",
+      { p_group_id: gid },
+    );
 
-    const expIds = (expensesByPaidTo ?? []).map((e) => e.id);
-    const { data: splits } = expIds.length
-      ? await supabase
-          .from("expense_splits")
-          .select("amount")
-          .eq("user_id", paidBy)
-          .in("expense_id", expIds)
-      : { data: [] };
+    if (rpcError || !rpcData) continue;
 
-    const owedInGroup = (splits ?? []).reduce((s, r) => s + r.amount, 0);
+    const raw = rpcData as {
+      simplified_debts: { from: string; to: string; amount: number }[];
+    };
 
-    // Expenses paid_by paid in this group (paid_to owes their split)
-    const { data: expensesByPaidBy } = await supabase
-      .from("expenses")
-      .select("id")
-      .eq("group_id", gid)
-      .eq("paid_by", paidBy)
-      .eq("is_deleted", false);
+    // Find the simplified debt where paid_by owes paid_to
+    const debt = (raw.simplified_debts ?? []).find(
+      (d) => d.from === paidBy && d.to === paidTo,
+    );
 
-    const expIds2 = (expensesByPaidBy ?? []).map((e) => e.id);
-    const { data: splits2 } = expIds2.length
-      ? await supabase
-          .from("expense_splits")
-          .select("amount")
-          .eq("user_id", paidTo)
-          .in("expense_id", expIds2)
-      : { data: [] };
-
-    const owedBackInGroup = (splits2 ?? []).reduce((s, r) => s + r.amount, 0);
-
-    // Group settlements already made
-    const { data: settledOut } = await supabase
-      .from("settlements")
-      .select("amount")
-      .eq("group_id", gid)
-      .eq("paid_by", paidBy)
-      .eq("paid_to", paidTo);
-
-    const { data: settledIn } = await supabase
-      .from("settlements")
-      .select("amount")
-      .eq("group_id", gid)
-      .eq("paid_by", paidTo)
-      .eq("paid_to", paidBy);
-
-    const settled = (settledOut ?? []).reduce((s, r) => s + r.amount, 0);
-    const settledReverse = (settledIn ?? []).reduce((s, r) => s + r.amount, 0);
-
-    const netGroupDebt = owedInGroup - owedBackInGroup - settled + settledReverse;
-
-    if (netGroupDebt > largestDebt) {
-      largestDebt = netGroupDebt;
-      largestGroupId = gid;
+    if (debt && debt.amount > 0) {
+      results.push({ groupId: gid, amount: debt.amount });
     }
   }
 
-  return largestGroupId;
+  // Sort by highest debt first (descending)
+  results.sort((a, b) => b.amount - a.amount);
+
+  return results;
 }
 
 // -------------------------------------------------------
