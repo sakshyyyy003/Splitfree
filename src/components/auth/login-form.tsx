@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 
 import { loginSchema, type LoginInput } from "@/lib/validators/auth";
-import { signIn, signInWithGoogle } from "@/actions/auth";
+import { signIn } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Field, FieldError } from "@/components/ui/field";
-import { Separator } from "@/components/ui/separator";
 import {
   Card,
   CardHeader,
@@ -21,11 +20,9 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { GoogleIcon } from "@/components/icons/google-icon";
 
 export function LoginForm() {
   const [serverError, setServerError] = useState<string | null>(null);
-  const [isGooglePending, startGoogleTransition] = useTransition();
 
   const {
     register,
@@ -43,18 +40,6 @@ export function LoginForm() {
     if (result?.error) {
       setServerError(result.error.message);
     }
-  }
-
-  function handleGoogleSignIn() {
-    setServerError(null);
-
-    startGoogleTransition(async () => {
-      const result = await signInWithGoogle();
-
-      if (result?.error) {
-        setServerError(result.error.message);
-      }
-    });
   }
 
   return (
@@ -104,12 +89,13 @@ export function LoginForm() {
             <FieldError>{errors.password?.message}</FieldError>
           </Field>
 
-          <Button type="submit" size="lg" disabled={isSubmitting || isGooglePending}>
+          <Button type="submit" size="lg" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="animate-spin" />}
             Log in
           </Button>
         </form>
 
+        {/* TODO: Re-enable once Google OAuth is configured
         <div className="flex items-center gap-3 py-4">
           <Separator className="flex-1" />
           <span className="text-xs text-muted-foreground uppercase">or</span>
@@ -120,16 +106,12 @@ export function LoginForm() {
           variant="outline"
           size="lg"
           className="w-full"
-          disabled={isGooglePending || isSubmitting}
           onClick={handleGoogleSignIn}
         >
-          {isGooglePending ? (
-            <Loader2 className="animate-spin" />
-          ) : (
-            <GoogleIcon />
-          )}
+          <GoogleIcon />
           Sign in with Google
         </Button>
+        */}
       </CardContent>
 
       <CardFooter className="justify-center">
