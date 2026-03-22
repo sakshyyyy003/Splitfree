@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { getGroupMembers } from "@/lib/queries/group-members";
-import { ExpenseForm } from "@/components/expenses/expense-form";
+import { getProfile } from "@/lib/queries/profile";
+import { AddExpenseForm } from "@/components/expenses/add-expense-form";
 
 type AddExpensePageProps = {
   params: Promise<{
@@ -16,7 +17,12 @@ export default async function AddExpensePage({ params }: AddExpensePageProps) {
     requireAuthenticatedUser(),
   ]);
 
-  const members = await getGroupMembers(groupId);
+  const [members, profile] = await Promise.all([
+    getGroupMembers(groupId),
+    getProfile(user.id),
+  ]);
+
+  const displayName = profile.name ?? profile.email ?? "User";
 
   return (
     <div className="mx-auto max-w-lg space-y-8">
@@ -33,11 +39,11 @@ export default async function AddExpensePage({ params }: AddExpensePageProps) {
         </h1>
       </section>
 
-      <ExpenseForm
+      <AddExpenseForm
         groupId={groupId}
         members={members}
         currentUserId={user.id}
-        mode="create"
+        currentUserName={displayName}
       />
     </div>
   );

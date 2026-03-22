@@ -6,6 +6,7 @@ import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { getGroupDetail } from "@/lib/queries/group";
 import { getGroupMembers } from "@/lib/queries/group-members";
 import { GroupSettingsForm } from "@/components/groups/group-settings-form";
+import { InviteLinkSection } from "@/components/groups/invite-link-section";
 import { DeleteGroupDialog } from "@/components/groups/delete-group-dialog";
 import type { GroupCategory } from "@/lib/validators/group";
 
@@ -59,6 +60,8 @@ export default async function GroupSettingsPage({
         category={group.category as GroupCategory}
         coverImageUrl={group.coverImageUrl}
       />
+
+      <InviteLinkSection groupId={group.id} inviteCode={group.inviteCode} />
 
       <DeleteGroupDialog groupId={group.id} groupName={group.name} />
     </div>

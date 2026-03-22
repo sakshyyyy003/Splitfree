@@ -12,6 +12,12 @@ export type DashboardOverallBalanceSummary = {
   updatedAt: string;
 };
 
+export type CounterpartyBreakdownEntry = {
+  groupId: string | null; // null for direct expenses
+  groupName: string | null; // null for direct expenses
+  amount: number; // positive = they owe you, negative = you owe them
+};
+
 export type DashboardCounterpartyBalance = {
   userId: string;
   name: string;
@@ -20,6 +26,7 @@ export type DashboardCounterpartyBalance = {
   netBalance: number;
   groupCount: number;
   groupLabel: string;
+  breakdowns: CounterpartyBreakdownEntry[];
   lastActivityAt: string;
   settleGroupId: string | null;
   settleGroupName: string | null;
@@ -30,6 +37,12 @@ export type DashboardOverallBalances = {
   counterparties: DashboardCounterpartyBalance[];
 };
 
+export type DashboardGroupCounterparty = {
+  userId: string;
+  name: string;
+  amount: number; // positive = they owe you, negative = you owe them
+};
+
 export type DashboardGroup = {
   id: string;
   name: string;
@@ -38,6 +51,7 @@ export type DashboardGroup = {
   currency: string;
   memberCount: number;
   netBalance: number;
+  counterparties: DashboardGroupCounterparty[];
   isPinned: boolean;
   isArchived: boolean;
   createdAt: string;

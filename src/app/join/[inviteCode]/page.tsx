@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getGroupByInviteCode } from "@/lib/queries/group";
 import { JoinGroupCard } from "@/components/groups/join-group-card";
-import { buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardHeader,
@@ -34,12 +34,9 @@ export default async function JoinPage({ params }: JoinPageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link
-              href="/"
-              className={buttonVariants({ variant: "outline", className: "w-full" })}
-            >
-              Go Home
-            </Link>
+            <Button variant="outline" className="w-full" asChild>
+              <Link href="/">Go Home</Link>
+            </Button>
           </CardContent>
         </Card>
       </Shell>
@@ -67,18 +64,14 @@ export default async function JoinPage({ params }: JoinPageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <Link
-              href={loginUrl}
-              className={buttonVariants({ size: "lg", className: "w-full" })}
-            >
-              Sign in to join
-            </Link>
-            <Link
-              href={`/signup?redirectTo=/join/${inviteCode}`}
-              className={buttonVariants({ variant: "outline", size: "lg", className: "w-full" })}
-            >
-              Create an account
-            </Link>
+            <Button size="lg" className="w-full" asChild>
+              <Link href={loginUrl}>Sign in to join</Link>
+            </Button>
+            <Button variant="outline" size="lg" className="w-full" asChild>
+              <Link href={`/signup?redirectTo=/join/${inviteCode}`}>
+                Create an account
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </Shell>

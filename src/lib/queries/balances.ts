@@ -3,6 +3,7 @@ import "server-only";
 import { simplifyDebts } from "@/lib/algorithms/debt";
 import { createClient } from "@/lib/supabase/server";
 import type {
+  CounterpartyBreakdownEntry,
   DashboardCounterpartyBalance,
   DashboardOverallBalances,
 } from "@/types/dashboard";
@@ -225,6 +226,11 @@ export async function getGroupBalances(
       return getGroupBalancesFallback(groupId);
     }
 
+    // Handle permission denied (e.g. stale session or non-member access)
+    if (rpcError.message.includes("Permission denied")) {
+      return { balances: [], simplifiedDebts: [] };
+    }
+
     throw new Error(
       `Failed to calculate group balances: ${rpcError.message}`,
     );
@@ -285,10 +291,16 @@ export async function getGroupBalances(
  * Raw shape returned by the `calculate_overall_balances` Postgres function.
  * The function returns jsonb with counterparties and summary.
  */
+type RawBreakdownEntry = {
+  group_id: string | null;
+  amount: number;
+};
+
 type RawOverallCounterparty = {
   user_id: string;
   net_balance: number;
   group_ids: string[];
+  breakdowns: RawBreakdownEntry[];
 };
 
 type RawOverallSummary = {
@@ -418,13 +430,13 @@ export async function getOverallBalances(): Promise<DashboardOverallBalances> {
     ...new Set(raw.counterparties.flatMap((c) => c.group_ids)),
   ];
 
-  // Fetch profiles and groups in parallel
+  // Fetch profiles and groups in parallel (no per-group RPC calls needed)
   const [profileLookup, groupLookup] = await Promise.all([
     fetchProfilesByIds(allUserIds),
     fetchGroupsByIds(allGroupIds),
   ]);
 
-  // Build counterparty entries
+  // Build counterparty entries using breakdowns from SQL
   const counterparties: DashboardCounterpartyBalance[] = raw.counterparties.map(
     (entry) => {
       const profile = profileLookup.get(entry.user_id);
@@ -438,6 +450,17 @@ export async function getOverallBalances(): Promise<DashboardOverallBalances> {
         ? (groupLookup.get(settleGroupId)?.name ?? null)
         : null;
 
+      // Build breakdowns from SQL response (already computed per-group)
+      const breakdowns: CounterpartyBreakdownEntry[] = (entry.breakdowns ?? []).map(
+        (b) => ({
+          groupId: b.group_id,
+          groupName: b.group_id
+            ? (groupLookup.get(b.group_id)?.name ?? "Unknown")
+            : null,
+          amount: b.amount,
+        }),
+      );
+
       return {
         userId: entry.user_id,
         name: profile?.name ?? "Unknown",
@@ -446,6 +469,7 @@ export async function getOverallBalances(): Promise<DashboardOverallBalances> {
         netBalance: entry.net_balance,
         groupCount: entry.group_ids.length,
         groupLabel: buildGroupLabel(groupNames),
+        breakdowns,
         lastActivityAt: new Date().toISOString(),
         settleGroupId,
         settleGroupName,

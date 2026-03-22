@@ -1,19 +1,28 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, Users } from "lucide-react";
 
-import { searchProfiles, type ProfileResult } from "@/actions/search";
+import { searchProfiles, searchGroups, type ProfileResult, type GroupResult } from "@/actions/search";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const DEBOUNCE_DELAY_MS = 300;
 const MIN_QUERY_LENGTH = 2;
 
+const categoryEmoji: Record<string, string> = {
+  trip: "✈️",
+  home: "🏠",
+  couple: "💑",
+  other: "📋",
+};
+
 type UserSearchProps = {
   onSelect: (profile: ProfileResult) => void;
+  onGroupSelect?: (group: GroupResult) => void;
   excludeUserIds?: string[];
   placeholder?: string;
+  showGroups?: boolean;
 };
 
 function getInitials(name: string | null, email: string): string {
@@ -32,11 +41,14 @@ function getInitials(name: string | null, email: string): string {
 
 export function UserSearch({
   onSelect,
+  onGroupSelect,
   excludeUserIds = [],
   placeholder = "Search by name or email...",
+  showGroups = false,
 }: UserSearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ProfileResult[]>([]);
+  const [groupResults, setGroupResults] = useState<GroupResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -51,36 +63,55 @@ export function UserSearch({
 
     const timeoutId = setTimeout(() => {
       startTransition(async () => {
-        const result = await searchProfiles({ query: trimmed });
+        const [profileResult, groupResult] = await Promise.all([
+          searchProfiles({ query: trimmed }),
+          showGroups ? searchGroups({ query: trimmed }) : null,
+        ]);
 
-        if (result.error) {
+        if (profileResult.error) {
           setResults([]);
-          setHasSearched(true);
-          return;
+        } else {
+          const filtered = excludeUserIds.length > 0
+            ? profileResult.data.filter((profile) => !excludeUserIds.includes(profile.id))
+            : profileResult.data;
+          setResults(filtered);
         }
 
-        const filtered = excludeUserIds.length > 0
-          ? result.data.filter((profile) => !excludeUserIds.includes(profile.id))
-          : result.data;
+        if (groupResult && !groupResult.error) {
+          setGroupResults(groupResult.data);
+        } else {
+          setGroupResults([]);
+        }
 
-        setResults(filtered);
         setHasSearched(true);
       });
     }, DEBOUNCE_DELAY_MS);
 
     return () => clearTimeout(timeoutId);
-  }, [trimmed, isBelowMinLength, excludeUserIds]);
+  }, [trimmed, isBelowMinLength, excludeUserIds, showGroups]);
 
   function handleSelect(profile: ProfileResult) {
     onSelect(profile);
     setQuery("");
     setResults([]);
+    setGroupResults([]);
+    setHasSearched(false);
+    inputRef.current?.focus();
+  }
+
+  function handleGroupSelect(group: GroupResult) {
+    onGroupSelect?.(group);
+    setQuery("");
+    setResults([]);
+    setGroupResults([]);
     setHasSearched(false);
     inputRef.current?.focus();
   }
 
   const visibleResults = isBelowMinLength ? [] : results;
-  const showEmptyState = !isBelowMinLength && hasSearched && !isPending && visibleResults.length === 0;
+  const visibleGroups = isBelowMinLength ? [] : groupResults;
+  const hasAnyResults = visibleResults.length > 0 || visibleGroups.length > 0;
+  const showEmptyState = !isBelowMinLength && hasSearched && !isPending && !hasAnyResults;
 
   return (
     <div className="flex w-full flex-col gap-2">
@@ -100,11 +131,32 @@ export function UserSearch({
         )}
       </div>
 
-      {visibleResults.length > 0 && (
+      {hasAnyResults && (
         <ul
           role="listbox"
           className="flex flex-col gap-1 rounded-2xl border border-border bg-background p-2 shadow-subtle"
         >
+          {visibleGroups.map((group) => (
+            <li key={`group-${group.id}`} role="option" aria-selected={false}>
+              <button
+                type="button"
+                onClick={() => handleGroupSelect(group)}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:outline-none"
+              >
+                <div className="flex size-8 items-center justify-center rounded-full bg-secondary">
+                  <Users className="size-4 text-muted-foreground" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">
+                    {categoryEmoji[group.category] ?? "📋"} {group.name}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    Group
+                  </p>
+                </div>
+              </button>
+            </li>
+          ))}
           {visibleResults.map((profile) => (
             <li key={profile.id} role="option" aria-selected={false}>
               <button

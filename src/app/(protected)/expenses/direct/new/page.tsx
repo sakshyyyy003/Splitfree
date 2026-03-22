@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { getProfile } from "@/lib/queries/profile";
-import { DirectExpenseForm } from "@/components/expenses/direct-expense-form";
+import { AddExpenseForm } from "@/components/expenses/add-expense-form";
 
 export default async function NewDirectExpensePage() {
   const user = await requireAuthenticatedUser();
@@ -21,11 +21,11 @@ export default async function NewDirectExpensePage() {
           Back
         </Link>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Add a direct expense
+          Add new expense
         </h1>
       </section>
 
-      <DirectExpenseForm
+      <AddExpenseForm
         currentUserId={user.id}
         currentUserName={displayName}
       />

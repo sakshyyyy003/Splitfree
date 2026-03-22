@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
@@ -27,7 +27,12 @@ export function DashboardTabs({
   activeTab,
 }: DashboardTabsProps) {
   const { summary, counterparties } = overallBalances;
-  const router = useRouter();
+  const [currentTab, setCurrentTab] = useState(activeTab);
+
+  // Sync with server-driven tab changes (e.g. sidebar/bottom nav navigation)
+  useEffect(() => {
+    setCurrentTab(activeTab);
+  }, [activeTab]);
 
   const activityContent = (
     <div className="space-y-4">
@@ -40,7 +45,7 @@ export function DashboardTabs({
     <div className="space-y-4">
       {/* Mobile: content driven by bottom nav tab (no visible tab bar) */}
       <div className="lg:hidden">
-        {activeTab === "people" ? (
+        {currentTab === "people" ? (
           <div className="space-y-4">
             {peopleHeader}
             <CounterpartyBreakdown
@@ -48,7 +53,7 @@ export function DashboardTabs({
               currency={summary.currency}
             />
           </div>
-        ) : activeTab === "activity" ? (
+        ) : currentTab === "activity" ? (
           activityContent
         ) : (
           <div className="space-y-4">
@@ -60,12 +65,12 @@ export function DashboardTabs({
 
       {/* Desktop: tab switcher + content */}
       <div className="hidden lg:block">
-        {activeTab === "activity" ? (
+        {currentTab === "activity" ? (
           activityContent
         ) : (
           <Tabs
-            value={activeTab}
-            onValueChange={(tab) => router.push(`/dashboard?tab=${tab}`)}
+            value={currentTab}
+            onValueChange={setCurrentTab}
           >
             <TabsList className="w-full">
               <TabsTrigger value="groups">Groups</TabsTrigger>

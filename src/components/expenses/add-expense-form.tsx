@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, X } from "lucide-react";
+import { CalendarIcon, Loader2, X, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -14,15 +14,15 @@ import {
   type SplitType,
 } from "@/lib/validators/expense";
 import { calculateSplit, type SplitResult } from "@/lib/algorithms/splits";
-import { createDirectExpense } from "@/actions/expenses";
-import type { ProfileResult } from "@/actions/search";
+import { createExpense, createDirectExpense } from "@/actions/expenses";
+import { fetchGroupMembers, type GroupMemberResult } from "@/actions/search";
+import type { ProfileResult, GroupResult } from "@/actions/search";
+import type { GroupMember } from "@/types/group-detail";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { FieldError } from "@/components/ui/field";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserSearch } from "@/components/ui/user-search";
 import {
   Select,
   SelectContent,
@@ -30,6 +30,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FieldError } from "@/components/ui/field";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserSearch } from "@/components/ui/user-search";
 import { cn } from "@/lib/utils";
 
 // -------------------------------------------------------
@@ -49,18 +52,18 @@ const EXPENSE_CATEGORIES = [
 type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
 const categoryConfig: Record<ExpenseCategory, { label: string; emoji: string }> = {
-  food: { label: "Food", emoji: "🍽️" },
-  transport: { label: "Travel", emoji: "🚗" },
-  accommodation: { label: "Stay", emoji: "🏠" },
-  entertainment: { label: "Fun", emoji: "🎭" },
-  utilities: { label: "Bills", emoji: "⚡" },
-  shopping: { label: "Shopping", emoji: "🛒" },
-  other: { label: "Other", emoji: "●" },
+  food: { label: "Food", emoji: "\uD83C\uDF7D\uFE0F" },
+  transport: { label: "Travel", emoji: "\uD83D\uDE97" },
+  accommodation: { label: "Stay", emoji: "\uD83C\uDFE0" },
+  entertainment: { label: "Fun", emoji: "\uD83C\uDFAD" },
+  utilities: { label: "Bills", emoji: "\u26A1" },
+  shopping: { label: "Shopping", emoji: "\uD83D\uDED2" },
+  other: { label: "Other", emoji: "\u25CF" },
 };
 
 const splitTypeConfig: Record<SplitType, { symbol: string; label: string }> = {
   equal: { symbol: "=", label: "EQUAL" },
-  exact: { symbol: "₹", label: "EXACT" },
+  exact: { symbol: "\u20B9", label: "EXACT" },
   percentage: { symbol: "%", label: "PERCENT" },
   shares: { symbol: "#", label: "SHARES" },
 };
@@ -72,8 +75,6 @@ const splitTypeInputLabels: Record<SplitType, string> = {
   shares: "Shares",
 };
 
-const avatarColors = ["bg-black text-white", "bg-hotgreen text-black", "bg-highlight text-black", "bg-gray-500 text-white"];
-
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
   currency: "INR",
@@ -84,28 +85,24 @@ function formatINR(amount: number): string {
   return currencyFormatter.format(amount);
 }
 
-function getInitials(name: string | null, email: string): string {
-  if (name) {
-    return name
-      .split(" ")
-      .map((part) => part[0])
-      .filter(Boolean)
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-  }
-
-  return email[0]?.toUpperCase() ?? "?";
+function getInitials(name: string | null, fallback?: string): string {
+  const source = name ?? fallback ?? "?";
+  return source
+    .split(" ")
+    .map((part) => part[0] ?? "")
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 }
 
-/** Per-participant custom values for non-equal split types */
 type CustomSplitValues = Record<string, number>;
 
 // -------------------------------------------------------
-// Form-level schema (UI fields only)
+// Form schema
 // -------------------------------------------------------
 
-const directExpenseFormSchema = z.object({
+const addExpenseFormSchema = z.object({
   description: z
     .string()
     .min(1, { error: "Description is required" })
@@ -115,38 +112,73 @@ const directExpenseFormSchema = z.object({
     .positive({ error: "Amount must be greater than zero" })
     .max(9999999999.99, { error: "Amount exceeds maximum allowed value" }),
   date: z.string().min(1, { error: "Date is required" }),
+  paid_by: z.string().min(1, { error: "Please select who paid" }),
   split_type: z.enum(SPLIT_TYPES, { error: "Invalid split type" }),
   category: z.enum(EXPENSE_CATEGORIES, { error: "Invalid category" }),
-  paid_by: z.string().min(1, { error: "Please select who paid" }),
-  notes: z
-    .string()
-    .max(5000, { error: "Notes must be 5000 characters or fewer" })
-    .optional(),
 });
 
-type DirectExpenseFormValues = z.infer<typeof directExpenseFormSchema>;
+type AddExpenseFormValues = z.infer<typeof addExpenseFormSchema>;
+
+// -------------------------------------------------------
+// Selection type — what user picked in "Split with"
+// -------------------------------------------------------
+
+type Selection =
+  | { type: "group"; group: GroupResult; members: GroupMember[] }
+  | { type: "person"; person: ProfileResult };
 
 // -------------------------------------------------------
 // Props
 // -------------------------------------------------------
 
-type DirectExpenseFormProps = {
+type AddExpenseFormProps = {
   currentUserId: string;
   currentUserName: string;
+  /** Pre-selected group context (from group detail page) */
+  groupId?: string;
+  /** Pre-fetched members (from group detail page) */
+  members?: GroupMember[];
 };
 
 // -------------------------------------------------------
 // Component
 // -------------------------------------------------------
 
-export function DirectExpenseForm({
+export function AddExpenseForm({
   currentUserId,
   currentUserName,
-}: DirectExpenseFormProps) {
+  groupId: preSelectedGroupId,
+  members: preSelectedMembers,
+}: AddExpenseFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isFetchingMembers, startFetchingMembers] = useTransition();
   const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const [selectedFriend, setSelectedFriend] = useState<ProfileResult | null>(null);
+
+  // For group context from props, pre-populate selection
+  const isGroupContext = !!(preSelectedGroupId && preSelectedMembers);
+
+  const [selection, setSelection] = useState<Selection | null>(() => {
+    if (isGroupContext) {
+      return {
+        type: "group",
+        group: { id: preSelectedGroupId!, name: "", category: "" } as GroupResult,
+        members: preSelectedMembers!,
+      };
+    }
+    return null;
+  });
+
+  // Participants — all members selected by default for groups
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
+    () => {
+      if (preSelectedMembers) {
+        return preSelectedMembers.map((m) => m.userId);
+      }
+      return [currentUserId];
+    },
+  );
+
   const [customSplitValues, setCustomSplitValues] = useState<CustomSplitValues>({});
 
   const {
@@ -155,30 +187,63 @@ export function DirectExpenseForm({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<DirectExpenseFormValues>({
-    resolver: zodResolver(directExpenseFormSchema),
+  } = useForm<AddExpenseFormValues>({
+    resolver: zodResolver(addExpenseFormSchema),
     defaultValues: {
       description: "",
       amount: undefined as unknown as number,
       date: format(new Date(), "yyyy-MM-dd"),
+      paid_by: currentUserId,
       split_type: "equal",
       category: "other",
-      paid_by: currentUserId,
-      notes: "",
     },
   });
 
   const watchedAmount = watch("amount");
   const watchedDate = watch("date");
+  const watchedPaidBy = watch("paid_by");
   const watchedSplitType = watch("split_type");
   const watchedCategory = watch("category");
-  const watchedPaidBy = watch("paid_by");
 
-  // The two participants are always the current user and the selected friend
-  const participants = useMemo<string[]>(() => {
-    if (!selectedFriend) return [currentUserId];
-    return [currentUserId, selectedFriend.id];
-  }, [currentUserId, selectedFriend]);
+  // Derive participants list for split calculations
+  const participantIds = useMemo<string[]>(() => {
+    if (!selection) return [currentUserId];
+
+    if (selection.type === "person") {
+      return [currentUserId, selection.person.id];
+    }
+
+    // Group — use selected participants (checkboxes)
+    return selectedParticipants;
+  }, [selection, currentUserId, selectedParticipants]);
+
+  // Members list for rendering (group context)
+  const membersList = useMemo<GroupMember[]>(() => {
+    if (selection?.type === "group") return selection.members;
+    return [];
+  }, [selection]);
+
+  // "Paid by" options
+  const paidByOptions = useMemo<{ id: string; label: string }[]>(() => {
+    if (selection?.type === "group") {
+      return selection.members.map((m) => ({
+        id: m.userId,
+        label: m.userId === currentUserId ? `${m.name} (you)` : m.name,
+      }));
+    }
+
+    if (selection?.type === "person") {
+      return [
+        { id: currentUserId, label: `${currentUserName} (you)` },
+        {
+          id: selection.person.id,
+          label: selection.person.name ?? selection.person.email,
+        },
+      ];
+    }
+
+    return [{ id: currentUserId, label: `${currentUserName} (you)` }];
+  }, [selection, currentUserId, currentUserName]);
 
   // -----------------------------------------------------------
   // Live split preview
@@ -193,7 +258,11 @@ export function DirectExpenseForm({
       return { results: [], error: null };
     }
 
-    if (!selectedFriend) {
+    if (participantIds.length === 0) {
+      return { results: [], error: "No participants selected" };
+    }
+
+    if (!selection) {
       return { results: [], error: null };
     }
 
@@ -203,14 +272,14 @@ export function DirectExpenseForm({
           results: calculateSplit({
             splitType: "equal",
             totalAmount: amount,
-            participants,
+            participants: participantIds,
           }),
           error: null,
         };
       }
 
       if (watchedSplitType === "exact") {
-        const assignments = participants.map((userId) => ({
+        const assignments = participantIds.map((userId) => ({
           userId,
           amount: customSplitValues[userId] ?? 0,
         }));
@@ -225,7 +294,7 @@ export function DirectExpenseForm({
       }
 
       if (watchedSplitType === "percentage") {
-        const assignments = participants.map((userId) => ({
+        const assignments = participantIds.map((userId) => ({
           userId,
           percent: customSplitValues[userId] ?? 0,
         }));
@@ -240,7 +309,7 @@ export function DirectExpenseForm({
       }
 
       // shares
-      const assignments = participants.map((userId) => ({
+      const assignments = participantIds.map((userId) => ({
         userId,
         shares: customSplitValues[userId] ?? 0,
       }));
@@ -258,9 +327,8 @@ export function DirectExpenseForm({
         error: err instanceof Error ? err.message : "Invalid split values",
       };
     }
-  }, [watchedAmount, watchedSplitType, participants, customSplitValues, selectedFriend]);
+  }, [watchedAmount, watchedSplitType, participantIds, customSplitValues, selection]);
 
-  // Validation feedback for non-equal split types
   const splitValidation = useMemo<{
     total: number;
     expected: number;
@@ -268,9 +336,8 @@ export function DirectExpenseForm({
     unit: string;
   } | null>(() => {
     if (watchedSplitType === "equal") return null;
-    if (!selectedFriend) return null;
 
-    const total = participants.reduce(
+    const total = participantIds.reduce(
       (sum, id) => sum + (customSplitValues[id] ?? 0),
       0,
     );
@@ -295,23 +362,68 @@ export function DirectExpenseForm({
       };
     }
 
-    // shares — no fixed target, just show total
     return {
       total,
       expected: 0,
       remaining: 0,
       unit: "shares",
     };
-  }, [watchedSplitType, watchedAmount, participants, customSplitValues, selectedFriend]);
+  }, [watchedSplitType, watchedAmount, participantIds, customSplitValues]);
 
-  function handleFriendSelect(profile: ProfileResult) {
-    setSelectedFriend(profile);
-    setCustomSplitValues({});
+  // -----------------------------------------------------------
+  // Handlers
+  // -----------------------------------------------------------
+
+  function handleGroupSelect(group: GroupResult) {
+    startFetchingMembers(async () => {
+      const result = await fetchGroupMembers(group.id);
+      if (result.error || !result.data) {
+        toast.error(result.error?.message ?? "Failed to fetch group members");
+        return;
+      }
+
+      const members: GroupMember[] = result.data.map((m) => ({
+        userId: m.id,
+        name: m.name,
+        email: m.email,
+        avatarUrl: m.avatar_url,
+        role: "member" as const,
+        joinedAt: "",
+      }));
+
+      setSelection({ type: "group", group, members });
+      setSelectedParticipants(members.map((m) => m.userId));
+      setCustomSplitValues({});
+      // Reset paid_by to current user
+      setValue("paid_by", currentUserId, { shouldValidate: true });
+    });
   }
 
-  function handleFriendRemove() {
-    setSelectedFriend(null);
+  function handlePersonSelect(person: ProfileResult) {
+    setSelection({ type: "person", person });
     setCustomSplitValues({});
+    setValue("paid_by", currentUserId, { shouldValidate: true });
+  }
+
+  function handleClearSelection() {
+    setSelection(null);
+    setSelectedParticipants([currentUserId]);
+    setCustomSplitValues({});
+    setValue("paid_by", currentUserId, { shouldValidate: true });
+  }
+
+  function handleParticipantToggle(userId: string, checked: boolean) {
+    setSelectedParticipants((prev) => {
+      if (checked) return [...prev, userId];
+      return prev.filter((id) => id !== userId);
+    });
+    if (!checked) {
+      setCustomSplitValues((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+    }
   }
 
   function handleCustomValueChange(userId: string, raw: string) {
@@ -335,18 +447,17 @@ export function DirectExpenseForm({
 
   function getDisplayName(userId: string): string {
     if (userId === currentUserId) return `${currentUserName} (you)`;
-    return selectedFriend?.name ?? selectedFriend?.email ?? "Friend";
+    if (selection?.type === "person") {
+      return selection.person.name ?? selection.person.email;
+    }
+    if (selection?.type === "group") {
+      const member = selection.members.find((m) => m.userId === userId);
+      return member?.name ?? "Unknown";
+    }
+    return "Unknown";
   }
 
-  function buildSplitsPayload(formValues: DirectExpenseFormValues): {
-    user_id: string;
-    amount: number;
-    share_value: number | null;
-  }[] {
-    if (!selectedFriend) {
-      throw new Error("Please select a friend");
-    }
-
+  function buildSplitsPayload(formValues: AddExpenseFormValues) {
     let splitResults: SplitResult[];
 
     switch (formValues.split_type) {
@@ -354,7 +465,7 @@ export function DirectExpenseForm({
         splitResults = calculateSplit({
           splitType: "equal",
           totalAmount: formValues.amount,
-          participants,
+          participants: participantIds,
         });
         break;
       }
@@ -362,7 +473,7 @@ export function DirectExpenseForm({
         splitResults = calculateSplit({
           splitType: "exact",
           totalAmount: formValues.amount,
-          participants: participants.map((userId) => ({
+          participants: participantIds.map((userId) => ({
             userId,
             amount: customSplitValues[userId] ?? 0,
           })),
@@ -373,7 +484,7 @@ export function DirectExpenseForm({
         splitResults = calculateSplit({
           splitType: "percentage",
           totalAmount: formValues.amount,
-          participants: participants.map((userId) => ({
+          participants: participantIds.map((userId) => ({
             userId,
             percent: customSplitValues[userId] ?? 0,
           })),
@@ -384,7 +495,7 @@ export function DirectExpenseForm({
         splitResults = calculateSplit({
           splitType: "shares",
           totalAmount: formValues.amount,
-          participants: participants.map((userId) => ({
+          participants: participantIds.map((userId) => ({
             userId,
             shares: customSplitValues[userId] ?? 0,
           })),
@@ -400,9 +511,14 @@ export function DirectExpenseForm({
     }));
   }
 
-  function onSubmit(formValues: DirectExpenseFormValues) {
-    if (!selectedFriend) {
-      toast.error("Please select a friend to split with");
+  function onSubmit(formValues: AddExpenseFormValues) {
+    if (!selection) {
+      toast.error("Please select a group or person to split with");
+      return;
+    }
+
+    if (selection.type === "group" && selectedParticipants.length === 0) {
+      toast.error("Please select at least one participant");
       return;
     }
 
@@ -410,8 +526,37 @@ export function DirectExpenseForm({
       try {
         const splits = buildSplitsPayload(formValues);
 
+        if (selection.type === "group") {
+          const groupId = preSelectedGroupId ?? selection.group.id;
+          const result = await createExpense({
+            expense: {
+              group_id: groupId,
+              description: formValues.description,
+              amount: formValues.amount,
+              currency: "INR",
+              date: formValues.date,
+              paid_by: formValues.paid_by,
+              created_by: currentUserId,
+              split_type: formValues.split_type,
+              category: formValues.category,
+              is_recurring: false,
+            },
+            splits,
+          });
+
+          if (result.error) {
+            toast.error(result.error.message);
+            return;
+          }
+
+          toast.success("Expense created successfully!");
+          router.push(`/groups/${groupId}`);
+          return;
+        }
+
+        // Person — direct expense
         const result = await createDirectExpense({
-          friend_id: selectedFriend.id,
+          friend_id: selection.person.id,
           expense: {
             description: formValues.description,
             amount: formValues.amount,
@@ -421,7 +566,6 @@ export function DirectExpenseForm({
             created_by: currentUserId,
             split_type: formValues.split_type,
             category: formValues.category,
-            notes: formValues.notes || undefined,
             is_recurring: false,
           },
           splits,
@@ -446,19 +590,30 @@ export function DirectExpenseForm({
     ? format(new Date(watchedDate + "T00:00:00"), "PPP")
     : "Pick a date";
 
+  const avatarColors = [
+    "bg-black text-white",
+    "bg-hotgreen text-black",
+    "bg-highlight text-black",
+    "bg-gray-500 text-white",
+  ];
+
+  const categoryEmoji: Record<string, string> = {
+    trip: "\u2708\uFE0F",
+    home: "\uD83C\uDFE0",
+    couple: "\uD83D\uDC91",
+    other: "\uD83D\uDCCB",
+  };
+
   return (
     <div className="rounded-xl bg-white p-6 sm:p-8">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
         {/* Big Amount Input */}
         <div className="mb-8 text-center">
           <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
             Amount
           </label>
           <div className="flex items-center justify-center gap-2">
-            <span className="text-4xl font-bold text-textsec">₹</span>
+            <span className="text-4xl font-bold text-textsec">{"\u20B9"}</span>
             <input
               type="number"
               inputMode="decimal"
@@ -476,94 +631,80 @@ export function DirectExpenseForm({
           <FieldError>{errors.amount?.message}</FieldError>
         </div>
 
-        {/* Split with */}
-        <div className="mb-6">
-          <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
-            Split with
-          </label>
-          {selectedFriend ? (
-            <div className="flex items-center gap-3 rounded-lg border-2 border-hotgreen bg-hotgreen/5 p-3">
-              <Avatar size="sm">
-                {selectedFriend.avatar_url ? (
-                  <AvatarImage
-                    src={selectedFriend.avatar_url}
-                    alt={selectedFriend.name ?? selectedFriend.email}
-                  />
-                ) : null}
-                <AvatarFallback>
-                  {getInitials(selectedFriend.name, selectedFriend.email)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1">
-                {selectedFriend.name ? (
-                  <p className="truncate text-sm font-bold">
-                    {selectedFriend.name}
-                  </p>
-                ) : null}
-                <p className="truncate text-sm text-textsec">
-                  {selectedFriend.email}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleFriendRemove}
-                aria-label="Remove selected friend"
-                className="rounded-lg p-1 transition-colors hover:bg-black/5"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-          ) : (
-            <UserSearch
-              onSelect={handleFriendSelect}
-              excludeUserIds={[currentUserId]}
-              placeholder="Search for a friend or group"
-            />
-          )}
-          {!selectedFriend && (
-            <p className="mt-2 text-xs text-textsec">
-              Search and select the person you want to split this expense with.
-            </p>
-          )}
-        </div>
-
-        {/* Paid By */}
-        <div className="mb-6">
-          <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
-            Paid by
-          </label>
-          <Select
-            value={watchedPaidBy}
-            onValueChange={(val) =>
-              setValue("paid_by", val as string, { shouldValidate: true })
-            }
-          >
-            <SelectTrigger className="w-full" aria-invalid={!!errors.paid_by}>
-              <SelectValue placeholder="Select who paid">
-                {(value: string) => {
-                  if (value === currentUserId) return `${currentUserName} (you)`;
-                  if (selectedFriend && value === selectedFriend.id)
-                    return selectedFriend.name ?? selectedFriend.email;
-                  return "Select who paid";
-                }}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={currentUserId} label={`${currentUserName} (you)`}>
-                {currentUserName} (you)
-              </SelectItem>
-              {selectedFriend && (
-                <SelectItem
-                  value={selectedFriend.id}
-                  label={selectedFriend.name ?? selectedFriend.email}
+        {/* Split with — only shown when no pre-selected group */}
+        {!isGroupContext && (
+          <div className="mb-6">
+            <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
+              Split with
+            </label>
+            {selection ? (
+              <div className="flex items-center gap-3 rounded-lg border-2 border-hotgreen bg-hotgreen/5 p-3">
+                {selection.type === "group" ? (
+                  <>
+                    <div className="flex size-8 items-center justify-center rounded-full bg-secondary">
+                      <Users className="size-4 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold">
+                        {categoryEmoji[selection.group.category] ?? "\uD83D\uDCCB"}{" "}
+                        {selection.group.name}
+                      </p>
+                      <p className="truncate text-xs text-textsec">
+                        Group &middot; {selection.members.length} members
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Avatar size="sm">
+                      {selection.person.avatar_url ? (
+                        <AvatarImage
+                          src={selection.person.avatar_url}
+                          alt={selection.person.name ?? selection.person.email}
+                        />
+                      ) : null}
+                      <AvatarFallback>
+                        {getInitials(selection.person.name, selection.person.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      {selection.person.name ? (
+                        <p className="truncate text-sm font-bold">
+                          {selection.person.name}
+                        </p>
+                      ) : null}
+                      <p className="truncate text-sm text-textsec">
+                        {selection.person.email}
+                      </p>
+                    </div>
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={handleClearSelection}
+                  aria-label="Clear selection"
+                  className="rounded-lg p-1 transition-colors hover:bg-black/5"
                 >
-                  {selectedFriend.name ?? selectedFriend.email}
-                </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
-          <FieldError>{errors.paid_by?.message}</FieldError>
-        </div>
+                  <X className="size-4" />
+                </button>
+              </div>
+            ) : (
+              <UserSearch
+                onSelect={handlePersonSelect}
+                onGroupSelect={handleGroupSelect}
+                excludeUserIds={[currentUserId]}
+                placeholder="Search for a group or person"
+                showGroups
+              />
+            )}
+            {isFetchingMembers && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-textsec">
+                <Loader2 className="size-3 animate-spin" />
+                Loading group members...
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Description */}
         <div className="mb-6">
@@ -572,7 +713,7 @@ export function DirectExpenseForm({
           </label>
           <input
             type="text"
-            placeholder="e.g. Coffee at Blue Tokai"
+            placeholder="e.g. Dinner at Toit"
             autoComplete="off"
             aria-invalid={!!errors.description}
             className={cn(
@@ -616,7 +757,37 @@ export function DirectExpenseForm({
           <FieldError>{errors.date?.message}</FieldError>
         </div>
 
-        {/* Split Type */}
+        {/* Paid By */}
+        <div className="mb-6">
+          <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
+            Paid by
+          </label>
+          <Select
+            value={watchedPaidBy}
+            onValueChange={(val) =>
+              setValue("paid_by", val as string, { shouldValidate: true })
+            }
+          >
+            <SelectTrigger className="w-full" aria-invalid={!!errors.paid_by}>
+              <SelectValue placeholder="Select who paid">
+                {(value: string) => {
+                  const match = paidByOptions.find((o) => o.id === value);
+                  return match?.label ?? "Select who paid";
+                }}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {paidByOptions.map((option) => (
+                <SelectItem key={option.id} value={option.id} label={option.label}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldError>{errors.paid_by?.message}</FieldError>
+        </div>
+
+        {/* Split Type Cards */}
         <div className="mb-6">
           <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
             Split Type
@@ -648,6 +819,78 @@ export function DirectExpenseForm({
           </div>
           <FieldError>{errors.split_type?.message}</FieldError>
         </div>
+
+        {/* Participants — shown for group selection */}
+        {selection?.type === "group" && (
+          <div className="mb-6">
+            <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
+              Participants
+            </label>
+            <div className="flex flex-col gap-2">
+              {membersList.map((member) => {
+                const isChecked = selectedParticipants.includes(member.userId);
+                return (
+                  <div key={member.userId} className="flex items-center gap-2">
+                    <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
+                      <Checkbox
+                        checked={isChecked}
+                        onCheckedChange={(checked) =>
+                          handleParticipantToggle(member.userId, checked)
+                        }
+                      />
+                      <span className="truncate text-sm font-bold">
+                        {member.name}
+                        {member.userId === currentUserId ? " (you)" : ""}
+                      </span>
+                    </label>
+                    {watchedSplitType !== "equal" && isChecked && (
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        step={watchedSplitType === "shares" ? "1" : "0.01"}
+                        min="0"
+                        placeholder="0"
+                        className="w-28 rounded-lg border-2 border-gray-300 bg-transparent px-3 py-2 text-right text-sm font-bold transition-colors focus:border-hotgreen focus:outline-none"
+                        value={customSplitValues[member.userId] ?? ""}
+                        onChange={(e) =>
+                          handleCustomValueChange(member.userId, e.target.value)
+                        }
+                        aria-label={`${splitTypeInputLabels[watchedSplitType]} for ${member.name}`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {selectedParticipants.length === 0 && (
+              <p className="mt-1 text-sm text-destructive">
+                At least one participant is required
+              </p>
+            )}
+            {splitValidation && watchedSplitType !== "shares" && (
+              <p
+                className={cn(
+                  "mt-1 text-sm",
+                  splitValidation.remaining === 0
+                    ? "text-muted-foreground"
+                    : "text-destructive",
+                )}
+              >
+                {splitValidation.remaining > 0
+                  ? `${splitValidation.remaining} ${splitValidation.unit} remaining`
+                  : splitValidation.remaining < 0
+                    ? `${Math.abs(splitValidation.remaining)} ${splitValidation.unit} over`
+                    : `Splits add up correctly`}
+              </p>
+            )}
+            {splitValidation && watchedSplitType === "shares" && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                Total: {splitValidation.total}{" "}
+                {splitValidation.total === 1 ? "share" : "shares"}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Category Chips */}
         <div className="mb-6">
@@ -681,14 +924,14 @@ export function DirectExpenseForm({
           <FieldError>{errors.category?.message}</FieldError>
         </div>
 
-        {/* Split Configuration (non-equal only, shown when friend is selected) */}
-        {selectedFriend && watchedSplitType !== "equal" && (
+        {/* Split Details — person mode, non-equal only */}
+        {selection?.type === "person" && watchedSplitType !== "equal" && (
           <div className="mb-6">
             <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
               Split Details
             </label>
             <div className="flex flex-col gap-3">
-              {participants.map((userId) => (
+              {participantIds.map((userId) => (
                 <div key={userId} className="flex items-center gap-3">
                   <span className="min-w-0 flex-1 truncate text-sm font-bold">
                     {getDisplayName(userId)}
@@ -743,15 +986,6 @@ export function DirectExpenseForm({
             <div className="space-y-3">
               {splitPreview.results.map((result, index) => {
                 const displayName = getDisplayName(result.userId);
-                const initials =
-                  result.userId === currentUserId
-                    ? currentUserName
-                        .split(" ")
-                        .map((p) => p[0])
-                        .join("")
-                        .slice(0, 2)
-                        .toUpperCase()
-                    : getInitials(selectedFriend?.name ?? null, selectedFriend?.email ?? "");
                 return (
                   <div
                     key={result.userId}
@@ -764,7 +998,7 @@ export function DirectExpenseForm({
                           avatarColors[index % avatarColors.length],
                         )}
                       >
-                        {initials}
+                        {getInitials(displayName)}
                       </div>
                       <span className="text-sm font-bold">{displayName}</span>
                     </div>
@@ -791,7 +1025,7 @@ export function DirectExpenseForm({
         <Button
           type="submit"
           size="lg"
-          disabled={isPending || !selectedFriend}
+          disabled={isPending || !selection}
           className="w-full border-0 bg-black py-5 text-lg text-white hover:bg-gray-900"
         >
           {isPending && <Loader2 className="animate-spin" />}

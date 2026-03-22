@@ -1,5 +1,6 @@
 # Project Rules
 
-## No Testing
+## Testing
 
-Do NOT add tests to this project. Do not install vitest, jest, or any other testing framework. Do not create test files, `__tests__` directories, or `*.test.*`/`*.spec.*` files.
+- **Unit/Integration tests**: Vitest (`npm test`) — for algorithms, validators, and backend logic
+- **E2E tests**: Playwright (`npm run test:e2e`) — for browser-based UI flows

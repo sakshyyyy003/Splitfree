@@ -24,24 +24,19 @@ export default async function DashboardPage({
   const displayName = dashboardUser.name ?? dashboardUser.email ?? "there";
 
   const groupsHeader = (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight">Your groups</h2>
-        <p className="text-sm text-muted-foreground">
-          A quick read on where you stand across every shared circle.
-        </p>
-      </div>
+    <div className="flex items-center justify-between gap-3 sm:items-end">
+      <h2 className="text-lg font-bold tracking-tight sm:text-2xl">Your groups</h2>
 
       <div className="flex shrink-0 gap-2">
         <Link
           href="/expenses/direct/new"
-          className="inline-flex h-10 items-center justify-center gap-1.5 border-2 border-foreground bg-background px-4 text-sm font-bold uppercase whitespace-nowrap text-foreground transition-all outline-none select-none hover:bg-secondary active:translate-y-px"
+          className="hidden sm:inline-flex h-10 items-center justify-center gap-1.5 border-2 border-foreground bg-background px-4 text-sm font-bold uppercase whitespace-nowrap text-foreground transition-all outline-none select-none hover:bg-secondary active:translate-y-px"
         >
           Add Expense
         </Link>
         <Link
           href="/groups/new"
-          className="inline-flex h-10 items-center justify-center gap-1.5 border border-primary bg-primary px-4 text-sm font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
+          className="inline-flex h-8 items-center justify-center gap-1.5 border border-primary bg-primary px-3 text-xs font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px sm:h-10 sm:px-4 sm:text-sm"
         >
           New Group
         </Link>
@@ -50,17 +45,11 @@ export default async function DashboardPage({
   );
 
   const peopleHeader = (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight">People</h2>
-        <p className="text-sm text-muted-foreground">
-          Individual balances across all your shared groups.
-        </p>
-      </div>
-
+    <div className="flex items-center justify-between gap-3">
+      <h2 className="text-2xl font-bold tracking-tight">People</h2>
       <Link
         href="/expenses/direct/new"
-        className="inline-flex h-10 items-center justify-center gap-1.5 border border-primary bg-primary px-4 text-sm font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
+        className="inline-flex h-10 items-center justify-center gap-1.5 border-2 border-foreground bg-background px-4 text-sm font-bold uppercase whitespace-nowrap text-foreground transition-all outline-none select-none hover:bg-secondary active:translate-y-px"
       >
         Add Expense
       </Link>
@@ -68,7 +57,7 @@ export default async function DashboardPage({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto max-w-[800px] space-y-4">
       {activeTab !== "activity" && (
         <div className="flex flex-col gap-1.5">
           <h1 className="text-[30px] font-bold leading-10 tracking-[-0.9px]">

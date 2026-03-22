@@ -94,18 +94,22 @@ export function SettleUpForm({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  // Compute initial selection from ?from= and ?to= query params
+  // Compute initial selection from ?from= and ?to= query params,
+  // or auto-select if there is only one debt
   const initialDebtIndex = (() => {
     const fromParam = searchParams.get("from");
     const toParam = searchParams.get("to");
 
-    if (!fromParam || !toParam) return null;
+    if (fromParam && toParam) {
+      const matchIndex = simplifiedDebts.findIndex(
+        (debt) => debt.fromUserId === fromParam && debt.toUserId === toParam,
+      );
+      if (matchIndex !== -1) return matchIndex;
+    }
 
-    const matchIndex = simplifiedDebts.findIndex(
-      (debt) => debt.fromUserId === fromParam && debt.toUserId === toParam,
-    );
+    if (simplifiedDebts.length === 1) return 0;
 
-    return matchIndex !== -1 ? matchIndex : null;
+    return null;
   })();
 
   const [selectedDebtIndex, setSelectedDebtIndex] = useState<number | null>(

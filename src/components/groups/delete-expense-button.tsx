@@ -66,7 +66,7 @@ export function DeleteExpenseButton({
         render={
           <Button variant="destructive">
             <Trash2 className="size-4" />
-            Delete expense
+            <span className="hidden sm:inline">Delete expense</span>
           </Button>
         }
       />

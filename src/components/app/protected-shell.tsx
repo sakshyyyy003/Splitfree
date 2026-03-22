@@ -33,7 +33,9 @@ const navigationItems = [
     label: "Dashboard",
     icon: LayoutDashboard,
     match: (pathname: string, searchParams: URLSearchParams) =>
-      pathname === "/dashboard" && searchParams.get("tab") !== "activity",
+      (pathname === "/dashboard" && searchParams.get("tab") !== "activity") ||
+      pathname.startsWith("/groups") ||
+      pathname.startsWith("/expenses"),
   },
   {
     href: "/dashboard?tab=activity",
@@ -227,7 +229,7 @@ export function ProtectedShell({ children, user }: ProtectedShellProps) {
           </div>
         </aside>
 
-        <div className="flex min-h-screen flex-1 flex-col lg:min-h-[calc(100vh-2rem)]">
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:min-h-[calc(100vh-2rem)]">
           {/* Mobile Header */}
           <header className="sticky top-0 z-20 bg-black px-4 py-4 lg:hidden">
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
