@@ -78,6 +78,9 @@ export function GroupExpenseList({ groupId, expenses, settlements, currentUserId
       date: new Date(s.createdAt),
     })),
   ].sort((a, b) => {
+    const dateDiff = b.date.getTime() - a.date.getTime();
+    if (dateDiff !== 0) return dateDiff;
+    // Same date — show most recently created first
     const aCreated = new Date(a.data.createdAt).getTime();
     const bCreated = new Date(b.data.createdAt).getTime();
     return bCreated - aCreated;
