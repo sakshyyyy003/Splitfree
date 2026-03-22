@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getGroupByInviteCode } from "@/lib/queries/group";
 import { JoinGroupCard } from "@/components/groups/join-group-card";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Card,
   CardHeader,
