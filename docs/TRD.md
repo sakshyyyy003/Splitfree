@@ -549,7 +549,7 @@ Computed via the `calculate_group_balances` Postgres function for accuracy and p
 | Image Uploads | Supabase Storage policies (type validation: JPEG/PNG, 5MB limit) |
 | Audit Trail | All expense mutations logged to expense_audit_log via DB trigger |
 | HTTPS | Enforced by Vercel (frontend) and Supabase (backend) |
-| Environment Secrets | `SUPABASE_SERVICE_ROLE_KEY` server-only, never exposed to client |
+| Environment Secrets | `SUPABASE_SECRET_KEY` server-only, never exposed to client |
 
 ### 5.3 Authorization Matrix
 
@@ -774,8 +774,8 @@ Migrations are written as SQL files in `supabase/migrations/` and applied manual
 | Variable | Context | Description |
 |----------|---------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Client + Server | Supabase project URL (different per environment) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Client + Server | Supabase anon key (safe for browser, RLS enforced) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server only | Bypasses RLS — used in cron jobs and admin operations |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Client + Server | Supabase publishable key (safe for browser, RLS enforced) |
+| `SUPABASE_SECRET_KEY` | Server only | Bypasses RLS — used in cron jobs and admin operations |
 | `RESEND_API_KEY` | Server only | Email sending |
 | `CRON_SECRET` | Server only | Vercel Cron job authentication |
 
