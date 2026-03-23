@@ -23,6 +23,7 @@ type UserSearchProps = {
   excludeUserIds?: string[];
   placeholder?: string;
   showGroups?: boolean;
+  suggestions?: ProfileResult[];
 };
 
 function getInitials(name: string | null, email: string): string {
@@ -45,13 +46,16 @@ export function UserSearch({
   excludeUserIds = [],
   placeholder = "Search by name or email...",
   showGroups = false,
+  suggestions = [],
 }: UserSearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ProfileResult[]>([]);
   const [groupResults, setGroupResults] = useState<GroupResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const trimmed = query.trim();
   const isBelowMinLength = trimmed.length < MIN_QUERY_LENGTH;
@@ -112,9 +116,18 @@ export function UserSearch({
   const visibleGroups = isBelowMinLength ? [] : groupResults;
   const hasAnyResults = visibleResults.length > 0 || visibleGroups.length > 0;
   const showEmptyState = !isBelowMinLength && hasSearched && !isPending && !hasAnyResults;
+  const showSuggestions = isFocused && isBelowMinLength && suggestions.length > 0 && !hasAnyResults;
 
   return (
-    <div className="flex w-full flex-col gap-2">
+    <div
+      ref={containerRef}
+      className="flex w-full flex-col gap-2"
+      onBlur={(e) => {
+        if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+          setIsFocused(false);
+        }
+      }}
+    >
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -122,6 +135,7 @@ export function UserSearch({
           type="text"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
+          onFocus={() => setIsFocused(true)}
           placeholder={placeholder}
           autoComplete="off"
           className="pl-10"
@@ -131,10 +145,52 @@ export function UserSearch({
         )}
       </div>
 
+      {showSuggestions && (
+        <ul
+          role="listbox"
+          className="flex flex-col gap-1 rounded-none border border-border bg-background p-2 shadow-subtle"
+        >
+          <li className="px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            People you know on Splitfree
+          </li>
+          {suggestions.map((profile) => (
+            <li key={profile.id} role="option" aria-selected={false}>
+              <button
+                type="button"
+                onClick={() => handleSelect(profile)}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:outline-none"
+              >
+                <Avatar size="sm">
+                  {profile.avatar_url ? (
+                    <AvatarImage
+                      src={profile.avatar_url}
+                      alt={profile.name ?? profile.email}
+                    />
+                  ) : null}
+                  <AvatarFallback>
+                    {getInitials(profile.name, profile.email)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  {profile.name ? (
+                    <p className="truncate text-sm font-semibold">
+                      {profile.name}
+                    </p>
+                  ) : null}
+                  <p className="truncate text-sm text-muted-foreground">
+                    {profile.email}
+                  </p>
+                </div>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {hasAnyResults && (
         <ul
           role="listbox"
-          className="flex flex-col gap-1 rounded-2xl border border-border bg-background p-2 shadow-subtle"
+          className="flex flex-col gap-1 rounded-none border border-border bg-background p-2 shadow-subtle"
         >
           {visibleGroups.map((group) => (
             <li key={`group-${group.id}`} role="option" aria-selected={false}>
@@ -192,7 +248,7 @@ export function UserSearch({
       )}
 
       {showEmptyState && (
-        <div className="rounded-2xl border border-dashed border-border bg-secondary/30 px-4 py-6 text-center text-sm text-muted-foreground">
+        <div className="rounded-none border border-dashed border-border bg-secondary/30 px-4 py-6 text-center text-sm text-muted-foreground">
           No results found for &ldquo;{query.trim()}&rdquo;
         </div>
       )}

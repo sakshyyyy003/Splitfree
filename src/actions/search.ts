@@ -123,6 +123,65 @@ export async function searchGroups(
   return { data: groups, error: null };
 }
 
+/**
+ * Fetch users who share at least one group with the current user,
+ * excluding a given set of user IDs (e.g. current group members).
+ */
+export async function fetchFrequentContacts(
+  excludeUserIds: string[],
+): Promise<ActionResult<ProfileResult[]>> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      data: null,
+      error: { code: "unauthorized", message: "You must be signed in" },
+    };
+  }
+
+  // Get all groups the current user belongs to
+  const { data: myGroups } = await supabase
+    .from("group_members")
+    .select("group_id")
+    .eq("user_id", user.id);
+
+  if (!myGroups || myGroups.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const groupIds = myGroups.map((g) => g.group_id);
+
+  // Get distinct co-members from those groups
+  const excludeIds = [user.id, ...excludeUserIds];
+  const { data, error: queryError } = await supabase
+    .from("group_members")
+    .select("user_id, profiles(id, name, email, avatar_url)")
+    .in("group_id", groupIds)
+    .not("user_id", "in", `(${excludeIds.join(",")})`)
+    .limit(50);
+
+  if (queryError) {
+    return { data: [], error: null };
+  }
+
+  // Deduplicate by user_id
+  const seen = new Set<string>();
+  const contacts: ProfileResult[] = [];
+  for (const row of data) {
+    const profile = row.profiles as unknown as ProfileResult | null;
+    if (profile && !seen.has(profile.id)) {
+      seen.add(profile.id);
+      contacts.push(profile);
+    }
+  }
+
+  return { data: contacts, error: null };
+}
+
 export type GroupMemberResult = {
   id: string;
   name: string;

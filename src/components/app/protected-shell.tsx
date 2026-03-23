@@ -16,7 +16,6 @@ import { signOut } from "@/actions/auth";
 import { PROFILE_ROUTE } from "@/constants/routes";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 
 type ProtectedShellProps = {
   children: React.ReactNode;
@@ -214,18 +213,16 @@ export function ProtectedShell({ children, user }: ProtectedShellProps) {
                   {user.email ?? "Signed in"}
                 </p>
               </div>
+              <form action={signOut}>
+                <button
+                  type="submit"
+                  aria-label="Sign out"
+                  className="flex size-8 items-center justify-center rounded-md text-sidebar-foreground/50 transition-colors hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <LogOut className="size-4" />
+                </button>
+              </form>
             </div>
-
-            <form action={signOut} className="mt-4">
-              <Button
-                type="submit"
-                variant="outline"
-                className="w-full justify-center border-sidebar-border bg-transparent text-sidebar-foreground hover:bg-hotgreen hover:text-black hover:border-hotgreen"
-              >
-                <LogOut className="size-4" />
-                Sign out
-              </Button>
-            </form>
           </div>
         </aside>
 

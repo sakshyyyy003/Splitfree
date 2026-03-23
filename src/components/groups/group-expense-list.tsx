@@ -1,21 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import {
   CircleHelp,
   Handshake,
   House,
+  Link2,
   type LucideIcon,
+  Loader2,
   ReceiptText,
   ShoppingBag,
   Ticket,
   TramFront,
+  UserPlus,
   UtensilsCrossed,
 } from "lucide-react";
 
+import { toast } from "sonner";
+
+import { addMemberToGroup } from "@/actions/group";
+import { fetchFrequentContacts, type ProfileResult } from "@/actions/search";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { GroupExpense, GroupSettlement } from "@/types/group-detail";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { UserSearch } from "@/components/ui/user-search";
 import {
   Pagination,
   PaginationContent,
@@ -32,6 +50,9 @@ type GroupExpenseListProps = {
   settlements: GroupSettlement[];
   currentUserId: string;
   isUserSettled: boolean;
+  isAdmin: boolean;
+  inviteCode: string;
+  memberUserIds: string[];
 };
 
 type FeedItem =
@@ -64,7 +85,7 @@ const categoryIcons: Record<string, LucideIcon> = {
   default: CircleHelp,
 };
 
-export function GroupExpenseList({ groupId, expenses, settlements, currentUserId, isUserSettled }: GroupExpenseListProps) {
+export function GroupExpenseList({ groupId, expenses, settlements, currentUserId, isUserSettled, isAdmin, inviteCode, memberUserIds }: GroupExpenseListProps) {
   // Merge expenses and settlements into a unified feed sorted by date descending
   const feed: FeedItem[] = [
     ...expenses.map((e) => ({
@@ -92,11 +113,15 @@ export function GroupExpenseList({ groupId, expenses, settlements, currentUserId
   const pageItems = feed.slice(startIndex, startIndex + PAGE_SIZE);
 
   if (feed.length === 0) {
+    if (isAdmin) {
+      return <AdminOnboardingEmpty groupId={groupId} inviteCode={inviteCode} memberUserIds={memberUserIds} />;
+    }
+
     return (
       <div className="rounded-lg border border-dashed border-border bg-card px-5 py-10 text-center">
         <p className="text-sm font-semibold text-foreground">No expenses yet</p>
         <p className="mt-2 text-sm text-muted-foreground">
-          This group does not have any mock expenses loaded.
+          This group doesn&apos;t have any expenses yet.
         </p>
       </div>
     );
@@ -277,6 +302,151 @@ function SettlementCard({
         </div>
       </Card>
     </Link>
+  );
+}
+
+function AdminOnboardingEmpty({
+  groupId,
+  inviteCode,
+  memberUserIds,
+}: {
+  groupId: string;
+  inviteCode: string;
+  memberUserIds: string[];
+}) {
+  const [contacts, setContacts] = useState<ProfileResult[]>([]);
+  const [isAddingMember, startAddMemberTransition] = useTransition();
+
+  useEffect(() => {
+    fetchFrequentContacts(memberUserIds).then((result) => {
+      if (result.data) setContacts(result.data);
+    });
+  }, [memberUserIds]);
+
+  async function handleCopyInviteLink() {
+    const inviteUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/join/${inviteCode}`
+        : `/join/${inviteCode}`;
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      toast.success("Group invite link copied to clipboard");
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  }
+
+  function handleAddMember(profile: ProfileResult) {
+    startAddMemberTransition(async () => {
+      const result = await addMemberToGroup({
+        groupId,
+        userId: profile.id,
+      });
+
+      if (result.error) {
+        toast.error(result.error.message);
+        return;
+      }
+
+      toast.success(`${profile.name ?? profile.email} has been added to the group`);
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-dashed border-border bg-card px-5 py-8 text-center">
+        <p className="text-base font-semibold text-foreground">No expenses yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Start by adding people to your group
+        </p>
+
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyInviteLink}
+          >
+            <Link2 className="size-4" />
+            Invite via link
+          </Button>
+          <Dialog>
+            <DialogTrigger
+              render={
+                <Button variant="outline" size="sm">
+                  <UserPlus className="size-4" />
+                  Add people
+                </Button>
+              }
+            />
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <UserPlus className="size-4" />
+                  Add People
+                  {isAddingMember && (
+                    <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+                  )}
+                </DialogTitle>
+                <DialogDescription>
+                  Search for existing users to add them to the group.
+                </DialogDescription>
+              </DialogHeader>
+              <UserSearch
+                onSelect={handleAddMember}
+                excludeUserIds={memberUserIds}
+                placeholder="Search by name or email to add..."
+              />
+              {contacts.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">
+                    People you know on Splitfree
+                  </p>
+                  <div className="flex flex-col gap-1">
+                    {contacts.map((contact) => (
+                      <button
+                        key={contact.id}
+                        type="button"
+                        onClick={() => handleAddMember(contact)}
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-secondary"
+                      >
+                        <Avatar size="sm">
+                          {contact.avatar_url ? (
+                            <AvatarImage
+                              src={contact.avatar_url}
+                              alt={contact.name ?? contact.email}
+                            />
+                          ) : null}
+                          <AvatarFallback>
+                            {contact.name
+                              ? contact.name
+                                  .split(" ")
+                                  .map((p) => p[0])
+                                  .slice(0, 2)
+                                  .join("")
+                                  .toUpperCase()
+                              : contact.email[0]?.toUpperCase() ?? "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          {contact.name && (
+                            <p className="truncate text-sm font-semibold">
+                              {contact.name}
+                            </p>
+                          )}
+                          <p className="truncate text-xs text-muted-foreground">
+                            {contact.email}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+    </div>
   );
 }
 
