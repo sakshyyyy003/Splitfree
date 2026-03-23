@@ -99,7 +99,7 @@ export async function signUp(
   redirect(getSafeRedirect(redirectTo));
 }
 
-export async function signInWithGoogle(): Promise<ActionResult<null>> {
+export async function signInWithGoogle(): Promise<void> {
   const supabase = await createClient();
   const requestHeaders = await headers();
   const origin = requestHeaders.get("origin");
@@ -112,13 +112,7 @@ export async function signInWithGoogle(): Promise<ActionResult<null>> {
   });
 
   if (error) {
-    return {
-      data: null,
-      error: {
-        code: error.code ?? "unknown_error",
-        message: error.message,
-      },
-    };
+    throw new Error(error.message);
   }
 
   redirect(data.url);
