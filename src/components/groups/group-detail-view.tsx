@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Handshake,
+  Link2,
   Loader2,
   Plus,
   Settings,
@@ -23,7 +24,7 @@ import { addMemberToGroup } from "@/actions/group";
 import type { ProfileResult } from "@/actions/search";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -96,6 +97,19 @@ export function GroupDetailView({
 
       toast.success(`${profile.name ?? profile.email} has been added to the group`);
     });
+  }
+
+  async function handleCopyInviteLink() {
+    const inviteUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/join/${group.inviteCode}`
+        : `/join/${group.inviteCode}`;
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      toast.success("Group invite link copied to clipboard");
+    } catch {
+      toast.error("Failed to copy link");
+    }
   }
 
   const sortedBalances = [...balances].sort((left, right) => {
@@ -213,7 +227,7 @@ export function GroupDetailView({
         </TabsList>
 
         <TabsContent value="expenses">
-          <GroupExpenseList groupId={group.id} expenses={expenses} settlements={settlements} currentUserId={currentUserId} isUserSettled={group.netBalance === 0} />
+          <GroupExpenseList groupId={group.id} expenses={expenses} settlements={settlements} currentUserId={currentUserId} isUserSettled={group.netBalance === 0} isAdmin={isAdmin} inviteCode={group.inviteCode} memberUserIds={memberUserIds} />
         </TabsContent>
 
         <TabsContent value="balances">
@@ -391,6 +405,18 @@ export function GroupDetailView({
               <CardDescription>
                 Everyone currently in the group and when they joined.
               </CardDescription>
+              {isAdmin && (
+                <CardAction>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyInviteLink}
+                  >
+                    <Link2 className="size-4" />
+                    Invite via link
+                  </Button>
+                </CardAction>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               {isAdmin && (
@@ -411,44 +437,62 @@ export function GroupDetailView({
                 </div>
               )}
 
-              <div className="grid gap-3 md:grid-cols-2">
-                {members.map((member) => (
-                  <div
-                    key={member.userId}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-card p-4"
-                  >
-                    <Avatar>
-                      {member.avatarUrl ? (
-                        <AvatarImage src={member.avatarUrl} alt={member.name} />
-                      ) : null}
-                      <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate font-semibold">{member.name}</p>
-                        <Badge variant={member.role === "admin" ? "default" : "outline"}>
-                          {member.role === "admin" ? "Admin" : "Member"}
-                        </Badge>
+              <div className="space-y-3">
+                {members.map((member) => {
+                  const balance = balances.find((b) => b.userId === member.userId);
+                  const net = balance?.netBalance ?? 0;
+
+                  return (
+                    <div
+                      key={member.userId}
+                      className="flex items-center gap-3 rounded-lg border border-border bg-card p-4"
+                    >
+                      <Avatar>
+                        {member.avatarUrl ? (
+                          <AvatarImage src={member.avatarUrl} alt={member.name} />
+                        ) : null}
+                        <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate font-semibold">{member.name}</p>
+                          <Badge variant={member.role === "admin" ? "default" : "outline"}>
+                            {member.role === "admin" ? "Admin" : "Member"}
+                          </Badge>
+                        </div>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {member.email}
+                        </p>
                       </div>
-                      <p className="truncate text-sm text-muted-foreground">
-                        {member.email}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Joined {dateFormatter.format(new Date(member.joinedAt))}
-                      </p>
+                      <div className="flex shrink-0 items-center gap-3">
+                        {net !== 0 ? (
+                          <div className={`text-right ${net > 0 ? "text-[#007a55]" : "text-rose-700"}`}>
+                            <p className="text-xs font-medium">
+                              {net > 0 ? "You get" : "You owe"}
+                            </p>
+                            <p className="text-sm font-bold">
+                              {currencyFormatter.format(Math.abs(net))}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Settled
+                          </p>
+                        )}
+                        <RemoveMemberButton
+                          groupId={group.id}
+                          userId={member.userId}
+                          memberName={member.name}
+                          canRemove={
+                            isAdmin &&
+                            member.userId !== currentUserId &&
+                            member.role !== "admin"
+                          }
+                        />
+                      </div>
                     </div>
-                    <RemoveMemberButton
-                      groupId={group.id}
-                      userId={member.userId}
-                      memberName={member.name}
-                      canRemove={
-                        isAdmin &&
-                        member.userId !== currentUserId &&
-                        member.role !== "admin"
-                      }
-                    />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>

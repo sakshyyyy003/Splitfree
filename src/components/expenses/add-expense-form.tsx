@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +15,7 @@ import {
 } from "@/lib/validators/expense";
 import { calculateSplit, type SplitResult } from "@/lib/algorithms/splits";
 import { createExpense, createDirectExpense } from "@/actions/expenses";
-import { fetchGroupMembers, type GroupMemberResult } from "@/actions/search";
+import { fetchFrequentContacts, fetchGroupMembers, type GroupMemberResult } from "@/actions/search";
 import type { ProfileResult, GroupResult } from "@/actions/search";
 import type { GroupMember } from "@/types/group-detail";
 
@@ -154,6 +154,13 @@ export function AddExpenseForm({
   const [isPending, startTransition] = useTransition();
   const [isFetchingMembers, startFetchingMembers] = useTransition();
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<ProfileResult[]>([]);
+
+  useEffect(() => {
+    fetchFrequentContacts([currentUserId]).then((result) => {
+      if (result.data) setSuggestions(result.data);
+    });
+  }, [currentUserId]);
 
   // For group context from props, pre-populate selection
   const isGroupContext = !!(preSelectedGroupId && preSelectedMembers);
@@ -624,6 +631,7 @@ export function AddExpenseForm({
               aria-invalid={!!errors.amount}
               className="min-w-[1ch] bg-transparent text-center font-bold focus:outline-none [appearance:textfield] [field-sizing:content] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               style={{ fontSize: "72px", lineHeight: 1 }}
+              onWheel={(e) => e.currentTarget.blur()}
               {...register("amount", { valueAsNumber: true })}
             />
           </div>
@@ -695,6 +703,7 @@ export function AddExpenseForm({
                 excludeUserIds={[currentUserId]}
                 placeholder="Search for a group or person"
                 showGroups
+                suggestions={suggestions}
               />
             )}
             {isFetchingMembers && (
@@ -706,10 +715,10 @@ export function AddExpenseForm({
           </div>
         )}
 
-        {/* Description */}
+        {/* Expense */}
         <div className="mb-6">
           <label className="mb-3 block text-xs font-bold uppercase tracking-ultra text-textsec">
-            Description
+            Expense
           </label>
           <input
             type="text"
@@ -852,6 +861,7 @@ export function AddExpenseForm({
                         placeholder="0"
                         className="w-28 rounded-lg border-2 border-gray-300 bg-transparent px-3 py-2 text-right text-sm font-bold transition-colors focus:border-hotgreen focus:outline-none"
                         value={customSplitValues[member.userId] ?? ""}
+                        onWheel={(e) => e.currentTarget.blur()}
                         onChange={(e) =>
                           handleCustomValueChange(member.userId, e.target.value)
                         }
@@ -944,6 +954,7 @@ export function AddExpenseForm({
                     placeholder="0"
                     className="w-28 rounded-lg border-2 border-gray-300 bg-transparent px-3 py-2 text-right text-sm font-bold transition-colors focus:border-hotgreen focus:outline-none"
                     value={customSplitValues[userId] ?? ""}
+                    onWheel={(e) => e.currentTarget.blur()}
                     onChange={(e) =>
                       handleCustomValueChange(userId, e.target.value)
                     }
