@@ -1,19 +1,14 @@
 import "server-only";
 
+import { cache } from "react";
+
+import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { createClient } from "@/lib/supabase/server";
 import type { DashboardUser } from "@/types/dashboard";
 
-export async function getDashboardUser(): Promise<DashboardUser> {
+export const getDashboardUser = cache(async (): Promise<DashboardUser> => {
+  const user = await requireAuthenticatedUser();
   const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return { email: null, name: null, avatarUrl: null };
-  }
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -26,7 +21,7 @@ export async function getDashboardUser(): Promise<DashboardUser> {
     name: profile?.name ?? null,
     avatarUrl: profile?.avatar_url ?? null,
   };
-}
+});
 
 export async function getProfile(userId: string) {
   const supabase = await createClient();

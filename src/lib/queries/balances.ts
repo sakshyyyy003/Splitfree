@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { simplifyDebts } from "@/lib/algorithms/debt";
 import { createClient } from "@/lib/supabase/server";
 import type {
@@ -215,11 +217,13 @@ export async function getGroupBalances(
 ): Promise<GroupBalanceSummary> {
   const supabase = await createClient();
 
-  // 1. Call the Postgres function to get raw balances and simplified debts
-  const { data: rpcData, error: rpcError } = await supabase.rpc(
-    "calculate_group_balances",
-    { p_group_id: groupId },
-  );
+  // Fire RPC and member fetch in parallel
+  const [rpcResult, members] = await Promise.all([
+    supabase.rpc("calculate_group_balances", { p_group_id: groupId }),
+    getGroupMembersWithProfiles(groupId),
+  ]);
+
+  const { data: rpcData, error: rpcError } = rpcResult;
 
   if (rpcError) {
     if (isMissingCalculateBalancesFunction(rpcError.message)) {
@@ -243,9 +247,8 @@ export async function getGroupBalances(
     return { balances: [], simplifiedDebts: [] };
   }
 
-  // 3. Fetch group members with profile data to enrich the balance entries
+  // 3. Enrich balance entries with profile data
   const userIds = raw.balances.map((b) => b.user_id);
-  const members = await getGroupMembersWithProfiles(groupId);
   const memberLookup = buildMemberLookup(
     members.filter((member) => userIds.includes(member.user_id)),
   );
@@ -402,7 +405,7 @@ async function fetchGroupsByIds(
   return lookup;
 }
 
-export async function getOverallBalances(): Promise<DashboardOverallBalances> {
+export const getOverallBalances = cache(async (): Promise<DashboardOverallBalances> => {
   const supabase = await createClient();
 
   const { data: rpcData, error: rpcError } = await supabase.rpc(
@@ -487,4 +490,4 @@ export async function getOverallBalances(): Promise<DashboardOverallBalances> {
     },
     counterparties,
   };
-}
+});

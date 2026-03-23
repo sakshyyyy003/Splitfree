@@ -21,7 +21,7 @@ export default async function ExpenseDetailPage({
   const user = await requireAuthenticatedUser();
 
   const [group, expense] = await Promise.all([
-    getGroupDetail(id),
+    getGroupDetail(id, user.id),
     getExpenseDetail(id, expenseId, user.id),
   ]);
 

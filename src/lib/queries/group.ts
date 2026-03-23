@@ -4,15 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { DashboardGroup } from "@/types/dashboard";
 import type { GroupDetail } from "@/types/group-detail";
 
-export async function getDashboardGroups(): Promise<DashboardGroup[]> {
+export async function getDashboardGroups(userId: string): Promise<DashboardGroup[]> {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) return [];
 
   // 1. Fetch all groups the user belongs to
   const { data: memberships } = await supabase
@@ -20,7 +13,7 @@ export async function getDashboardGroups(): Promise<DashboardGroup[]> {
     .select(
       "group_id, groups(id, name, description, category, currency, is_pinned, is_archived, created_at, updated_at)",
     )
-    .eq("user_id", user.id);
+    .eq("user_id", userId);
 
   if (!memberships || memberships.length === 0) return [];
 
@@ -55,63 +48,46 @@ export async function getDashboardGroups(): Promise<DashboardGroup[]> {
   }
 
   // 3. Batch-fetch balance data across all groups + per-group simplified debts
-  const rpcPromises = groupIds.map(async (groupId) => {
-    const { data, error } = await supabase.rpc("calculate_group_balances", {
-      p_group_id: groupId,
-    });
-    if (error) return { groupId, debts: [] as { from: string; to: string; amount: number }[] };
-    const raw = data as unknown as { simplified_debts?: { from: string; to: string; amount: number }[] };
-    return { groupId, debts: raw?.simplified_debts ?? [] };
-  });
-
   const [
     { data: expensesPaid },
-    { data: allGroupExpenses },
+    { data: userSplitsWithGroup },
     { data: settlementsPaid },
     { data: settlementsReceived },
-    ...balanceResults
+    batchBalanceResult,
   ] = await Promise.all([
     supabase
       .from("expenses")
       .select("group_id, amount")
       .in("group_id", groupIds)
-      .eq("paid_by", user.id)
+      .eq("paid_by", userId)
       .eq("is_deleted", false),
     supabase
-      .from("expenses")
-      .select("id, group_id")
-      .in("group_id", groupIds)
-      .eq("is_deleted", false),
+      .from("expense_splits")
+      .select("amount, expenses!inner(group_id)")
+      .eq("user_id", userId)
+      .in("expenses.group_id", groupIds)
+      .eq("expenses.is_deleted", false),
     supabase
       .from("settlements")
       .select("group_id, amount")
       .in("group_id", groupIds)
-      .eq("paid_by", user.id),
+      .eq("paid_by", userId),
     supabase
       .from("settlements")
       .select("group_id, amount")
       .in("group_id", groupIds)
-      .eq("paid_to", user.id),
-    ...rpcPromises,
+      .eq("paid_to", userId),
+    supabase.rpc("calculate_multi_group_balances", { p_group_ids: groupIds }),
   ]);
 
-  // Build expense_id -> group_id map for attributing splits
-  const expenseToGroup = new Map<string, string>();
-  const expenseIds: string[] = [];
-  for (const e of allGroupExpenses ?? []) {
-    expenseToGroup.set(e.id, e.group_id);
-    expenseIds.push(e.id);
-  }
-
-  // Fetch user's splits
-  const { data: userSplits } =
-    expenseIds.length > 0
-      ? await supabase
-          .from("expense_splits")
-          .select("expense_id, amount")
-          .eq("user_id", user.id)
-          .in("expense_id", expenseIds)
-      : { data: [] };
+  const batchBalances = (batchBalanceResult.data ?? {}) as Record<
+    string,
+    { simplified_debts?: { from: string; to: string; amount: number }[] }
+  >;
+  const balanceResults = groupIds.map((groupId) => ({
+    groupId,
+    debts: batchBalances[groupId]?.simplified_debts ?? [],
+  }));
 
   // 4. Compute per-group net balance
   const balanceMap = new Map<string, number>();
@@ -119,8 +95,8 @@ export async function getDashboardGroups(): Promise<DashboardGroup[]> {
   for (const e of expensesPaid ?? []) {
     balanceMap.set(e.group_id, (balanceMap.get(e.group_id) ?? 0) + e.amount);
   }
-  for (const s of userSplits ?? []) {
-    const gId = expenseToGroup.get(s.expense_id);
+  for (const s of userSplitsWithGroup ?? []) {
+    const gId = (s.expenses as unknown as { group_id: string }).group_id;
     if (gId) balanceMap.set(gId, (balanceMap.get(gId) ?? 0) - s.amount);
   }
   for (const s of settlementsPaid ?? []) {
@@ -134,8 +110,8 @@ export async function getDashboardGroups(): Promise<DashboardGroup[]> {
   const debtUserIds = new Set<string>();
   for (const result of balanceResults) {
     for (const debt of result.debts) {
-      if (debt.from === user.id) debtUserIds.add(debt.to);
-      else if (debt.to === user.id) debtUserIds.add(debt.from);
+      if (debt.from === userId) debtUserIds.add(debt.to);
+      else if (debt.to === userId) debtUserIds.add(debt.from);
     }
   }
 
@@ -159,13 +135,13 @@ export async function getDashboardGroups(): Promise<DashboardGroup[]> {
   for (const result of balanceResults) {
     const counterparties: { userId: string; name: string; amount: number }[] = [];
     for (const debt of result.debts) {
-      if (debt.from === user.id) {
+      if (debt.from === userId) {
         counterparties.push({
           userId: debt.to,
           name: profileMap.get(debt.to) ?? "Unknown",
           amount: -debt.amount,
         });
-      } else if (debt.to === user.id) {
+      } else if (debt.to === userId) {
         counterparties.push({
           userId: debt.from,
           name: profileMap.get(debt.from) ?? "Unknown",
@@ -194,15 +170,9 @@ export async function getDashboardGroups(): Promise<DashboardGroup[]> {
 
 export async function getGroupDetail(
   groupId: string,
+  userId: string,
 ): Promise<GroupDetail | null> {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) return null;
 
   // Fetch group (RLS ensures only members can see it)
   const { data: group, error: groupError } = await supabase
@@ -221,7 +191,7 @@ export async function getGroupDetail(
     { data: expenses },
     { data: settlements },
     { data: expensesPaidByUser },
-    { data: groupExpenseRows },
+    { data: userSplits },
     { data: settlementsPaidByUser },
     { data: settlementsReceivedByUser },
     { data: coverFiles },
@@ -243,23 +213,24 @@ export async function getGroupDetail(
       .from("expenses")
       .select("amount")
       .eq("group_id", groupId)
-      .eq("paid_by", user.id)
+      .eq("paid_by", userId)
       .eq("is_deleted", false),
     supabase
-      .from("expenses")
-      .select("id")
-      .eq("group_id", groupId)
-      .eq("is_deleted", false),
+      .from("expense_splits")
+      .select("amount, expenses!inner(id)")
+      .eq("user_id", userId)
+      .eq("expenses.group_id", groupId)
+      .eq("expenses.is_deleted", false),
     supabase
       .from("settlements")
       .select("amount")
       .eq("group_id", groupId)
-      .eq("paid_by", user.id),
+      .eq("paid_by", userId),
     supabase
       .from("settlements")
       .select("amount")
       .eq("group_id", groupId)
-      .eq("paid_to", user.id),
+      .eq("paid_to", userId),
     supabase.storage.from("group-covers").list(groupId, { limit: 10 }),
   ]);
 
@@ -269,18 +240,6 @@ export async function getGroupDetail(
     (sum, s) => sum + s.amount,
     0,
   );
-
-  // Compute user's net balance for this group
-  const expenseIds = (groupExpenseRows ?? []).map((e) => e.id);
-
-  const { data: userSplits } =
-    expenseIds.length > 0
-      ? await supabase
-          .from("expense_splits")
-          .select("amount")
-          .eq("user_id", user.id)
-          .in("expense_id", expenseIds)
-      : { data: [] };
 
   const paid = (expensesPaidByUser ?? []).reduce(
     (sum, e) => sum + e.amount,

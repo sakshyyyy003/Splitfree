@@ -40,9 +40,9 @@ export default async function SettlementDetailPage({
   params,
 }: SettlementDetailPageProps) {
   const { id: groupId, settlementId } = await params;
-  const [user, group, settlement] = await Promise.all([
-    requireAuthenticatedUser(),
-    getGroupDetail(groupId),
+  const user = await requireAuthenticatedUser();
+  const [group, settlement] = await Promise.all([
+    getGroupDetail(groupId, user.id),
     getSettlementDetail(settlementId),
   ]);
 
