@@ -91,21 +91,14 @@ export function GroupExpenseList({ groupId, expenses, settlements, currentUserId
     ...expenses.map((e) => ({
       type: "expense" as const,
       data: e,
-      date: new Date(e.incurredOn || e.createdAt),
+      date: new Date(e.createdAt),
     })),
     ...settlements.map((s) => ({
       type: "settlement" as const,
       data: s,
       date: new Date(s.createdAt),
     })),
-  ].sort((a, b) => {
-    const dateDiff = b.date.getTime() - a.date.getTime();
-    if (dateDiff !== 0) return dateDiff;
-    // Same date — show most recently created first
-    const aCreated = new Date(a.data.createdAt).getTime();
-    const bCreated = new Date(b.data.createdAt).getTime();
-    return bCreated - aCreated;
-  });
+  ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(feed.length / PAGE_SIZE);
