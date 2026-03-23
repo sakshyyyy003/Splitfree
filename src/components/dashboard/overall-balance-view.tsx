@@ -48,11 +48,11 @@ export function MobileBalanceBanner({
 
   if (netBalance > 0) {
     label = "Overall, you get";
-    amount = formatCurrency(totalOwed, currency);
+    amount = formatCurrency(netBalance, currency);
     tone = "text-[#007a55]";
   } else if (netBalance < 0) {
     label = "Overall, you owe";
-    amount = formatCurrency(totalYouOwe, currency);
+    amount = formatCurrency(Math.abs(netBalance), currency);
     tone = "text-rose-700";
   } else {
     label = "All settled up";
