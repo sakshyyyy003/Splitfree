@@ -16,6 +16,7 @@ type DashboardTabsProps = {
   peopleHeader: React.ReactNode;
   activityFeed: ActivityFeedResult;
   activeTab: string;
+  currentUserId: string;
 };
 
 export function DashboardTabs({
@@ -25,6 +26,7 @@ export function DashboardTabs({
   peopleHeader,
   activityFeed,
   activeTab,
+  currentUserId,
 }: DashboardTabsProps) {
   const { summary, counterparties } = overallBalances;
   const [currentTab, setCurrentTab] = useState(activeTab);
@@ -37,7 +39,7 @@ export function DashboardTabs({
   const activityContent = (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold tracking-tight">Recent activity</h2>
-      <ActivityFeed initial={activityFeed} />
+      <ActivityFeed initial={activityFeed} currentUserId={currentUserId} />
     </div>
   );
 

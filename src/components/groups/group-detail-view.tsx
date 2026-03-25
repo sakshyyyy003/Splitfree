@@ -206,9 +206,9 @@ export function GroupDetailView({
                 {simplifiedDebts.map((debt) => (
                   <div key={`${debt.fromUserId}-${debt.toUserId}`} className="flex gap-[5px] leading-7">
                     <p className="font-medium text-black/70">
-                      {debt.fromName} owes {debt.toName}
+                      {debt.fromUserId === currentUserId ? "You" : debt.fromName} owes {debt.toUserId === currentUserId ? "you" : debt.toName}
                     </p>
-                    <p className="font-bold text-[#007a55]">
+                    <p className={`font-bold ${debt.fromUserId === currentUserId ? "text-rose-700" : "text-[#007a55]"}`}>
                       {formatCurrency(debt.amount, group.currency)}
                     </p>
                   </div>
@@ -220,7 +220,7 @@ export function GroupDetailView({
       </section>
 
       <Tabs defaultValue="expenses" className="space-y-4">
-        <TabsList className="w-full justify-start overflow-x-auto">
+        <TabsList className="w-full justify-start">
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
           <TabsTrigger value="balances">Balances</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
@@ -372,7 +372,7 @@ export function GroupDetailView({
                         className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <p className="font-semibold text-foreground">
-                          {debt.fromName} owes {debt.toName}{" "}
+                          {debt.fromUserId === currentUserId ? "You" : debt.fromName} owes {debt.toUserId === currentUserId ? "you" : debt.toName}{" "}
                           {formatCurrency(debt.amount, group.currency)}
                         </p>
                         <div className="flex items-center gap-2">

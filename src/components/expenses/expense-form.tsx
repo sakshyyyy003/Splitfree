@@ -563,7 +563,7 @@ export function ExpenseForm({
             autoComplete="off"
             aria-invalid={!!errors.description}
             className={cn(
-              "w-full rounded-lg border-2 border-gray-300 bg-transparent px-4 py-4 text-lg font-bold transition-colors focus:border-hotgreen focus:outline-none",
+              "w-full rounded-lg border-2 border-gray-300 bg-transparent px-4 py-3 text-sm font-medium transition-colors focus:border-hotgreen focus:outline-none [height:48px]",
               errors.description && "border-destructive",
             )}
             {...register("description")}

@@ -145,9 +145,14 @@ export function CounterpartyBreakdown({
         return (
           <Card
             key={counterparty.userId}
-            className="overflow-clip bg-white px-6 py-5"
+            className="relative overflow-clip bg-white px-6 py-5"
           >
-            <div className="flex flex-row items-center">
+            <Link
+              href={`/people/${counterparty.userId}`}
+              className="absolute inset-0 z-0"
+              aria-label={`View balance with ${counterparty.name}`}
+            />
+            <div className="relative z-10 flex flex-row items-center">
               <div className="flex flex-1 items-center gap-[18px]">
                 <Avatar>
                   {counterparty.avatarUrl ? (
@@ -184,7 +189,7 @@ export function CounterpartyBreakdown({
                 {counterparty.netBalance !== 0 && (
                   <Link
                     href={`/expenses/direct/settle?with=${counterparty.userId}`}
-                    className="inline-flex h-8 items-center justify-center gap-1.5 border border-primary bg-primary px-3 text-xs font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
+                    className="relative z-20 inline-flex h-8 items-center justify-center gap-1.5 border border-primary bg-primary px-3 text-xs font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
                   >
                     Settle Up
                   </Link>
@@ -192,11 +197,13 @@ export function CounterpartyBreakdown({
               </div>
             </div>
             {activeBreakdowns.length > 0 && (
-              <PersonBreakdownTree
-                name={counterparty.name}
-                breakdowns={activeBreakdowns}
-                currency={currency}
-              />
+              <div className="relative z-10">
+                <PersonBreakdownTree
+                  name={counterparty.name}
+                  breakdowns={activeBreakdowns}
+                  currency={currency}
+                />
+              </div>
             )}
           </Card>
         );

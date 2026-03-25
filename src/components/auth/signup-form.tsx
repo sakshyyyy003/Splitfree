@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 import { signupSchema, type SignupInput } from "@/lib/validators/auth";
 import { signUp, signInWithGoogle } from "@/actions/auth";
@@ -27,6 +27,8 @@ export function SignupForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo");
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -49,7 +51,7 @@ export function SignupForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">Create an account</CardTitle>
+        <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
         <CardDescription>Get started with SplitFree.</CardDescription>
       </CardHeader>
 
@@ -68,6 +70,19 @@ export function SignupForm() {
           )}
 
           <Field>
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Your name"
+              autoComplete="name"
+              aria-invalid={!!errors.name}
+              {...register("name")}
+            />
+            <FieldError>{errors.name?.message}</FieldError>
+          </Field>
+
+          <Field>
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
@@ -82,27 +97,49 @@ export function SignupForm() {
 
           <Field>
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="At least 8 characters"
-              autoComplete="new-password"
-              aria-invalid={!!errors.password}
-              {...register("password")}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
+                aria-invalid={!!errors.password}
+                className="pr-10"
+                {...register("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
             <FieldError>{errors.password?.message}</FieldError>
           </Field>
 
           <Field>
             <Label htmlFor="confirmPassword">Confirm password</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="Re-enter your password"
-              autoComplete="new-password"
-              aria-invalid={!!errors.confirmPassword}
-              {...register("confirmPassword")}
-            />
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Re-enter your password"
+                autoComplete="new-password"
+                aria-invalid={!!errors.confirmPassword}
+                className="pr-10"
+                {...register("confirmPassword")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
             <FieldError>{errors.confirmPassword?.message}</FieldError>
           </Field>
 
@@ -151,7 +188,7 @@ export function SignupForm() {
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link href={redirectTo ? `/login?redirectTo=${encodeURIComponent(redirectTo)}` : "/login"} className="text-primary underline-offset-4 hover:underline">
+          <Link href={redirectTo ? `/login?redirectTo=${encodeURIComponent(redirectTo)}` : "/login"} className="font-bold text-primary underline-offset-4 hover:underline">
             Log in
           </Link>
         </p>

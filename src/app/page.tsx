@@ -3,6 +3,11 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main>
+      {/* Nav */}
+      <nav className="absolute left-0 right-0 top-0 z-10 px-4 py-5 sm:px-6">
+        <span className="text-xl font-bold text-white">Split<span className="text-hotgreen">free</span></span>
+      </nav>
+
       {/* Hero */}
       <section className="relative overflow-hidden bg-black px-4 py-28 text-white sm:px-6 sm:py-40">
         <div
@@ -19,11 +24,12 @@ export default function Home() {
             India&apos;s boldest expense splitter
           </p>
           <h1 className="mb-8 text-5xl font-bold leading-none sm:text-6xl lg:text-7xl">
-            SPLIT BILLS.
-            <br />
-            NOT{" "}
-            <span className="bg-highlight px-1.5 text-black">
-              FRIENDSHIPS.
+            <span className="block">SPLIT BILLS.</span>
+            <span className="block mt-4">
+              NOT{" "}
+              <span className="bg-highlight px-1.5 text-black">
+                FRIENDSHIPS.
+              </span>
             </span>
           </h1>
           <p className="mx-auto mb-10 max-w-xl text-xl font-normal text-gray-400 sm:text-2xl">
@@ -92,8 +98,7 @@ export default function Home() {
             </h2>
             <p className="text-lg text-gray-400">
               We built Splitfree because asking &quot;did you pay me
-              back?&quot; shouldn&apos;t ruin your weekend. Built for India,
-              powered by UPI.
+              back?&quot; shouldn&apos;t ruin your weekend.
             </p>
           </div>
         </div>
