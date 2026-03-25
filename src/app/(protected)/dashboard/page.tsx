@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
 import { MobileBalanceBanner } from "@/components/dashboard/overall-balance-view";
+import { requireAuthenticatedUser } from "@/lib/auth/user";
 import { getActivityFeed } from "@/lib/queries/activity";
 import { getOverallBalances } from "@/lib/queries/balances";
 import { getDashboardGroups } from "@/lib/queries/group";
@@ -12,12 +13,13 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
-  const [groups, overallBalances, activityFeed, dashboardUser, params] =
+  const [groups, overallBalances, activityFeed, dashboardUser, user, params] =
     await Promise.all([
       getDashboardGroups(),
       getOverallBalances(),
       getActivityFeed(),
       getDashboardUser(),
+      requireAuthenticatedUser(),
       searchParams,
     ]);
   const activeTab = params.tab ?? "groups";
@@ -73,6 +75,7 @@ export default async function DashboardPage({
         peopleHeader={peopleHeader}
         activityFeed={activityFeed}
         activeTab={activeTab}
+        currentUserId={user.id}
       />
     </div>
   );

@@ -164,10 +164,10 @@ export function ProtectedShell({ children, user }: ProtectedShellProps) {
   const displayName = user.name?.trim() || user.email || "SplitFree member";
 
   return (
-    <div className="min-h-screen lg:p-4">
-      <div className="flex min-h-screen lg:min-h-[calc(100vh-2rem)] lg:gap-4">
+    <div className="min-h-screen">
+      <div className="flex min-h-screen lg:gap-4">
         {/* Desktop Sidebar */}
-        <aside className="hidden w-64 shrink-0 bg-sidebar px-5 py-6 text-sidebar-foreground lg:flex lg:flex-col">
+        <aside className="hidden w-64 shrink-0 bg-sidebar px-5 py-6 text-sidebar-foreground lg:flex lg:flex-col sticky top-0 h-screen">
           <div className="flex items-center gap-3 px-2">
             <p className="text-xl font-bold tracking-tight">
               SPLIT<span className="text-hotgreen">FREE</span>
@@ -226,23 +226,13 @@ export function ProtectedShell({ children, user }: ProtectedShellProps) {
           </div>
         </aside>
 
-        <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:min-h-[calc(100vh-2rem)]">
+        <div className="flex min-w-0 flex-1 flex-col">
           {/* Mobile Header */}
           <header className="sticky top-0 z-20 bg-black px-4 py-4 lg:hidden">
-            <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+            <div className="mx-auto flex max-w-7xl items-center gap-4">
               <p className="text-xl font-bold tracking-tight text-white">
                 SPLIT<span className="text-hotgreen">FREE</span>
               </p>
-              <Link href={PROFILE_ROUTE} aria-label="Open profile">
-                <Avatar size="sm">
-                  {user.avatarUrl ? (
-                    <AvatarImage src={user.avatarUrl} alt={displayName} />
-                  ) : null}
-                  <AvatarFallback className="bg-hotgreen text-black">
-                    {getInitials(displayName)}
-                  </AvatarFallback>
-                </Avatar>
-              </Link>
             </div>
           </header>
 

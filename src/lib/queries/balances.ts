@@ -402,6 +402,13 @@ async function fetchGroupsByIds(
   return lookup;
 }
 
+export async function getCounterpartyBalance(
+  targetUserId: string,
+): Promise<DashboardCounterpartyBalance | null> {
+  const balances = await getOverallBalances();
+  return balances.counterparties.find((c) => c.userId === targetUserId) ?? null;
+}
+
 export async function getOverallBalances(): Promise<DashboardOverallBalances> {
   const supabase = await createClient();
 

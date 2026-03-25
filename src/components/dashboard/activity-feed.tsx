@@ -23,6 +23,7 @@ import type {
 
 type ActivityFeedProps = {
   initial: ActivityFeedResult;
+  currentUserId: string;
 };
 
 const ACTION_ICON: Record<ActivityAction, React.ComponentType<{ className?: string }>> = {
@@ -178,24 +179,53 @@ function buildMessage(entry: ActivityEntry): React.ReactNode {
   }
 }
 
-function ActivityItem({ entry }: { entry: ActivityEntry }) {
+function getActivityHref(entry: ActivityEntry, currentUserId: string): string | null {
+  const groupId = entry.group?.id;
+
+  switch (entry.action) {
+    case "expense_created":
+    case "expense_updated":
+      return groupId
+        ? `/groups/${groupId}/expenses/${entry.entityId}`
+        : null;
+
+    case "expense_deleted":
+      return groupId ? `/groups/${groupId}` : null;
+
+    case "settlement_recorded":
+      if (groupId) return `/groups/${groupId}/settlements/${entry.entityId}`;
+      // Direct settlement — link to the other person's detail page
+      break;
+
+    case "member_added":
+    case "member_removed":
+      return groupId ? `/groups/${groupId}` : null;
+  }
+
+  // Direct activity fallback — other person's detail page
+  const otherId =
+    entry.actor.userId === currentUserId
+      ? entry.targetUser?.userId
+      : entry.actor.userId;
+  return otherId ? `/people/${otherId}` : null;
+}
+
+function ActivityItem({ entry, currentUserId }: { entry: ActivityEntry; currentUserId: string }) {
   const Icon = ACTION_ICON[entry.action];
   const colorClass = ACTION_COLOR[entry.action];
+  const href = getActivityHref(entry, currentUserId);
 
-  const groupLink = entry.group ? (
-    <Link
-      href={`/groups/${entry.group.id}`}
-      className="text-xs font-bold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
-    >
+  const sourceLabel = entry.group ? (
+    <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
       {entry.group.name}
-    </Link>
+    </span>
   ) : (
     <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
       Direct
     </span>
   );
 
-  return (
+  const inner = (
     <div className="flex gap-3 border-b border-border px-1 py-4 last:border-b-0">
       <div className="flex flex-col items-center gap-1 pt-0.5">
         <Avatar className="size-8">
@@ -214,7 +244,7 @@ function ActivityItem({ entry }: { entry: ActivityEntry }) {
       <div className="min-w-0 flex-1 space-y-1">
         <p className="text-sm leading-snug">{buildMessage(entry)}</p>
         <div className="flex items-center gap-2">
-          {groupLink}
+          {sourceLabel}
           <span className="text-muted-foreground">·</span>
           <span className="text-xs text-muted-foreground">
             {getRelativeTime(entry.createdAt)}
@@ -223,9 +253,19 @@ function ActivityItem({ entry }: { entry: ActivityEntry }) {
       </div>
     </div>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block hover:bg-muted/40 transition-colors">
+        {inner}
+      </Link>
+    );
+  }
+
+  return inner;
 }
 
-export function ActivityFeed({ initial }: ActivityFeedProps) {
+export function ActivityFeed({ initial, currentUserId }: ActivityFeedProps) {
   const [entries, setEntries] = useState(initial.entries);
   const [hasMore, setHasMore] = useState(initial.hasMore);
   const [cursor, setCursor] = useState(initial.nextCursor);
@@ -259,7 +299,7 @@ export function ActivityFeed({ initial }: ActivityFeedProps) {
     <div>
       <div className="divide-y-0">
         {entries.map((entry) => (
-          <ActivityItem key={entry.id} entry={entry} />
+          <ActivityItem key={entry.id} entry={entry} currentUserId={currentUserId} />
         ))}
       </div>
 

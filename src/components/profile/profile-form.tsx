@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from "react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -12,6 +12,7 @@ import {
   type UpdateProfileInput,
 } from "@/lib/validators/profile";
 import { updateProfile, uploadAvatar } from "@/actions/profile";
+import { signOut } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -115,6 +116,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   const initials = getInitials(profile.name, profile.email);
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Profile picture</CardTitle>
@@ -207,5 +209,13 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         </form>
       </CardContent>
     </Card>
+
+    <form action={signOut} className="mt-4 lg:hidden">
+      <Button type="submit" variant="outline" size="lg" className="w-full text-destructive border-destructive/50 hover:bg-destructive/10 hover:text-destructive">
+        <LogOut className="size-4" />
+        Sign out
+      </Button>
+    </form>
+    </>
   );
 }
