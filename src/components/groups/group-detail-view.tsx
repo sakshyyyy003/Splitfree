@@ -400,11 +400,8 @@ export function GroupDetailView({
 
         <TabsContent value="members">
           <Card className="border-2 border-border bg-card">
-            <CardHeader>
-              <CardTitle>Members</CardTitle>
-              <CardDescription>
-                Everyone currently in the group and when they joined.
-              </CardDescription>
+            <CardHeader className="items-center">
+              <CardTitle>{members.length} {members.length === 1 ? "Member" : "Members"}</CardTitle>
               {isAdmin && (
                 <CardAction>
                   <Button
@@ -445,7 +442,7 @@ export function GroupDetailView({
                   return (
                     <div
                       key={member.userId}
-                      className="flex items-center gap-3 rounded-lg border border-border bg-card p-4"
+                      className="flex items-center gap-4 border-b border-border px-4 py-4 last:border-b-0"
                     >
                       <Avatar>
                         {member.avatarUrl ? (
@@ -454,21 +451,24 @@ export function GroupDetailView({
                         <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="truncate font-semibold">{member.name}</p>
-                          <Badge variant={member.role === "admin" ? "default" : "outline"}>
-                            {member.role === "admin" ? "Admin" : "Member"}
-                          </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <p className="truncate text-sm font-bold">{member.name}</p>
+                          {member.role === "admin" && (
+                            <>
+                              <span className="text-sm text-[#404040]/60">&middot;</span>
+                              <span className="text-sm text-[#404040]/60">Admin</span>
+                            </>
+                          )}
                         </div>
-                        <p className="truncate text-sm text-muted-foreground">
+                        <p className="truncate text-sm text-[#404040]">
                           {member.email}
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-3">
                         {net !== 0 ? (
-                          <div className={`text-right ${net > 0 ? "text-[#007a55]" : "text-rose-700"}`}>
+                          <div className={`text-right ${net > 0 ? "text-[#007a55]" : "text-[#c70036]"}`}>
                             <p className="text-xs font-medium">
-                              {net > 0 ? "You get" : "You owe"}
+                              {net > 0 ? "gets" : "owes"}
                             </p>
                             <p className="text-sm font-bold">
                               {currencyFormatter.format(Math.abs(net))}
@@ -476,7 +476,7 @@ export function GroupDetailView({
                           </div>
                         ) : (
                           <p className="text-sm font-medium text-muted-foreground">
-                            Settled
+                            Settled up
                           </p>
                         )}
                         <RemoveMemberButton

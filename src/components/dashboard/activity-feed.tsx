@@ -44,28 +44,25 @@ const ACTION_COLOR: Record<ActivityAction, string> = {
   member_removed: "bg-rose-100 text-rose-700",
 };
 
-const relativeTimeFormatter = new Intl.RelativeTimeFormat("en", {
-  numeric: "auto",
-});
-
 function getRelativeTime(dateStr: string): string {
   const now = Date.now();
   const then = new Date(dateStr).getTime();
-  const diffMs = then - now;
+  const diffMs = now - then;
   const diffSec = Math.round(diffMs / 1000);
   const diffMin = Math.round(diffSec / 60);
   const diffHr = Math.round(diffMin / 60);
   const diffDay = Math.round(diffHr / 24);
+  const diffWeek = Math.round(diffDay / 7);
+  const diffMonth = Math.round(diffDay / 30);
+  const diffYear = Math.round(diffDay / 365);
 
-  if (Math.abs(diffSec) < 60) return "just now";
-  if (Math.abs(diffMin) < 60) return relativeTimeFormatter.format(diffMin, "minute");
-  if (Math.abs(diffHr) < 24) return relativeTimeFormatter.format(diffHr, "hour");
-  if (Math.abs(diffDay) < 30) return relativeTimeFormatter.format(diffDay, "day");
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "numeric",
-    month: "short",
-  }).format(new Date(dateStr));
+  if (diffSec < 60) return `${Math.max(diffSec, 1)}s ago`;
+  if (diffMin < 60) return `${diffMin}min ago`;
+  if (diffHr < 24) return `${diffHr}hr ago`;
+  if (diffDay <= 6) return `${diffDay} ${diffDay === 1 ? "day" : "days"} ago`;
+  if (diffWeek <= 4) return `${diffWeek} ${diffWeek === 1 ? "week" : "weeks"} ago`;
+  if (diffMonth <= 12) return `${diffMonth} ${diffMonth === 1 ? "month" : "months"} ago`;
+  return `${diffYear} ${diffYear === 1 ? "year" : "years"} ago`;
 }
 
 function formatCurrency(amount: number, currency: string = "INR"): string {
@@ -85,8 +82,14 @@ function getInitials(name: string): string {
     .join("");
 }
 
-function buildMessage(entry: ActivityEntry): React.ReactNode {
+function buildLine1(entry: ActivityEntry, currentUserId: string): React.ReactNode {
   const actorName = entry.actor.name;
+  const groupSuffix = entry.group ? (
+    <>
+      {" in "}
+      <strong>&ldquo;{entry.group.name}&rdquo;</strong>
+    </>
+  ) : null;
 
   switch (entry.action) {
     case "expense_created": {
@@ -94,31 +97,18 @@ function buildMessage(entry: ActivityEntry): React.ReactNode {
       return (
         <>
           <strong>{actorName}</strong> added{" "}
-          <strong>&ldquo;{meta.description}&rdquo;</strong>{" "}
-          <span className="text-muted-foreground">
-            ({formatCurrency(meta.amount, meta.currency)})
-          </span>
+          <strong>&ldquo;{meta.description}&rdquo;</strong>
+          {groupSuffix ?? " as direct expense"}
         </>
       );
     }
     case "expense_updated": {
       const meta = entry.metadata as ActivityExpenseMetadata;
-      const parts: string[] = [];
-      if (meta.old_amount !== undefined) {
-        parts.push(
-          `amount ${formatCurrency(meta.old_amount, meta.currency)} → ${formatCurrency(meta.amount, meta.currency)}`,
-        );
-      }
-      if (meta.old_description) {
-        parts.push(`"${meta.old_description}" → "${meta.description}"`);
-      }
       return (
         <>
           <strong>{actorName}</strong> updated{" "}
           <strong>&ldquo;{meta.description}&rdquo;</strong>
-          {parts.length > 0 ? (
-            <span className="text-muted-foreground"> — {parts.join(", ")}</span>
-          ) : null}
+          {groupSuffix ?? " as direct expense"}
         </>
       );
     }
@@ -127,29 +117,58 @@ function buildMessage(entry: ActivityEntry): React.ReactNode {
       return (
         <>
           <strong>{actorName}</strong> deleted{" "}
-          <strong>&ldquo;{meta.description}&rdquo;</strong>{" "}
-          <span className="text-muted-foreground">
-            ({formatCurrency(meta.amount, meta.currency)})
-          </span>
+          <strong>&ldquo;{meta.description}&rdquo;</strong>
+          {groupSuffix ?? " as direct expense"}
         </>
       );
     }
     case "settlement_recorded": {
       const meta = entry.metadata as ActivitySettlementMetadata;
-      const payerName =
-        meta.paid_by === entry.actor.userId
-          ? actorName
-          : entry.targetUser?.name ?? "someone";
-      const payeeName =
-        meta.paid_to === entry.actor.userId
-          ? actorName
-          : entry.targetUser?.name ?? "someone";
+      const isCurrentUserPayer = meta.paid_by === currentUserId;
+      const isCurrentUserPayee = meta.paid_to === currentUserId;
+      const otherName = isCurrentUserPayer
+        ? (entry.targetUser?.name ?? "someone")
+        : (entry.actor.name);
+
+      if (isCurrentUserPayer) {
+        return (
+          <>
+            <strong>You</strong> paid <strong>{otherName}</strong>
+            {entry.group ? (
+              <>
+                {" in "}
+                <strong>&ldquo;{entry.group.name}&rdquo;</strong>
+              </>
+            ) : (
+              " directly"
+            )}
+          </>
+        );
+      }
+
+      if (isCurrentUserPayee) {
+        return (
+          <>
+            <strong>{otherName}</strong> paid <strong>you</strong>
+            {entry.group ? (
+              <>
+                {" in "}
+                <strong>&ldquo;{entry.group.name}&rdquo;</strong>
+              </>
+            ) : (
+              " directly"
+            )}
+          </>
+        );
+      }
+
+      // Fallback: neither party is the current user
+      const payerName = entry.actor.name;
+      const payeeName = entry.targetUser?.name ?? "someone";
       return (
         <>
-          <strong>{payerName}</strong> paid <strong>{payeeName}</strong>{" "}
-          <span className="text-muted-foreground">
-            ({formatCurrency(meta.amount)})
-          </span>
+          <strong>{payerName}</strong> paid <strong>{payeeName}</strong>
+          {groupSuffix ?? " directly"}
         </>
       );
     }
@@ -158,13 +177,15 @@ function buildMessage(entry: ActivityEntry): React.ReactNode {
         return (
           <>
             <strong>{actorName}</strong> added{" "}
-            <strong>{entry.targetUser.name}</strong> to the group
+            <strong>{entry.targetUser.name}</strong> to{" "}
+            <strong>&ldquo;{entry.group?.name ?? "the group"}&rdquo;</strong>
           </>
         );
       }
       return (
         <>
-          <strong>{actorName}</strong> joined the group
+          <strong>{actorName}</strong> joined{" "}
+          <strong>&ldquo;{entry.group?.name ?? "the group"}&rdquo;</strong>
         </>
       );
     }
@@ -172,9 +193,85 @@ function buildMessage(entry: ActivityEntry): React.ReactNode {
       return (
         <>
           <strong>{actorName}</strong> removed{" "}
-          <strong>{entry.targetUser?.name ?? "a member"}</strong> from the group
+          <strong>{entry.targetUser?.name ?? "a member"}</strong> from{" "}
+          <strong>&ldquo;{entry.group?.name ?? "the group"}&rdquo;</strong>
         </>
       );
+    }
+  }
+}
+
+function buildLine2(entry: ActivityEntry, currentUserId: string): React.ReactNode {
+  const time = getRelativeTime(entry.createdAt);
+
+  switch (entry.action) {
+    case "expense_created": {
+      if (entry.userShare !== null) {
+        const meta = entry.metadata as ActivityExpenseMetadata;
+        return (
+          <>
+            <span className="text-sm font-bold text-[#007a55]">
+              You owe {formatCurrency(entry.userShare, meta.currency)}
+            </span>
+            <span className="text-[#404040]">&middot;</span>
+            <span className="text-sm text-[#404040]">{time}</span>
+          </>
+        );
+      }
+      return <span className="text-sm text-[#404040]">{time}</span>;
+    }
+    case "expense_updated": {
+      if (entry.userShare !== null) {
+        const meta = entry.metadata as ActivityExpenseMetadata;
+        return (
+          <>
+            <span className="text-sm font-bold text-[#007a55]">
+              Your share updated to {formatCurrency(entry.userShare, meta.currency)}
+            </span>
+            <span className="text-[#404040]">&middot;</span>
+            <span className="text-sm text-[#404040]">{time}</span>
+          </>
+        );
+      }
+      return <span className="text-sm text-[#404040]">{time}</span>;
+    }
+    case "expense_deleted": {
+      return <span className="text-sm text-[#404040]">{time}</span>;
+    }
+    case "settlement_recorded": {
+      const meta = entry.metadata as ActivitySettlementMetadata;
+      const isCurrentUserPayer = meta.paid_by === currentUserId;
+      const isCurrentUserPayee = meta.paid_to === currentUserId;
+
+      let financialText: React.ReactNode = null;
+      if (isCurrentUserPayer) {
+        financialText = (
+          <span className="text-sm font-bold text-red-600">
+            You paid {formatCurrency(meta.amount)}
+          </span>
+        );
+      } else if (isCurrentUserPayee) {
+        financialText = (
+          <span className="text-sm font-bold text-[#007a55]">
+            You received {formatCurrency(meta.amount)}
+          </span>
+        );
+      }
+
+      if (financialText) {
+        return (
+          <>
+            {financialText}
+            <span className="text-[#404040]">&middot;</span>
+            <span className="text-sm text-[#404040]">{time}</span>
+          </>
+        );
+      }
+      return <span className="text-sm text-[#404040]">{time}</span>;
+    }
+    case "member_added":
+    case "member_removed": {
+      return <span className="text-sm text-[#404040]">{time}</span>;
     }
   }
 }
@@ -194,7 +291,6 @@ function getActivityHref(entry: ActivityEntry, currentUserId: string): string | 
 
     case "settlement_recorded":
       if (groupId) return `/groups/${groupId}/settlements/${entry.entityId}`;
-      // Direct settlement — link to the other person's detail page
       break;
 
     case "member_added":
@@ -215,40 +311,26 @@ function ActivityItem({ entry, currentUserId }: { entry: ActivityEntry; currentU
   const colorClass = ACTION_COLOR[entry.action];
   const href = getActivityHref(entry, currentUserId);
 
-  const sourceLabel = entry.group ? (
-    <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-      {entry.group.name}
-    </span>
-  ) : (
-    <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-      Direct
-    </span>
-  );
-
   const inner = (
     <div className="flex gap-3 border-b border-border px-1 py-4 last:border-b-0">
-      <div className="flex flex-col items-center gap-1 pt-0.5">
-        <Avatar className="size-8">
+      <div className="relative h-12 w-10 shrink-0">
+        <Avatar>
           {entry.actor.avatarUrl ? (
             <AvatarImage src={entry.actor.avatarUrl} alt={entry.actor.name} />
           ) : null}
-          <AvatarFallback className="text-xs">
+          <AvatarFallback>
             {getInitials(entry.actor.name)}
           </AvatarFallback>
         </Avatar>
-        <div className={`flex size-5 items-center justify-center rounded-full ${colorClass}`}>
+        <div className={`absolute bottom-0 left-5 flex size-5 items-center justify-center rounded-full border-2 border-background ${colorClass}`}>
           <Icon className="size-3" />
         </div>
       </div>
 
-      <div className="min-w-0 flex-1 space-y-1">
-        <p className="text-sm leading-snug">{buildMessage(entry)}</p>
-        <div className="flex items-center gap-2">
-          {sourceLabel}
-          <span className="text-muted-foreground">·</span>
-          <span className="text-xs text-muted-foreground">
-            {getRelativeTime(entry.createdAt)}
-          </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-base leading-snug">{buildLine1(entry, currentUserId)}</p>
+        <div className="mt-0.5 flex items-center gap-2">
+          {buildLine2(entry, currentUserId)}
         </div>
       </div>
     </div>
@@ -256,7 +338,7 @@ function ActivityItem({ entry, currentUserId }: { entry: ActivityEntry; currentU
 
   if (href) {
     return (
-      <Link href={href} className="block hover:bg-muted/40 transition-colors">
+      <Link href={href} className="block transition-colors hover:bg-muted/40">
         {inner}
       </Link>
     );

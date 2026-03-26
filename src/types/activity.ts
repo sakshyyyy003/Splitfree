@@ -42,6 +42,8 @@ export type ActivityEntry = {
   group: { id: string; name: string } | null;
   metadata: ActivityExpenseMetadata | ActivitySettlementMetadata | ActivityMemberMetadata;
   createdAt: string;
+  /** Current user's share amount for expense entries (fetched from expense_splits) */
+  userShare: number | null;
 };
 
 export type ActivityFeedResult = {
