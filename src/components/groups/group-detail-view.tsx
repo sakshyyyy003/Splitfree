@@ -201,9 +201,9 @@ export function GroupDetailView({
               )}
             </p>
 
-            {simplifiedDebts.length > 0 && (
+            {simplifiedDebts.some((debt) => debt.fromUserId === currentUserId || debt.toUserId === currentUserId) && (
               <div className="flex flex-col pb-[3px] text-[16px]">
-                {simplifiedDebts.map((debt) => (
+                {simplifiedDebts.filter((debt) => debt.fromUserId === currentUserId || debt.toUserId === currentUserId).map((debt) => (
                   <div key={`${debt.fromUserId}-${debt.toUserId}`} className="flex gap-[5px] leading-7">
                     <p className="font-medium text-black/70">
                       {debt.fromUserId === currentUserId ? "You" : debt.fromName} owes {debt.toUserId === currentUserId ? "you" : debt.toName}
