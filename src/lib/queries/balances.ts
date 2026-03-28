@@ -6,6 +6,9 @@ import type {
   CounterpartyBreakdownEntry,
   DashboardCounterpartyBalance,
   DashboardOverallBalances,
+  PersonDetail,
+  PersonDirectExpenseEntry,
+  PersonGroupBreakdownEntry,
 } from "@/types/dashboard";
 import type {
   GroupBalance,
@@ -493,5 +496,107 @@ export async function getOverallBalances(): Promise<DashboardOverallBalances> {
       updatedAt: new Date().toISOString(),
     },
     counterparties,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Person Detail (enriched view for the people detail page)
+// ---------------------------------------------------------------------------
+
+export async function getPersonDetail(
+  targetUserId: string,
+): Promise<PersonDetail | null> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) return null;
+
+  // Get base counterparty balance (aggregated)
+  const counterparty = await getCounterpartyBalance(targetUserId);
+  if (!counterparty) return null;
+
+  // Fetch individual direct expenses between the two users
+  const { data: directExpenseRows } = await supabase
+    .from("expenses")
+    .select("id, description, amount, paid_by, date, expense_splits(user_id, amount)")
+    .is("group_id", null)
+    .eq("is_deleted", false)
+    .order("date", { ascending: false });
+
+  const directExpenses: PersonDirectExpenseEntry[] = [];
+
+  for (const row of (directExpenseRows ?? []) as unknown as {
+    id: string;
+    description: string;
+    amount: number;
+    paid_by: string;
+    date: string;
+    expense_splits: { user_id: string; amount: number }[];
+  }[]) {
+    const splitUserIds = row.expense_splits.map((s) => s.user_id);
+    const involvesCurrentUser = splitUserIds.includes(user.id) || row.paid_by === user.id;
+    const involvesTarget = splitUserIds.includes(targetUserId) || row.paid_by === targetUserId;
+
+    if (!involvesCurrentUser || !involvesTarget) continue;
+
+    // Calculate what the target user owes/is owed relative to the current user
+    const currentUserSplit = row.expense_splits.find((s) => s.user_id === user.id);
+    const targetSplit = row.expense_splits.find((s) => s.user_id === targetUserId);
+
+    let balanceForExpense = 0;
+    if (row.paid_by === user.id) {
+      // Current user paid — target owes their split amount
+      balanceForExpense = targetSplit?.amount ?? 0;
+    } else if (row.paid_by === targetUserId) {
+      // Target paid — current user owes their split amount (negative)
+      balanceForExpense = -(currentUserSplit?.amount ?? 0);
+    }
+
+    if (balanceForExpense === 0) continue;
+
+    directExpenses.push({
+      expenseId: row.id,
+      description: row.description,
+      amount: Math.round(balanceForExpense * 100) / 100,
+      date: row.date,
+    });
+  }
+
+  // Build group breakdowns with latest expense date
+  const groupBreakdowns: PersonGroupBreakdownEntry[] = [];
+
+  for (const breakdown of counterparty.breakdowns) {
+    if (breakdown.groupId === null) continue; // skip direct (handled above)
+
+    // Fetch the latest expense date in this group involving both users
+    const { data: latestExpense } = await supabase
+      .from("expenses")
+      .select("date")
+      .eq("group_id", breakdown.groupId)
+      .eq("is_deleted", false)
+      .order("date", { ascending: false })
+      .limit(1)
+      .single();
+
+    groupBreakdowns.push({
+      groupId: breakdown.groupId,
+      groupName: breakdown.groupName ?? "Unknown Group",
+      amount: breakdown.amount,
+      latestExpenseDate: latestExpense?.date ?? null,
+    });
+  }
+
+  return {
+    userId: counterparty.userId,
+    name: counterparty.name,
+    email: counterparty.email,
+    avatarUrl: counterparty.avatarUrl,
+    netBalance: counterparty.netBalance,
+    directExpenses,
+    groupBreakdowns,
   };
 }

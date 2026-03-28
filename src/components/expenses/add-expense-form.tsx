@@ -607,8 +607,10 @@ export function AddExpenseForm({
   const categoryEmoji: Record<string, string> = {
     trip: "\u2708\uFE0F",
     home: "\uD83C\uDFE0",
-    couple: "\uD83D\uDC91",
-    other: "\uD83D\uDCCB",
+    couple: "\u2764\uFE0F",
+    work: "\uD83D\uDCBC",
+    friends: "\uD83C\uDF89",
+    other: "\uD83C\uDF00",
   };
 
   return (

@@ -13,8 +13,10 @@ const MIN_QUERY_LENGTH = 2;
 const categoryEmoji: Record<string, string> = {
   trip: "✈️",
   home: "🏠",
-  couple: "💑",
-  other: "📋",
+  couple: "❤️",
+  work: "💼",
+  friends: "🎉",
+  other: "🌀",
 };
 
 type UserSearchProps = {

@@ -345,99 +345,105 @@ function AdminOnboardingEmpty({
     });
   }
 
+  const isOnlyMember = memberUserIds.length <= 1;
+
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-dashed border-border bg-card px-5 py-8 text-center">
         <p className="text-base font-semibold text-foreground">No expenses yet</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Start by adding people to your group
+          {isOnlyMember
+            ? "Start by adding people to your group"
+            : "Add an expense to get started"}
         </p>
 
-        <div className="mt-6 flex items-center justify-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopyInviteLink}
-          >
-            <Link2 className="size-4" />
-            Invite via link
-          </Button>
-          <Dialog>
-            <DialogTrigger
-              render={
-                <Button variant="outline" size="sm">
-                  <UserPlus className="size-4" />
-                  Add people
-                </Button>
-              }
-            />
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <UserPlus className="size-4" />
-                  Add People
-                  {isAddingMember && (
-                    <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
-                  )}
-                </DialogTitle>
-                <DialogDescription>
-                  Search for existing users to add them to the group.
-                </DialogDescription>
-              </DialogHeader>
-              <UserSearch
-                onSelect={handleAddMember}
-                excludeUserIds={memberUserIds}
-                placeholder="Search by name or email to add..."
+        {isOnlyMember && (
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopyInviteLink}
+            >
+              <Link2 className="size-4" />
+              Invite via link
+            </Button>
+            <Dialog>
+              <DialogTrigger
+                render={
+                  <Button variant="outline" size="sm">
+                    <UserPlus className="size-4" />
+                    Add people
+                  </Button>
+                }
               />
-              {contacts.length > 0 && (
-                <div>
-                  <p className="mb-2 text-xs font-medium text-muted-foreground">
-                    People you know on Splitfree
-                  </p>
-                  <div className="flex flex-col gap-1">
-                    {contacts.map((contact) => (
-                      <button
-                        key={contact.id}
-                        type="button"
-                        onClick={() => handleAddMember(contact)}
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-secondary"
-                      >
-                        <Avatar size="sm">
-                          {contact.avatar_url ? (
-                            <AvatarImage
-                              src={contact.avatar_url}
-                              alt={contact.name ?? contact.email}
-                            />
-                          ) : null}
-                          <AvatarFallback>
-                            {contact.name
-                              ? contact.name
-                                  .split(" ")
-                                  .map((p) => p[0])
-                                  .slice(0, 2)
-                                  .join("")
-                                  .toUpperCase()
-                              : contact.email[0]?.toUpperCase() ?? "?"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          {contact.name && (
-                            <p className="truncate text-sm font-semibold">
-                              {contact.name}
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <UserPlus className="size-4" />
+                    Add People
+                    {isAddingMember && (
+                      <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+                    )}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Search for existing users to add them to the group.
+                  </DialogDescription>
+                </DialogHeader>
+                <UserSearch
+                  onSelect={handleAddMember}
+                  excludeUserIds={memberUserIds}
+                  placeholder="Search by name or email to add..."
+                />
+                {contacts.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">
+                      People you know on Splitfree
+                    </p>
+                    <div className="flex flex-col gap-1">
+                      {contacts.map((contact) => (
+                        <button
+                          key={contact.id}
+                          type="button"
+                          onClick={() => handleAddMember(contact)}
+                          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-secondary"
+                        >
+                          <Avatar size="sm">
+                            {contact.avatar_url ? (
+                              <AvatarImage
+                                src={contact.avatar_url}
+                                alt={contact.name ?? contact.email}
+                              />
+                            ) : null}
+                            <AvatarFallback>
+                              {contact.name
+                                ? contact.name
+                                    .split(" ")
+                                    .map((p) => p[0])
+                                    .slice(0, 2)
+                                    .join("")
+                                    .toUpperCase()
+                                : contact.email[0]?.toUpperCase() ?? "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            {contact.name && (
+                              <p className="truncate text-sm font-semibold">
+                                {contact.name}
+                              </p>
+                            )}
+                            <p className="truncate text-xs text-muted-foreground">
+                              {contact.email}
                             </p>
-                          )}
-                          <p className="truncate text-xs text-muted-foreground">
-                            {contact.email}
-                          </p>
-                        </div>
-                      </button>
-                    ))}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
-        </div>
+                )}
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
       </div>
     </div>
   );

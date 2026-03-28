@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { getCounterpartyBalance } from "@/lib/queries/balances";
+import { getPersonDetail } from "@/lib/queries/balances";
 import { PersonDetailView } from "@/components/people/person-detail-view";
 
 type PersonDetailPageProps = {
@@ -9,7 +9,7 @@ type PersonDetailPageProps = {
 
 export default async function PersonDetailPage({ params }: PersonDetailPageProps) {
   const { userId } = await params;
-  const person = await getCounterpartyBalance(userId);
+  const person = await getPersonDetail(userId);
 
   if (!person) {
     notFound();

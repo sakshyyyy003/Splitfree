@@ -192,7 +192,9 @@ export function GroupDetailView({
                   ? "Overall, you'll get "
                   : group.netBalance < 0
                     ? "Overall, you owe "
-                    : "All settled up"}
+                    : members.length <= 1
+                      ? "No expenses"
+                      : "All settled up"}
               </span>
               {group.netBalance !== 0 && (
                 <span className={`font-bold ${group.netBalance > 0 ? "text-[#007a55]" : "text-rose-700"}`}>

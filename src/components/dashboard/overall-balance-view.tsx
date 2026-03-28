@@ -152,7 +152,7 @@ export function CounterpartyBreakdown({
               className="absolute inset-0 z-0"
               aria-label={`View balance with ${counterparty.name}`}
             />
-            <div className="relative z-10 flex flex-row items-center">
+            <div className="relative z-10 flex flex-row items-center pointer-events-none">
               <div className="flex flex-1 items-center gap-[18px]">
                 <Avatar>
                   {counterparty.avatarUrl ? (
@@ -189,7 +189,7 @@ export function CounterpartyBreakdown({
                 {counterparty.netBalance !== 0 && (
                   <Link
                     href={`/expenses/direct/settle?with=${counterparty.userId}`}
-                    className="relative z-20 inline-flex h-8 items-center justify-center gap-1.5 border border-primary bg-primary px-3 text-xs font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px"
+                    className="relative z-20 inline-flex h-8 items-center justify-center gap-1.5 border border-primary bg-primary px-3 text-xs font-bold uppercase whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/92 active:translate-y-px pointer-events-auto"
                   >
                     Settle Up
                   </Link>
@@ -197,7 +197,7 @@ export function CounterpartyBreakdown({
               </div>
             </div>
             {activeBreakdowns.length > 0 && (
-              <div className="relative z-10">
+              <div className="relative z-10 pointer-events-none">
                 <PersonBreakdownTree
                   name={counterparty.name}
                   breakdowns={activeBreakdowns}
