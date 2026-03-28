@@ -30,8 +30,10 @@ const balanceFormatter = new Intl.NumberFormat("en-IN", {
 const categoryEmoji: Record<string, string> = {
   trip: "✈️",
   home: "🏠",
-  couple: "💑",
-  other: "📋",
+  couple: "❤️",
+  work: "💼",
+  friends: "🎉",
+  other: "🌀",
 };
 
 export function GroupList({ groups }: GroupListProps) {

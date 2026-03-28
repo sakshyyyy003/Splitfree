@@ -37,6 +37,30 @@ export type DashboardOverallBalances = {
   counterparties: DashboardCounterpartyBalance[];
 };
 
+export type PersonDirectExpenseEntry = {
+  expenseId: string;
+  description: string;
+  amount: number; // positive = they owe you, negative = you owe them
+  date: string;
+};
+
+export type PersonGroupBreakdownEntry = {
+  groupId: string;
+  groupName: string;
+  amount: number; // positive = they owe you, negative = you owe them
+  latestExpenseDate: string | null;
+};
+
+export type PersonDetail = {
+  userId: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  netBalance: number;
+  directExpenses: PersonDirectExpenseEntry[];
+  groupBreakdowns: PersonGroupBreakdownEntry[];
+};
+
 export type DashboardGroupCounterparty = {
   userId: string;
   name: string;

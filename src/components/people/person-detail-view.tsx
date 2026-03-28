@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft, Handshake, Plus } from "lucide-react";
 
-import type { DashboardCounterpartyBalance } from "@/types/dashboard";
+import type { PersonDetail } from "@/types/dashboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type PersonDetailViewProps = {
-  person: DashboardCounterpartyBalance;
+  person: PersonDetail;
   currency: string;
 };
 
@@ -15,6 +15,14 @@ const currencyFormatter = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 2,
 });
 
+const monthFormatter = new Intl.DateTimeFormat("en-IN", {
+  month: "short",
+});
+
+const dayFormatter = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+});
+
 function formatCurrency(amount: number, currency: string) {
   if (currency === "INR") return currencyFormatter.format(amount);
   return new Intl.NumberFormat("en-IN", {
@@ -22,6 +30,16 @@ function formatCurrency(amount: number, currency: string) {
     currency,
     maximumFractionDigits: 2,
   }).format(amount);
+}
+
+function DateBlock({ dateStr }: { dateStr: string }) {
+  const date = new Date(dateStr);
+  return (
+    <div className="shrink-0 text-[12px] font-medium uppercase leading-4 tracking-[2.16px] text-[#404040]/70">
+      <p>{monthFormatter.format(date)}</p>
+      <p>{dayFormatter.format(date)}</p>
+    </div>
+  );
 }
 
 function getInitials(name: string) {
@@ -34,8 +52,8 @@ function getInitials(name: string) {
 }
 
 export function PersonDetailView({ person, currency }: PersonDetailViewProps) {
-  const { netBalance } = person;
-  const activeBreakdowns = person.breakdowns.filter((b) => b.amount !== 0);
+  const { netBalance, directExpenses, groupBreakdowns } = person;
+  const hasAnyExpenses = directExpenses.length > 0 || groupBreakdowns.length > 0;
 
   return (
     <div className="space-y-8">
@@ -110,7 +128,7 @@ export function PersonDetailView({ person, currency }: PersonDetailViewProps) {
           Expenses
         </p>
 
-        {activeBreakdowns.length === 0 ? (
+        {!hasAnyExpenses ? (
           <div className="rounded-lg border border-dashed border-border bg-card p-6 text-center">
             <p className="text-sm font-semibold text-muted-foreground">
               All settled up
@@ -120,46 +138,72 @@ export function PersonDetailView({ person, currency }: PersonDetailViewProps) {
             </p>
           </div>
         ) : (
-          activeBreakdowns.map((breakdown) => {
-            const isOwed = breakdown.amount > 0;
-            const isDirect = breakdown.groupId === null;
+          <div className="flex flex-col gap-3">
+            {groupBreakdowns.map((group) => {
+              const isOwed = group.amount > 0;
 
-            const sourceLabel = isDirect ? "Direct Expense" : (breakdown.groupName ?? "Unknown Group");
-            const sourceContent = isDirect ? (
-              <p className="text-base font-bold">{sourceLabel}</p>
-            ) : (
-              <Link
-                href={`/groups/${breakdown.groupId}`}
-                className="text-base font-bold hover:underline underline-offset-2"
-              >
-                {sourceLabel}
-              </Link>
-            );
+              return (
+                <Link
+                  key={group.groupId}
+                  href={`/groups/${group.groupId}`}
+                  className="flex items-center justify-between rounded-none border border-border bg-white px-5 py-4"
+                >
+                  <div className="flex min-w-0 items-center gap-[18px]">
+                    {group.latestExpenseDate && (
+                      <DateBlock dateStr={group.latestExpenseDate} />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-base font-bold leading-[24.75px]">
+                        {group.groupName}
+                      </p>
+                      <p className="text-sm leading-5 text-[#404040]">
+                        Group
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`shrink-0 text-right ${isOwed ? "text-[#007a55]" : "text-rose-700"}`}>
+                    <p className="text-sm font-medium leading-6">
+                      {isOwed ? "You get" : "You owe"}
+                    </p>
+                    <p className="text-base font-bold leading-6">
+                      {formatCurrency(Math.abs(group.amount), currency)}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
 
-            return (
-              <div
-                key={breakdown.groupId ?? "direct"}
-                className="flex items-center justify-between rounded-none border border-border bg-white px-5 py-4"
-              >
-                <div>
-                  {sourceContent}
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    {isDirect ? "Direct" : "Group"}
-                  </p>
+            {directExpenses.map((expense) => {
+              const isOwed = expense.amount > 0;
+
+              return (
+                <div
+                  key={expense.expenseId}
+                  className="flex items-center justify-between rounded-none border border-border bg-white px-5 py-4"
+                >
+                  <div className="flex min-w-0 items-center gap-[18px]">
+                    <DateBlock dateStr={expense.date} />
+                    <div className="min-w-0">
+                      <p className="text-base font-bold leading-[24.75px]">
+                        {expense.description}
+                      </p>
+                      <p className="text-sm leading-5 text-[#404040]">
+                        Direct
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`shrink-0 text-right ${isOwed ? "text-[#007a55]" : "text-rose-700"}`}>
+                    <p className="text-sm font-medium leading-6">
+                      {isOwed ? "You get" : "You owe"}
+                    </p>
+                    <p className="text-base font-bold leading-6">
+                      {formatCurrency(Math.abs(expense.amount), currency)}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p
-                    className={`text-base font-bold ${isOwed ? "text-[#007a55]" : "text-rose-700"}`}
-                  >
-                    {formatCurrency(Math.abs(breakdown.amount), currency)}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    {isOwed ? "you get" : "you owe"}
-                  </p>
-                </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </section>
     </div>
